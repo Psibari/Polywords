@@ -211,7 +211,7 @@ glow. Do not re-add any of them. `TorchGlow.tsx` stays (Settings uses it).
   hunted). On the normal card, the resting dark drop shadow blends into the tier glow as the card
   lifts. Full press (opacity / radius): 0.30/22, 0.55/36, 0.75/50, 1.0/66, 0.80/44. The gauntlet
   card keeps its own gold glow (0.80/36 at full press), unchanged.
-  KNOWN ISSUE, NOT FIXED (Pete, 2026-10-11): the glow is nearly invisible on device. The same view
+  FIXED 2026-11-07, DEVICE-CHECKED (Pete saw STEADY, SHARP, RAZOR SHARP and UNTRAPPABLE unclipped on POLYWORDS DEV: "look great"; the wrong-swipe red flash still shows around the unclipped card): candidate C, `styles.tile` in `SwipeMask.tsx` is now `overflow: 'visible'` (live cards grow to fit their text, so nothing needed the clip; undo = `'hidden'`). No retune needed; leave opacity and radius as they are. Original problem (Pete, 2026-10-11): the glow is nearly invisible on device. The same view
   (`styles.tile`) carries the glow and clips (overflow hidden, radius 20), and with no background
   the shadow is traced from `card-face.png`'s alpha (1410x604, painted x 31-1378, y 14-591; sides
   bow outward, corners far rounder than 20 pt). Only the ~6 pt side / ~3 pt top-bottom margin

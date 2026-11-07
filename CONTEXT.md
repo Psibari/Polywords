@@ -196,7 +196,7 @@ Home, open:
   be bottom-anchored like the Boss ledge and `app/ui/dailyCastleScene.ts`.
 
 Hunt momentum feedback, open:
-- Pressed-card glow is clipped by its own card view (`CLAUDE.md` known issue). Left as is.
+- Pressed-card glow: FIXED 2026-11-07 (`styles.tile` overflow now visible), device-checked by Pete on all four tiers. Uncommitted until Pete commits.
 - A device screenshot at STEADY shows the lifted card overlapping the "SWIPE UP TO CLAIM" label.
   Not investigated; separate job.
 - The four momentum rungs follow the streak colour even while HUNTED (existing behaviour). Pete
@@ -702,4 +702,4 @@ sources). Both pushed by Pete (verified on origin 2026-11-07): `74db273` (blast-
 - **Dev buttons:** the BOSS / FALL 3 / ARMOR STEP stack is wrapped in `__DEV__` (`GameScreen.tsx` about line 2092), so a TestFlight or production build (release, `__DEV__` false) does not draw it. Only the POLYWORDS DEV build keeps it. Nothing to remove for TestFlight; remove from the source only when Pete says. Each label was not checked separately; only the block start and FALL 3.
 - **Build size (read-only look, nothing changed):** `assets/` is about 163 MB on disk (images 142 MB, audio 19 MB). By a name search of the code, about 106 MB across 259 files is referenced and about 57 MB across 73 files is not (this is a heuristic; confirm before deleting). The unreferenced pile includes `assets/images/vault/quill.glb` (28 MB), which Metro would not bundle. The biggest bundled files are PNGs of 1.4 to 5.6 MB (`polybook_open.png`, `homebook1.png`, the Polly perch and pose PNGs, the results crowns and plaques) and the four BGM mp3s of 1.7 to 3.5 MB. The warning's exact number comes from a TestFlight build (Pete will bring it). Likely savings, not yet measured: lossless PNG optimisation or WebP, and a lower-bitrate BGM re-encode.
 - **10-round test pass:** Pete has older ten-round test passes; none is recent. Still to do before testers.
-
+- **Build-size measurements (2026-11-07, on scratch copies, repo untouched):** the 11 biggest referenced PNGs total 29.5 MB. Lossless PNG optimisation gives 25.6 MB (about 13% saved). Lossless WebP gives 16.9 MB (about 43% saved, pixel-identical). Lossy WebP at quality 92 gives 2.6 MB (about 91% saved) with PSNR 33 to 44 dB, so some art would visibly change (GoldenCrown 33 dB and the Polly poses 35 dB were the lowest). All 166 referenced PNGs total 89.9 MB. The six BGM mp3s are all 256 kbps (15.8 MB); at 128 kbps they total 7.9 MB (file sizes only; listening and loop-gap checks not done). Converting PNG to WebP means changing file names, so every `require`, the art scripts and any test that pins a file name must change with it. `.webp` is already in use (`assets/images/ui/icon_*.webp`). Nothing applied; waiting on Pete.

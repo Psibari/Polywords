@@ -1029,7 +1029,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     padding: 0,
-    overflow: 'hidden',
+    // Visible on purpose (2026-11-07): 'hidden' clipped the pressed-card glow
+    // to the card's bounds, so only the few points of card-face.png's own
+    // margin ever showed it. The card grows to fit its text (tileTextLayout), so
+    // nothing here needs the clip. Undo = put 'hidden' back.
+    overflow: 'visible',
     backgroundColor: 'transparent',
     shadowColor: PW.color.shadow,
     shadowOffset: { width: 0, height: 12 },
