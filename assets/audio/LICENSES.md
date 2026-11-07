@@ -168,7 +168,11 @@ by name. Keep a dated saved copy of the licence page.
   sound (`bookClose`), replacing `book_close_v2.mp3`, which stays in the repo unreferenced. 0.89 s
   (-12.1 LUFS).
 
-Source page and licence terms NOT verified: creator names and file numbers come from the downloaded file
-names, and no Pixabay page was opened. Confirm both before launch.
+Source pages (opened 2026-11-06; each page states "Free for use under the Pixabay Content License"; the
+licence summary itself was not read):
+- Face Slap: https://pixabay.com/sound-effects/people-060887-face-slap-48025/ (uploader Freesound Community,
+  listed on the page as "060887_Face slap impact sound effect").
+- Door Slam: https://pixabay.com/sound-effects/film-special-effects-door-slam-172171/ (uploader SoundReality;
+  credit not required).
 
 POLYWORDS edits: the slap is trimmed as above; both files had their ID3 tag stripped.
