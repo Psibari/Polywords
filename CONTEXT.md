@@ -687,10 +687,9 @@ sources). Committed, NOT pushed (Pete pushes): `74db273` (blast-off) and `ad27b3
 
 1. Push `74db273` and `ad27b36`. Run `npm test` on the PC.
 2. Device-check the chant: lose a Returning Haunt and see how the bubble reads next to the STILL card.
-3. **Daily entry card tease line (not written).** Pete wants to write it together. Angle: the faster the player solves, the more
-   it throws Polly (clue 1 she is blown away, clue 2 she is startled); it is her challenge, so the game dares the player to
-   rattle her. Game voice, third person, never claiming the clues get easier; one line at 19 pt in the 326 pt column, so measure
-   before building; probably the last rules line in `app/ui/dailyEntryCopy.ts`. Change the copy only on Pete's word.
+3. (Done) Daily entry card tease line: `ANSWER fast. Surprise Polly.` is the fifth rule line, between `WAIT for another clue, free.` and
+   `WRONG ANSWER costs one life.` in `app/ui/dailyEntryCopy.ts`. Pete's idea and wording; not measured on a phone and not device-tested
+   (it should fit one line: it is shorter than the widest existing line). The long card is one line taller, not re-measured.
 4. (Closed) The page flip needs no Freesound link: it is a Pixabay file (47177).
 5. The GitHub "Claude" app asked for repository-creation permission. Pete has not accepted; the recommendation was to leave it.
 6. Carried over: the 10-round test pass, the TestFlight splash build (costs monthly allowance), the build-size warning, the dev

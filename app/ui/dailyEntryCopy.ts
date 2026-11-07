@@ -56,6 +56,7 @@ export const DAILY_ENTRY_RULES: readonly string[] = [
   'Only one word fits all three.',
   'SWIPE UP to claim your answer.',
   'WAIT for another clue, free.',
+  'ANSWER fast. Surprise Polly.',
   'WRONG ANSWER costs one life.',
 ];
 

@@ -523,7 +523,7 @@ already exist.
 - Every word lives in `app/ui/dailyEntryCopy.ts`, like `dailyPauseCopy.ts` and `dailyExpiredCopy.ts`.
   Change the copy only on Pete's word.
 - The card scrolls (`startScroll` / `startGate`) and sits 10 pt from each edge so the long version
-  cannot clip on a short phone. Measured 2026-11-04: long card 650 pt, short card 408 pt; the long
+  cannot clip on a short phone. Measured 2026-11-04: long card 650 pt, short card 408 pt (before the 6 Nov tease line `ANSWER fast. Surprise Polly.`, which adds one rule line, not re-measured); the long
   one fits a 390x844 screen whole and scrolls on a 375x667.
 - THREE buttons, descending weight: ACCEPT CHALLENGE (gold fill), NOT NOW (outline plus faint fill,
   the game's own secondary copied from `DailyPauseCard` `actionSecondary`), HOW TO PLAY (outline
