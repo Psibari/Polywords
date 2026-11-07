@@ -665,8 +665,8 @@ Branch `play-screen-overhaul`. Pushed by Pete: `4a4cfda` (armor flip MP3 tag str
 sources). Committed, NOT pushed (Pete pushes): `74db273` (blast-off) and `ad27b36` (chant). Details are in `CLAUDE.md`.
 
 - **Licences:** `assets/audio/LICENSES.md` now records the Pixabay source pages for the wrong-swipe slap (48025), the door slam
-  (172171) and the armor page flip (47177, credited qubodup / Freesound). Licence summaries were not checked. Pete will bring the
-  Freesound link for the page flip.
+  (172171) and the armor page flip (47177, credited qubodup / Freesound). Licence summaries were not checked. The page flip is a
+  Pixabay download (Pete confirmed 2026-11-06; its page states the Pixabay Content License), so no Freesound link is needed.
 - **Armor MP3 tag:** the hidden C2PA tag was stripped from `armor_flip_turn.mp3` and `armor_flip_chime.mp3` without re-encoding.
 - **`#FFD700` closed:** `splitBorderColor` (`SwipeMask.tsx` about line 162) is declared and never used, and the `hiddenPhrase`
   state (about line 1218) is never set anywhere. Pete said to leave it; nothing changed.
@@ -691,7 +691,7 @@ sources). Committed, NOT pushed (Pete pushes): `74db273` (blast-off) and `ad27b3
    it throws Polly (clue 1 she is blown away, clue 2 she is startled); it is her challenge, so the game dares the player to
    rattle her. Game voice, third person, never claiming the clues get easier; one line at 19 pt in the 326 pt column, so measure
    before building; probably the last rules line in `app/ui/dailyEntryCopy.ts`. Change the copy only on Pete's word.
-4. The Freesound link for the page flip (Pete) so `LICENSES.md` can carry the original licence.
+4. (Closed) The page flip needs no Freesound link: it is a Pixabay file (47177).
 5. The GitHub "Claude" app asked for repository-creation permission. Pete has not accepted; the recommendation was to leave it.
 6. Carried over: the 10-round test pass, the TestFlight splash build (costs monthly allowance), the build-size warning, the dev
    buttons (BOSS, BOSS CRISIS, FALL 3, ARMOR STEP, REPLAY LESSONS; remove only when Pete says), the 8 parked Daily words (Pete's
