@@ -182,7 +182,7 @@ const GAME_OVER_LAUGH: VisitSpec = {
 
 const HAUNT_FAILED_LAUGH: VisitSpec = {
   kind: 'guaranteed', flyPose: 'fly', perchPose: 'laugh',
-  lineId: 'huntLaugh', line: POLLY_LINES.huntLaugh, sfx: 'pollySqwawkLaugh',
+  lineId: 'huntHauntChant', line: POLLY_LINES.huntHauntChant, sfx: 'pollySqwawkLaugh',
   holdPerch: false, perchMs: 2200,
 };
 

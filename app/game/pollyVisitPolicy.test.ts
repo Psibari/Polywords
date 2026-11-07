@@ -152,7 +152,7 @@ function visitSpec(d: VisitDecision, label: string): VisitSpec {
   const s = visitSpec(resolveVisit('hauntFailed', idle), 'hauntFailed');
   eq(s.kind, 'guaranteed', 'hauntFailed.kind');
   eq(s.perchPose, 'laugh', 'hauntFailed.perchPose');
-  eq(s.line, 'BBBLAAAAHHAHAHA!', 'hauntFailed.line');
+  eq(s.line, 'Trap. Trap. Trap.', 'hauntFailed.line');
   eq(s.sfx, 'pollySqwawkLaugh', 'hauntFailed.sfx');
   eq(s.holdPerch, false, 'hauntFailed.holdPerch');
 }

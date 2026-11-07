@@ -195,6 +195,7 @@ export const POLLY_LINES = {
   bossFavorite: 'Here we go. My favorite.',
   bossPutWork: 'I put work into this one.',
   huntLaugh: 'BBBLAAAAHHAHAHA!',
+  huntHauntChant: 'Trap. Trap. Trap.',
   huntCleanSweep: "Bet you can't do that again.",
   huntThoughtSo: 'Thought so.',
   huntGotcha: 'Gotcha.',
