@@ -686,6 +686,10 @@ Pete, 2026-10-29: nothing below ~18 for copy.
   file before commit. A validator self-test passing is not evidence: FOAM/FOLD shipped below the
   3-trap minimum on 2026-08-31 that way.
 - New tiles get fresh ids. Retired ids are never reused for different content.
+- Retired Hunt trap ids (2026-11-07, never reuse): `line_t2`, `left_t6`, `last_t3`, `lap_t2`, `lime_t4`, `lead_t2`, `exchange_t1`, `draw_t0`. Their replacements are `line_t7`, `left_t8`, `last_t8`, `lap_t6`, `lime_t5`, `lead_t10`, `exchange_t10`, `draw_t4`. Before picking a fresh id, check git history, not just the current file: `git log --all -S'"<id>"' -- assets/data/huntData.json`. `last_t6`, `lead_t7` and `exchange_t8` were free in the file but used for other cards in older banks, so they were skipped (gaps in the numbering are fine).
+- Hunt card order: `selectVisibleMasks` in `huntGenerator.ts` returns up to five cards with at least one REAL and one trap, REAL first, so `step.masks[0]` is always a REAL. The order the player sees comes from `createGame` in `polyRunEngine.ts` (`shuffledMasks`, seeded per run and per word). Read order from `shuffledMasks`, never from `step.masks`. Words with five cards or fewer always show all of them.
+- `artifacts/content-identity-map.json` and `tools/content/import-staging/staged-hunt-content.json` are stale generated files (they still hold the retired phrases). No test or build step reads them. Regenerate only if a tool starts depending on them.
+- The Linux sandbox cannot run `tsx` (the installed esbuild is the Windows build). `node node_modules/typescript/bin/tsc --noEmit -p .` works there (about two minutes).
 
 ## Polly Architecture
 
