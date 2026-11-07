@@ -56,6 +56,7 @@ Focused product rules live in `docs/`. Runtime code/data outrank every doc.
   It still writes `assets/images/brand/wordmark.png` and `assets/images/brand/home-wordmark.png`.
 - `assets/adaptive-icon.png` is the crown icon: `icon.png` scaled to 531 px, centered on `#240353`, 1024x1024,
   inside the Android safe zone (a circle 66/108 of the canvas). Do not regenerate it.
+- `assets/favicon.png` (48x48) is still the Expo starter's black-and-white cubes icon from the first commit. `app.json` uses it ONLY as the web favicon, so it shows in a browser tab when Pete tests the web build (seen 2026-11-07). It is not the Android or iOS icon; Android uses `adaptive-icon.png` (checked 2026-11-07). Swap it for a small crown only if Pete asks.
 
 ### iOS expo-audio watchdog patch (SDK 57)
 
@@ -710,7 +711,7 @@ Pete, 2026-10-29: nothing below ~18 for copy.
   which flies in on `hauntTaunt`. Only the exit shows the result: mastery exits `flyAngry`; the
   Haunted gloat exits `flyGrin` but holds the perch, so that exit is rarely seen. A lost Returning Haunt fires `hauntMasterFailed` (the silent gloat) and 400 ms
   later `hauntFailed`, whose `HAUNT_FAILED_LAUGH` visit hard-cuts the gloat; its bubble is `huntHauntChant`
-  ("Trap. Trap. Trap.", 2026-11-06, `ad27b36`; committed before Pete saw it on device) with the
+  ("Trap. Trap. Trap.", 2026-11-06, `ad27b36`; device-approved by Pete 2026-11-07) with the
   `pollySqwawkLaugh` squawk. `huntLaugh` still serves the game-over laugh. Boss entry
   perches `point` (perchScale 1.05); mastery `angryYell`; Haunted gloat `hauntTaunt` (perchScale
   1.24); streak x10 `embarrassed`; two one-feather lines `laugh03`; laugh visits `bigLaugh`. Exit

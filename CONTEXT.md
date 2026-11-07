@@ -423,7 +423,7 @@ never alias two HUD target entries to one ref.
 
 **Device bridge note.** Every BINARY file written to Pete's disk through the bridge gains about
 5.8 KB of injected C2PA metadata (text files are unaffected). Both armor flip MP3s went to GitHub
-carrying it; decoded audio is unchanged. Not yet stripped. Strip binaries before committing, or
+carrying it; decoded audio is unchanged. Stripped later, 2026-11-06 (`4a4cfda`). Strip binaries before committing, or
 accept the bloat knowingly — it matters for the pinned build-size item.
 
 ### DAILY CHALLENGE — findings, nothing built
@@ -463,7 +463,7 @@ uncommitted changes in Pete's working tree, so removing it produced no diff and 
 commit. And `dailyClaimPresentation.ts` plus its test (the clue-count grade plumbing, 57 lines) went
 up in the first commit after sitting uncommitted since 2026-11-03.
 
-**Built, not device-tested.** The Daily finally explains itself. Architecture is in the Daily
+**Built; device-tested and approved by Pete (onboarding and entry card 2026-11-06, entry card with the tease line 2026-11-07).** The Daily finally explains itself. Architecture is in the Daily
 section of CLAUDE.md. Shape: the entry card is the attempt gate and can never stop appearing, but
 the explanation shows only the first time; after that it is the short gate plus HOW TO PLAY, which
 reopens the same lines from the same constants. Three real buttons now (ACCEPT CHALLENGE gold, NOT
@@ -590,7 +590,7 @@ tree is CRLF (270e553, commit message "tieer"). The breach is covered by `dailyB
 - The dance's hop wing overlaps clue plank 3. Pete accepted.
 - The dev build is slow and the three-clue claim chime plays late there, but not on TestFlight.
 - The design check flags `#12041F`, `#A98CFF` and `rgb(210,195,235)` in `app/ui/dailyBreach.ts`. Left alone.
-- The 4 Nov Daily entry card and onboarding card have still not been device-tested.
+- (Closed 2026-11-07) The 4 Nov Daily entry card and onboarding card were device-tested; Pete approved the entry card with the tease line.
 
 ### NEXT SESSION
 
@@ -609,11 +609,11 @@ tree is CRLF (270e553, commit message "tieer"). The breach is covered by `dailyB
    are needed for 30 days, mostly tier 1. Pete's 118-entry workbook was cross-checked 2026-11-06 (see the 2026-11-06 entry): no new words in it. Who
    assigned the existing tiers and against what definition is still UNRESOLVED — settle before
    writing more.
-5. Freesound licence for `armor_flip_turn.mp3` into `assets/audio/LICENSES.md` (Pete has it).
-6. Strip the injected C2PA metadata from the two armor flip MP3s.
+5. (Done 2026-11-06) `armor_flip_turn.mp3` is a Pixabay file (47177), not Freesound; its source is recorded in `assets/audio/LICENSES.md`. No Freesound link is needed.
+6. (Done 2026-11-06, `4a4cfda`) The injected C2PA metadata was stripped from both armor flip MP3s without re-encoding.
 7. A deliberate 10-ROUND test pass. All first-run testing uses the 8-round fledgling arc, so
    anything that only breaks at ten rounds has been invisible (the chip overflow was one).
-8. Polly's "Trap. Trap. Trap." chant — Pete likes it and wants it used somewhere; no home chosen.
+8. (Done 2026-11-06) Polly's "Trap. Trap. Trap." chant lives in the lost Returning Haunt laugh (`huntHauntChant`). Pete saw it on his phone 2026-11-07: "excellent".
    Candidates raised: the game-over laugh, or the Returning Haunt gloat. The armor-break moment was
    ruled out as too crowded.
 9. Still open from before (the Hunt pause button overlap was FIXED 2026-11-06, `e31898c`); TestFlight splash build;
@@ -644,8 +644,7 @@ All six commits are pushed to origin. Details of every number are in `CLAUDE.md`
   Not live: LEAN, LEFT, LEMON, LETTER, LITTER, LOCK, MARCH, MARKET ("Draft Batch 2026-09-02"). Pete set them aside back then for a
   reason and will review them himself later; nothing was imported. Standing flags: LEMON leaks a clue, LEFT has a grammar
   issue; every imported row must be exactly six cards (target plus five traps), each trap tempting one or two clues.
-- **Onboarding device test:** Pete said on 2026-11-06 that he device-tested onboarding; the result was never written down.
-  The 2026-11-04 Daily entry card is still recorded above as not device-tested; ask Pete.
+- **Onboarding device test:** Pete device-tested onboarding and the Daily entry card (told 2026-11-06). Closed: on 2026-11-07 he confirmed the entry card with the tease line is solid and approved.
 
 ### Open as of 2026-11-06 afternoon (superseded by the end-of-session list below)
 
@@ -662,7 +661,7 @@ All six commits are pushed to origin. Details of every number are in `CLAUDE.md`
 ## 2026-11-06 (night): licences, tag strip, chant, Daily clue-1 blast-off
 
 Branch `play-screen-overhaul`. Pushed by Pete: `4a4cfda` (armor flip MP3 tag strip), `4be65d9` and `9105af0` (licence
-sources). Committed, NOT pushed (Pete pushes): `74db273` (blast-off) and `ad27b36` (chant). Details are in `CLAUDE.md`.
+sources). Both pushed by Pete (verified on origin 2026-11-07): `74db273` (blast-off) and `ad27b36` (chant). Details are in `CLAUDE.md`.
 
 - **Licences:** `assets/audio/LICENSES.md` now records the Pixabay source pages for the wrong-swipe slap (48025), the door slam
   (172171) and the armor page flip (47177, credited qubodup / Freesound). Licence summaries were not checked. The page flip is a
@@ -672,7 +671,7 @@ sources). Committed, NOT pushed (Pete pushes): `74db273` (blast-off) and `ad27b3
   state (about line 1218) is never set anywhere. Pete said to leave it; nothing changed.
 - **Daily in-play lessons: none.** Pete decided the entry card is enough (the Hunt's first-word pauses are already a lot).
 - **Chant:** a lost Returning Haunt now says "Trap. Trap. Trap." (new line `huntHauntChant`, only `HAUNT_FAILED_LAUGH`).
-  Pete had not seen it on a phone when it was committed at his word; a Returning Haunt has to come up first.
+  Pete saw it on his phone on 2026-11-07 and says it looks excellent.
 - **Clue-1 blast-off:** on a one-clue win Polly is blown up and back off the top-left, tumbling, gone a beat, then flies back in on
   `fly` and lands. 2960 ms move (was 2870). Pete watched it on the phone, first at 520 ms (a blur, "hit by lightning"), then at
   1000 ms: "perfect". Clue 2 is unchanged (a straight-up jump). The recordings Pete sent (C1, C2 in Downloads) showed the old
@@ -685,15 +684,22 @@ sources). Committed, NOT pushed (Pete pushes): `74db273` (blast-off) and `ad27b3
 
 ### Open as of the end of 2026-11-06
 
-1. Push `74db273` and `ad27b36`. Run `npm test` on the PC.
-2. Device-check the chant: lose a Returning Haunt and see how the bubble reads next to the STILL card.
+1. (Done) `74db273` and `ad27b36` are pushed (verified on origin 2026-11-07); Pete reported `npm test` clean.
+2. (Done 2026-11-07) The chant was device-checked: Pete says it looks excellent on the phone.
 3. (Done) Daily entry card tease line: `ANSWER fast. Surprise Polly.` is the fifth rule line, between `WAIT for another clue, free.` and
-   `WRONG ANSWER costs one life.` in `app/ui/dailyEntryCopy.ts`. Pete's idea and wording; not measured on a phone and not device-tested
-   (it should fit one line: it is shorter than the widest existing line). The long card is one line taller, not re-measured.
+   `WRONG ANSWER costs one life.` in `app/ui/dailyEntryCopy.ts`. Pete's idea and wording; device-tested and approved 2026-11-07 ("solid", locked in)
+   (the card was not re-measured in points). The long card is one line taller, not re-measured.
 4. (Closed) The page flip needs no Freesound link: it is a Pixabay file (47177).
 5. The GitHub "Claude" app asked for repository-creation permission. Pete has not accepted; the recommendation was to leave it.
 6. Carried over: the 10-round test pass, the TestFlight splash build (costs monthly allowance), the build-size warning, the dev
    buttons (BOSS, BOSS CRISIS, FALL 3, ARMOR STEP, REPLAY LESSONS; remove only when Pete says), the 8 parked Daily words (Pete's
    review), the trap-reject tiers still being identical (accepted), launch work (privacy URLs, crash reporting, store listing,
-   Android testing), the friends beta (about Monday or Tuesday), and the recorded device-test result for the Daily entry card
-   and onboarding, which was never written down (ask Pete).
+   Android testing), the friends beta (about Monday or Tuesday).
+
+## 2026-11-07: icon check, stale-doc cleanup, build-size look
+
+- **Android icon: nothing to fix.** The black-and-white cubes Pete saw was `assets/favicon.png` (48x48, Expo starter, first commit) in a browser tab on the web build. `app.json` uses it only as the web favicon. Android uses `assets/adaptive-icon.png` (the crown). Verified from config and files only; no Android build has been run.
+- **Dev buttons:** the BOSS / FALL 3 / ARMOR STEP stack is wrapped in `__DEV__` (`GameScreen.tsx` about line 2092), so a TestFlight or production build (release, `__DEV__` false) does not draw it. Only the POLYWORDS DEV build keeps it. Nothing to remove for TestFlight; remove from the source only when Pete says. Each label was not checked separately; only the block start and FALL 3.
+- **Build size (read-only look, nothing changed):** `assets/` is about 163 MB on disk (images 142 MB, audio 19 MB). By a name search of the code, about 106 MB across 259 files is referenced and about 57 MB across 73 files is not (this is a heuristic; confirm before deleting). The unreferenced pile includes `assets/images/vault/quill.glb` (28 MB), which Metro would not bundle. The biggest bundled files are PNGs of 1.4 to 5.6 MB (`polybook_open.png`, `homebook1.png`, the Polly perch and pose PNGs, the results crowns and plaques) and the four BGM mp3s of 1.7 to 3.5 MB. The warning's exact number comes from a TestFlight build (Pete will bring it). Likely savings, not yet measured: lossless PNG optimisation or WebP, and a lower-bitrate BGM re-encode.
+- **10-round test pass:** Pete has older ten-round test passes; none is recent. Still to do before testers.
+
