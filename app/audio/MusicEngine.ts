@@ -533,6 +533,42 @@ export function setMusicAppActive(active: boolean): void {
   }
 }
 
+// After a long absence the old player may be stale (iOS can restart its media
+// service while the app is away). Drop it and make a fresh one. Reads nothing
+// from the old player: a stale one can block the caller. The caller follows
+// with setMusicAppActive(true), which restarts the desired track on the new
+// player.
+export function rebuildMusicPlayerAfterAbsence(): void {
+  const stalePlayer = player;
+  if (!stalePlayer) return;
+
+  transitionToken += 1;
+  cancelFade();
+  clearPauseTimer();
+  clearLoadRetry();
+  playerSubscription?.remove();
+  playerSubscription = null;
+  player = null;
+  activeTrackKey = null;
+  configuredTrackToken = -1;
+  configuredMomentumRate = null;
+  pendingSeek = null;
+  restartCurrentTrackAtZero = false;
+  playerRebuildAttempts = 0;
+
+  try {
+    stalePlayer.remove();
+  } catch (error) {
+    warnDev('failed to release stale music player', error);
+  }
+
+  try {
+    player = createPlayer();
+  } catch (error) {
+    warnDev('failed to create music player after absence', error);
+  }
+}
+
 export function haltMusicEngine(): void {
   activeOwner = null;
   activeTrackKey = null;

@@ -20,6 +20,13 @@ function warnDev(message: string, error?: unknown): void {
   }
 }
 
+// Forget the cached configuration so the next request configures the session
+// again. Used after a long absence, when iOS may have restarted its media
+// service and Apple says the session category and options must be set again.
+export function resetAudioSessionConfiguration(): void {
+  audioSessionPromise = null;
+}
+
 // Expo Audio mode is app-global. Every audio subsystem shares this one
 // idempotent configuration so SFX and music cannot race different modes.
 export function ensureAudioSessionConfigured(): Promise<void> {

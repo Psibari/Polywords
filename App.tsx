@@ -15,8 +15,9 @@ import DevResultsPreviewScreen from './app/screens/DevResultsPreviewScreen';
 import DevRematchOutcomePreviewScreen from './app/screens/DevRematchOutcomePreviewScreen';
 import DevOutcomePlaquePreviewScreen from './app/screens/DevOutcomePlaquePreviewScreen';
 import { flushActiveGamePersistence, useGameStore } from './app/store/useGameStore';
-import { preloadHomeTrack, setMusicAppActive } from './app/audio/MusicEngine';
-import { preloadSfx } from './app/audio/sfx';
+import { createAwayTracker, shouldRebuildAudioOnReturn } from './app/audio/audioResumePolicy';
+import { preloadHomeTrack, rebuildMusicPlayerAfterAbsence, setMusicAppActive } from './app/audio/MusicEngine';
+import { preloadSfx, rebuildSfxAfterAbsence } from './app/audio/sfx';
 import { loadPlaytestEvents } from './app/game/playtestTelemetry';
 import ErrorBoundary from './app/components/ErrorBoundary';
 
@@ -95,7 +96,21 @@ export default function App() {
   }, [bootChecksDone]);
 
   useEffect(() => {
+    const awayTracker = createAwayTracker();
     const subscription = AppState.addEventListener('change', nextState => {
+      if (nextState === 'active') {
+        // After a long absence iOS may have restarted its media service and the
+        // old players are stale: replace them BEFORE music resumes (see
+        // audioResumePolicy.ts). A short app switch keeps the audio it has.
+        if (shouldRebuildAudioOnReturn(awayTracker.returned(Date.now()))) {
+          try {
+            rebuildSfxAfterAbsence();
+            rebuildMusicPlayerAfterAbsence();
+          } catch {}
+        }
+      } else {
+        awayTracker.left(Date.now());
+      }
       setMusicAppActive(nextState === 'active');
       if (nextState !== 'active') {
         // Relationship memory records the last meaningful visit when the app

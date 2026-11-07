@@ -1,6 +1,6 @@
 import { createAudioPlayer, AudioPlayer } from 'expo-audio';
 import { useGameStore } from '../store/useGameStore';
-import { ensureAudioSessionConfigured } from './audioSession';
+import { ensureAudioSessionConfigured, resetAudioSessionConfiguration } from './audioSession';
 
 export type SfxName =
   | 'uiClick'
@@ -693,6 +693,19 @@ export function playSfx(
   if (slot.players.length === 0 && !slot.creating) createPlayer(name, generation);
   drainSlot(name, generation);
   return true;
+}
+
+/**
+ * After a long absence the old players may be stale (iOS can restart its media
+ * service while the app is away). Drops every pool and sets the session up
+ * again. Sounds then load on demand, as they do on a fresh launch; cues a
+ * screen warmed ahead of time (the warm* functions) load on first play until
+ * that screen warms them again.
+ */
+export function rebuildSfxAfterAbsence(): void {
+  unloadSfx();
+  resetAudioSessionConfiguration();
+  preloadSfx();
 }
 
 export function unloadSfx(): void {
