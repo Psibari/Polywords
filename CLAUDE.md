@@ -63,6 +63,14 @@ Focused product rules live in `docs/`. Runtime code/data outrank every doc.
 - `expo-audio 57.0.5` carries the official iOS watchdog fix as `patches/expo-audio+57.0.5.patch`, applied by `patch-package` from `postinstall`.
 - `tools/expoAudioPatch.test.mjs` is a regression guard and runs in normal `npm test`. Do not delete the patch, bypass the guard, or upgrade SDK merely to remove it. Retire it only when an intentional native/SDK upgrade contains the fix and passes device background/foreground verification.
 
+### Audio rebuild after a long absence (2026-11-07)
+
+- A build 17 TestFlight crash (watchdog `0x8BADF00D`) froze Pete's phone on the first sound after returning from the background (he tapped Polybook), then iOS killed the app. The main thread sat in `AVPlayerItem currentMediaSelection` and another thread in `SetRate`, both waiting on `mediaplaybackd`; no app code was running. The patch above covers `currentDate` / `currentTime` only, not this path.
+- Fix (written and `npm test` clean, NOT yet device-proven): `App.tsx`'s AppState handler times the absence (`createAwayTracker` in `app/audio/audioResumePolicy.ts`). On return after `AUDIO_REBUILD_AFTER_AWAY_MS` (60 s, TEST VALUE) it calls `rebuildSfxAfterAbsence()` (`sfx.ts`: `unloadSfx`, `resetAudioSessionConfiguration`, `preloadSfx`) and `rebuildMusicPlayerAfterAbsence()` (`MusicEngine.ts`), then `setMusicAppActive(true)`. A short app switch changes nothing. Apple's guidance after a media-service reset is to recreate audio objects and set the session up again.
+- Pinned by tests: `audioResumePolicy.test.ts` (threshold, tracker) and `audioResumeWiring.test.mjs` (rebuild runs before music resumes; the stale music player may only be `remove()`d, never read or driven, because a stale player can block its caller).
+- Known costs: cues a screen warmed ahead of time (`warm*Sfx`) load on first play again after a long absence. Whether `remove()` on a dead player can itself hang is unknown.
+- Cause NOT confirmed: nothing proves iOS restarted its media service on Pete's phone. Pause-on-leaving was considered and rejected as the main fix: music already fades and pauses on leaving, and the freeze began in the foreground after the return.
+
 ### Gameplay-feedback accessibility
 
 - `app/game/gameplayFeedbackAccessibility.ts` is the shared short-feedback policy. Motion animates only when Reduce Motion resolves false. Flash/pulse feedback requires motion to be allowed **and** Reduce Flashes to be off. A pending system motion preference takes the conservative static path.
@@ -379,6 +387,8 @@ losslessly in `4a4cfda` (`ffmpeg -c copy -map_metadata -1 -write_id3v2 0`; decod
 
 ## Polybook
 
+- First-open layout (2026-11-07): `VaultScreen` takes its safe-area padding from `useSafeAreaInsets()`, not a `SafeAreaView`. The Polybook opens as a `transparentModal` from Home, and on the first open of an app launch its own `SafeAreaView` was suspected of reading zero insets (book drawn tall, title under the status bar; later opens were fine). Not device-proven yet. `app/screens/vaultSafeArea.test.mjs` pins the choice. Polybook has no music and never has had (no music owner exists; Home's music stops on blur).
+
 - Vault route is Polly's book. Current architecture: closed physical book → one large portrait
   page, not the retired miniature two-page spread.
 - Navigation: TODAY / JOURNAL / MASTERY on bottom forked ribbons, plus visible `< COVER` return.
@@ -687,6 +697,7 @@ Pete, 2026-10-29: nothing below ~18 for copy.
   3-trap minimum on 2026-08-31 that way.
 - New tiles get fresh ids. Retired ids are never reused for different content.
 - Retired Hunt trap ids (2026-11-07, never reuse): `line_t2`, `left_t6`, `last_t3`, `lap_t2`, `lime_t4`, `lead_t2`, `exchange_t1`, `draw_t0`. Their replacements are `line_t7`, `left_t8`, `last_t8`, `lap_t6`, `lime_t5`, `lead_t10`, `exchange_t10`, `draw_t4`. Before picking a fresh id, check git history, not just the current file: `git log --all -S'"<id>"' -- assets/data/huntData.json`. `last_t6`, `lead_t7` and `exchange_t8` were free in the file but used for other cards in older banks, so they were skipped (gaps in the numbering are fine).
+- Retired Hunt trap id (2026-11-07, later the same day): `down_t01`, replaced by `down_t06` (`THE WAY YOU FIX A ZIPPER WHEN YOUR FLY IS OPEN`). The old text (`...GOES WHEN YOUR FLY'S OPEN`) contradicted its own answer (UP); Pete's intended wording was the "fix" one. History shows the "fix" wording never existed in the repo or workbooks, so where it was lost is unknown. The stale `exchange_t1` row in the workbook's Boss Words (Production) sheet was also brought to `exchange_t10`.
 - Hunt card order: `selectVisibleMasks` in `huntGenerator.ts` returns up to five cards with at least one REAL and one trap, REAL first, so `step.masks[0]` is always a REAL. The order the player sees comes from `createGame` in `polyRunEngine.ts` (`shuffledMasks`, seeded per run and per word). Read order from `shuffledMasks`, never from `step.masks`. Words with five cards or fewer always show all of them.
 - `artifacts/content-identity-map.json` and `tools/content/import-staging/staged-hunt-content.json` are stale generated files (they still hold the retired phrases). No test or build step reads them. Regenerate only if a tool starts depending on them.
 - The Linux sandbox cannot run `tsx` (the installed esbuild is the Windows build). `node node_modules/typescript/bin/tsc --noEmit -p .` works there (about two minutes).

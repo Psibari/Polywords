@@ -1,7 +1,7 @@
 import React, { useRef, useState } from "react";
 import { Animated, Easing, Image, StyleSheet, Text, View, useWindowDimensions } from "react-native";
 import { useRoute } from "@react-navigation/native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import HomeButton from "../components/HomeButton";
 import PolybookCage from "../components/PolybookCage";
 import { FONTS } from "../constants/fonts";
@@ -96,6 +96,10 @@ export default function VaultScreen({ navigation }: Props) {
   const rising = route.params?.polybookRiseFrom !== undefined;
   const chrome = useRef(new Animated.Value(rising ? 0 : 1)).current;
   const { height: windowHeight } = useWindowDimensions();
+  // The app-wide provider's insets, not a SafeAreaView's own: on the first open of an app launch the
+  // Polybook is a transparent modal, and its own safe-area view read zero (the book came out tall, the
+  // title under the status bar; Pete's screenshots, 2026-11-07). Home and the Daily read insets this way too.
+  const insets = useSafeAreaInsets();
   const [pageWidth, setPageWidth] = useState(0);
   const [contentBottom, setContentBottom] = useState(0);
   // True from the book's thud: the cage lets go (first visit of an app launch; PolybookCage decides).
@@ -339,7 +343,12 @@ export default function VaultScreen({ navigation }: Props) {
   }
 
   return (
-    <SafeAreaView style={styles.screen}>
+    <View
+      style={[
+        styles.screen,
+        { paddingTop: insets.top, paddingBottom: insets.bottom, paddingLeft: insets.left, paddingRight: insets.right },
+      ]}
+    >
       {/* The page behind the book: Pete's room painting (2026-10-23), fading in with the page. It replaces
           the old sky, wash, vignette and candle glow, which were made for the old background. */}
       <Animated.View
@@ -411,7 +420,7 @@ export default function VaultScreen({ navigation }: Props) {
         <HomeButton navigation={navigation} />
       </Animated.View>
 
-    </SafeAreaView>
+    </View>
   );
 }
 
