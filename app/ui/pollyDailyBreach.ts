@@ -1,4 +1,3 @@
-import { createSeededRng } from '../game/seededRandom';
 import {
   DAILY_BREACH_POLLY_HIT_HOLD_MS,
   DAILY_BREACH_POLLY_HIT_MOVE_SEGMENTS_MS,
@@ -17,7 +16,8 @@ import type { PollyScreenPoseName } from './pollyScreenPoses';
  * the plaque and the castle and cannot drift from them.
  *
  * Offsets are points, the same unscaled kind as the perch's reactX/reactY;
- * rotation is degrees. She stays in the strip left of the castle.
+ * rotation is degrees. The two-clue jump stays in the strip left of the castle;
+ * the one-clue blast takes her off the screen and she flies back in.
  */
 
 /** A pose held on the clock from `fromMs` to `toMs`. */
@@ -91,34 +91,42 @@ function hitTimeline(): PollyBreachTimeline {
   };
 }
 
-// ── One clue: the fury ──
+// ── One clue: blown off the screen ──
 
 /**
- * The fury's poses and their segments (DAILY_BREACH_POLLY_SMASH_MOVE_SEGMENTS_MS,
- * then the hold), from the throw. The fall back to the perch is not given a
- * pose of its own in the mock; she falls still in jumpAngry.
+ * The move's poses and their segments (DAILY_BREACH_POLLY_SMASH_MOVE_SEGMENTS_MS,
+ * then the hold), from the throw. She is blown out of sight in jumpAngry,
+ * stays gone, flies back in on `fly` (her arrival pose) and lands in angry.
  */
 const FURY_POSES: readonly PollyScreenPoseName[] = [
   'angryYell', // 0-130, yelling
   'sulk', // 130-260, the crouch
   'flyAngry', // 260-380, launching
-  'jumpAngry', // 380-580, blown up and back
-  'jumpAngry', // 580-1060, shaking in mid-air
-  'jumpAngry', // 1060-1440, falling to the perch
-  'angry', // 1440-1570, the landing bounce
+  'jumpAngry', // 380-1380, blown up and back, tumbling out of sight
+  'jumpAngry', // 1380-1680, gone
+  'fly', // 1680-2330, flying back in
+  'angry', // 2330-2460, the landing bounce
 ];
 
-/** Start values from the mock; the apex is deliberately above the two-clue jump's -90. */
-export const POLLY_FURY = {
+/**
+ * TEST VALUES (Pete, 2026-11-06). Offsets are points from her perch. The exit
+ * is far past the top-left of any phone (the perch sits about 55% down the
+ * screen, so a 932 pt phone needs about 700 up); she is out of sight well
+ * before the blast ends. Rotation runs negative: she faces right, so she is
+ * blown backwards, head over heels.
+ */
+export const POLLY_BLOWN_AWAY = {
   crouchY: 4,
   launch: { x: 18, y: -36 },
-  apex: { x: 10, y: -120, rotateDeg: -6 },
-  /** Mid-air shake: jitter decays from ±3 to ±1.5 pt, rotation ±2 to ±1 deg, while y drifts to -114. */
-  shake: { jitterFromPt: 3, jitterToPt: 1.5, rotateFromDeg: 2, rotateToDeg: 1, driftToY: -114, stepMs: 30, seed: 110451 },
+  exit: { x: -240, y: -800, rotateDeg: -540 },
+  /** Where she comes back in from: above the top and a little left, like her arrival (DAILY_POLLY_ENTRY_DX). */
+  returnFrom: { x: -60, y: -800 },
   landingBouncePt: 3,
 } as const;
 
 type Pose3 = { x: number; y: number; r: number };
+
+type Eases = { x: (u: number) => number; y: (u: number) => number; r: (u: number) => number };
 
 function pushEased(
   out: { t: number[]; x: number[]; y: number[]; r: number[] },
@@ -126,19 +134,20 @@ function pushEased(
   ms: number,
   from: Pose3,
   to: Pose3,
-  ease: (u: number) => number,
+  ease: ((u: number) => number) | Eases,
   steps = 6,
 ) {
+  const eases: Eases = typeof ease === 'function' ? { x: ease, y: ease, r: ease } : ease;
   for (let i = 1; i <= steps; i += 1) {
     const u = i / steps;
-    const e = ease(u);
     out.t.push(fromMs + ms * u);
-    out.x.push(from.x + (to.x - from.x) * e);
-    out.y.push(from.y + (to.y - from.y) * e);
-    out.r.push(from.r + (to.r - from.r) * e);
+    out.x.push(from.x + (to.x - from.x) * eases.x(u));
+    out.y.push(from.y + (to.y - from.y) * eases.y(u));
+    out.r.push(from.r + (to.r - from.r) * eases.r(u));
   }
 }
 
+const linear = (u: number) => u;
 const easeOutQuad = (u: number) => 1 - (1 - u) * (1 - u);
 const easeOutCubic = (u: number) => 1 - (1 - u) ** 3;
 const easeInQuad = (u: number) => u * u;
@@ -149,7 +158,7 @@ function smashTimeline(): PollyBreachTimeline {
   const at: number[] = [start];
   for (const ms of durations) at.push(at[at.length - 1] + ms);
   const end = at[at.length - 1] + DAILY_BREACH_POLLY_SMASH_HOLD_MS;
-  const F = POLLY_FURY;
+  const F = POLLY_BLOWN_AWAY;
 
   const out = { t: [start] as number[], x: [0] as number[], y: [0] as number[], r: [0] as number[] };
   const rest: Pose3 = { x: 0, y: 0, r: 0 };
@@ -159,26 +168,19 @@ function smashTimeline(): PollyBreachTimeline {
   pushEased(out, at[1], durations[1], rest, crouch, easeOutQuad);
   const launch: Pose3 = { x: F.launch.x, y: F.launch.y, r: 0 };
   pushEased(out, at[2], durations[2], crouch, launch, easeOutQuad);
-  // 380-580 blown up and back to the apex.
-  const apex: Pose3 = { x: F.apex.x, y: F.apex.y, r: F.apex.rotateDeg };
-  pushEased(out, at[3], durations[3], launch, apex, easeOutCubic);
-  // 580-1060 shaking in mid-air: seeded, decaying, ends exactly on the drift point.
-  const rng = createSeededRng(F.shake.seed);
-  const shakeSteps = Math.max(2, Math.round(durations[4] / F.shake.stepMs));
-  const settled: Pose3 = { x: F.apex.x, y: F.shake.driftToY, r: F.apex.rotateDeg };
-  for (let i = 1; i <= shakeSteps; i += 1) {
-    const u = i / shakeSteps;
-    const jitter = F.shake.jitterFromPt + (F.shake.jitterToPt - F.shake.jitterFromPt) * u;
-    const wobble = F.shake.rotateFromDeg + (F.shake.rotateToDeg - F.shake.rotateFromDeg) * u;
-    const last = i === shakeSteps;
-    out.t.push(at[4] + durations[4] * u);
-    out.x.push(settled.x + (last ? 0 : (rng() * 2 - 1) * jitter));
-    out.y.push(apex.y + (settled.y - apex.y) * u + (last ? 0 : (rng() * 2 - 1) * jitter));
-    out.r.push(settled.r + (last ? 0 : (rng() * 2 - 1) * wobble));
-  }
-  // 1060-1440 falls to the perch.
-  pushEased(out, at[5], durations[5], settled, rest, easeInQuad);
-  // 1440-1570 the landing bounce: down 3 and back.
+  // 380-1380 the blast: up first (a gentle ease-out, so she stays on screen long enough to read), then
+  // sweeping back to the left, tumbling at an even rate (Pete, 6 Nov: the first, front-loaded version was a blur).
+  const exit: Pose3 = { x: F.exit.x, y: F.exit.y, r: F.exit.rotateDeg };
+  pushEased(out, at[3], durations[3], launch, exit, { x: easeInQuad, y: easeOutQuad, r: linear }, 16);
+  // 1380-1680 gone: out of sight, she is moved to the return point (a jump nobody can see) and stands upright.
+  const back: Pose3 = { x: F.returnFrom.x, y: F.returnFrom.y, r: 0 };
+  out.t.push(at[4] + EDGE_MS, at[5]);
+  out.x.push(back.x, back.x);
+  out.y.push(back.y, back.y);
+  out.r.push(back.r, back.r);
+  // 1680-2330 flies back in and settles on the perch (the arrival's own ease).
+  pushEased(out, at[5], durations[5], back, rest, easeOutCubic, 10);
+  // 2330-2460 the landing bounce: down 3 and back.
   const half = durations[6] / 2;
   out.t.push(at[6] + half, at[7]);
   out.x.push(0, 0);

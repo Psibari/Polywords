@@ -189,7 +189,7 @@ for (const tier of TIERS) {
 // Polly's tier move.
 assert.deepEqual(dailyBreachPollyMoveMs('open', true), { moveMs: 0, holdMs: 0 });
 assert.deepEqual(dailyBreachPollyMoveMs('hit', true), { moveMs: 1073, holdMs: 1300 });
-assert.deepEqual(dailyBreachPollyMoveMs('smash', true), { moveMs: 1570, holdMs: 1300 });
+assert.deepEqual(dailyBreachPollyMoveMs('smash', true), { moveMs: 2460, holdMs: 500 });
 for (const tier of TIERS) {
   assert.deepEqual(dailyBreachPollyMoveMs(tier, false), { moveMs: 0, holdMs: 0 }, `no Polly move under Reduce Motion: ${tier}`);
 }

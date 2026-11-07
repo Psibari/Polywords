@@ -166,7 +166,8 @@ const DAILY_POLLY_EXIT_MOVE_MARGIN_MS = 1000;
  *   two-clue win: the win starts at 2823 (her move's end) and its bubble waits
  *     max(0, 1610 - 2823) = 0, so 2823 + 2500 + 220 + 500 = 6043 ms;
  *     failsafe 6000 + 2823 + 1000 = 9823.
- *   one-clue win: 2870 + 3220 = 6090 ms; failsafe 6000 + 2870 + 1000 = 9870.
+ *   one-clue win (she is blown off the screen and flies back): 2960 + 3220 = 6180 ms;
+ *     failsafe 6000 + 2960 + 1000 = 9960.
  * A delayed win's exit is today's path shifted by the delay, so the failsafe
  * keeps today's 6000 ms of room after it, plus the margin.
  */
@@ -1068,7 +1069,7 @@ export default function DailyChallengeScreen({ navigation }: Props) {
       // FIRST, then today's win (pose, startled sound, recoil, bubble,
       // fly-off). The move rides its breach clock from the claim, so the win
       // waits until that move and its hold are over: 2823 ms on two clues
-      // (contact 450 + 1073 + 1300), 2870 on one (0 + 1570 + 1300). 'open'
+      // (contact 450 + 1073 + 1300), 2960 on one (0 + 2460 + 500). 'open'
       // wins and Reduce Motion (no tier move) start at once, as before.
       const tier = claimBreachTierRef.current;
       const winDelayMs = pose === 'shocked' && breachPlays.pollyTierMoves && tier !== 'open'

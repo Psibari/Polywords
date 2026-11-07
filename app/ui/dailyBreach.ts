@@ -210,8 +210,15 @@ export function dailyBreachBeats(tier: DailyBreachTier, motion: boolean): DailyB
 export const DAILY_BREACH_POLLY_HIT_MOVE_SEGMENTS_MS = [140, 933] as const;
 /** 'hit': the embarrassed hold after the jump. */
 export const DAILY_BREACH_POLLY_HIT_HOLD_MS = 1300;
-export const DAILY_BREACH_POLLY_SMASH_MOVE_SEGMENTS_MS = [130, 130, 120, 200, 480, 380, 130] as const;
-export const DAILY_BREACH_POLLY_SMASH_HOLD_MS = 1300;
+/**
+ * 'smash' (Pete, 2026-11-06: she is blown off the screen and comes back). Yell, crouch, launch, then
+ * the blast out of sight (1000), gone (300), the flight back in (650) and the landing bounce (130).
+ * Every number here is a TEST VALUE, felt on the phone, not yet approved. The blast was 520 ms and
+ * Pete found the tumble unreadable (6 Nov), so it is slower and eased gently.
+ */
+export const DAILY_BREACH_POLLY_SMASH_MOVE_SEGMENTS_MS = [130, 130, 120, 1000, 300, 650, 130] as const;
+/** 'smash': the angry hold after she lands, before the win beat. Was 1300 while she stayed on screen. */
+export const DAILY_BREACH_POLLY_SMASH_HOLD_MS = 500;
 
 export type DailyBreachPollyMove = { moveMs: number; holdMs: number };
 
