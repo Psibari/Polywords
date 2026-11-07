@@ -518,8 +518,8 @@ four sounds are `breachGateCrack`, `breachCastleRumble`, `breachSmash` and `brea
   straight-up jump, then embarrassed.
 - **Smash (zero or one clue):** the plaque breaks through. Broken gate art, splinters, dust, two
   lightning bolts (each with a 0.5 screen flash), thunder, a 13 pt shake for 950 ms, and gold hit big1
-  (white wash peak 0.6). Sounds: smash, rumble and thunder. Polly: her fury move (yell, crouch,
-  launch, blown up and back, shaking in mid-air, fall, angry landing).
+  (white wash peak 0.6). Sounds: smash, rumble and thunder. Polly: her fury move (since
+  2026-11-06 she is blown off the screen and flies back; see the 2026-11-06 night section).
 - **A winning round** plays the tier move first, then today's win (shocked, startled sound, bubble,
   angry fly-off).
 - **First lost life:** Polly's dance (laugh, hop, hover pointing with the butter-knife line, land
@@ -584,7 +584,7 @@ tree is CRLF (270e553, commit message "tieer"). The breach is covered by `dailyB
   press) have no on/off switch like Polly's. They could freeze mid-effect if a clock is stopped
   mid-run. Not verified.
 - The idle cost of the effect views mounted with the stage is not measured.
-- A win on one or two clues takes about 6 s to reach Results: Polly's move and hold (2823 / 2870 ms),
+- A win on one or two clues takes about 6 s to reach Results: Polly's move and hold (2823 / 2960 ms),
   then the win bubble (2.72 s) and fly-out (0.5 s). Accepted.
 - On a 375x667 phone the plaque misses the hole by about 22 pt. Pete does not care.
 - The dance's hop wing overlaps clue plank 3. Pete accepted.
@@ -647,7 +647,7 @@ All six commits are pushed to origin. Details of every number are in `CLAUDE.md`
 - **Onboarding device test:** Pete said on 2026-11-06 that he device-tested onboarding; the result was never written down.
   The 2026-11-04 Daily entry card is still recorded above as not device-tested; ask Pete.
 
-### Open as of 2026-11-06 (replaces the NEXT SESSION list above where they differ)
+### Open as of 2026-11-06 afternoon (superseded by the end-of-session list below)
 
 1. `assets/audio/LICENSES.md`: the Freesound licence for `armor_flip_turn.mp3` (Pete has it), and source pages/licences for
    `wrong_slap.mp3` and `book_shut_door_slam.mp3` (entries exist and say unverified).
@@ -658,3 +658,43 @@ All six commits are pushed to origin. Details of every number are in `CLAUDE.md`
 5. 10-round test pass, Polly's "Trap. Trap. Trap." chant home, TestFlight splash build, build-size warning, and the dev buttons
    (BOSS, BOSS CRISIS, FALL 3, ARMOR STEP, REPLAY LESSONS) to remove only when Pete says.
 6. Not done: the trap-reject tiers are identical; the `[BOOKCLOSE]` and `[TRAPCUE]` diagnostics were one-offs and are removed.
+
+## 2026-11-06 (night): licences, tag strip, chant, Daily clue-1 blast-off
+
+Branch `play-screen-overhaul`. Pushed by Pete: `4a4cfda` (armor flip MP3 tag strip), `4be65d9` and `9105af0` (licence
+sources). Committed, NOT pushed (Pete pushes): `74db273` (blast-off) and `ad27b36` (chant). Details are in `CLAUDE.md`.
+
+- **Licences:** `assets/audio/LICENSES.md` now records the Pixabay source pages for the wrong-swipe slap (48025), the door slam
+  (172171) and the armor page flip (47177, credited qubodup / Freesound). Licence summaries were not checked. Pete will bring the
+  Freesound link for the page flip.
+- **Armor MP3 tag:** the hidden C2PA tag was stripped from `armor_flip_turn.mp3` and `armor_flip_chime.mp3` without re-encoding.
+- **`#FFD700` closed:** `splitBorderColor` (`SwipeMask.tsx` about line 162) is declared and never used, and the `hiddenPhrase`
+  state (about line 1218) is never set anywhere. Pete said to leave it; nothing changed.
+- **Daily in-play lessons: none.** Pete decided the entry card is enough (the Hunt's first-word pauses are already a lot).
+- **Chant:** a lost Returning Haunt now says "Trap. Trap. Trap." (new line `huntHauntChant`, only `HAUNT_FAILED_LAUGH`).
+  Pete had not seen it on a phone when it was committed at his word; a Returning Haunt has to come up first.
+- **Clue-1 blast-off:** on a one-clue win Polly is blown up and back off the top-left, tumbling, gone a beat, then flies back in on
+  `fly` and lands. 2960 ms move (was 2870). Pete watched it on the phone, first at 520 ms (a blur, "hit by lightning"), then at
+  1000 ms: "perfect". Clue 2 is unchanged (a straight-up jump). The recordings Pete sent (C1, C2 in Downloads) showed the old
+  clue-1 move rose only 30 pt higher than the clue-2 jump (apex -120 against -90) and landed on the same perch, which is why
+  it did not read as "blown away".
+- **Sandbox limits worth knowing:** the Cowork sandbox cannot run `tsx` from the repo (`node_modules` has the Windows esbuild), so
+  Claude ran the touched tests from a temp copy; `tsc` was clean. `dailyDevControls.test.mjs` could not run there. Pete should run
+  `npm test` on the PC. Git in the sandbox leaves lock files unless deletion is approved; stale `.git/stale-*.lock` files are
+  harmless leftovers and can be deleted.
+
+### Open as of the end of 2026-11-06
+
+1. Push `74db273` and `ad27b36`. Run `npm test` on the PC.
+2. Device-check the chant: lose a Returning Haunt and see how the bubble reads next to the STILL card.
+3. **Daily entry card tease line (not written).** Pete wants to write it together. Angle: the faster the player solves, the more
+   it throws Polly (clue 1 she is blown away, clue 2 she is startled); it is her challenge, so the game dares the player to
+   rattle her. Game voice, third person, never claiming the clues get easier; one line at 19 pt in the 326 pt column, so measure
+   before building; probably the last rules line in `app/ui/dailyEntryCopy.ts`. Change the copy only on Pete's word.
+4. The Freesound link for the page flip (Pete) so `LICENSES.md` can carry the original licence.
+5. The GitHub "Claude" app asked for repository-creation permission. Pete has not accepted; the recommendation was to leave it.
+6. Carried over: the 10-round test pass, the TestFlight splash build (costs monthly allowance), the build-size warning, the dev
+   buttons (BOSS, BOSS CRISIS, FALL 3, ARMOR STEP, REPLAY LESSONS; remove only when Pete says), the 8 parked Daily words (Pete's
+   review), the trap-reject tiers still being identical (accepted), launch work (privacy URLs, crash reporting, store listing,
+   Android testing), the friends beta (about Monday or Tuesday), and the recorded device-test result for the Daily entry card
+   and onboarding, which was never written down (ask Pete).

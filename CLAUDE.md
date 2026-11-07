@@ -149,7 +149,7 @@ Freesound page-flip riffle, +8.5 dB applied to reach -14.8 LUFS, peak -0.3 dBFS,
 volume 0.58) fires at the same instant. The riffle runs 20-360 ms and covers the 340 ms turn; the
 chime only reads from about 340 ms and so lands as the slab settles. The chime is the SHINE, the
 riffle is the TURN. Before this the flip was silent and Pete heard the sound arrive after the slab
-had already landed. Licence for the riffle is NOT yet recorded in `LICENSES.md`.
+had already landed. The riffle's source is recorded in `LICENSES.md` (2026-11-06: Pixabay file 47177, credited qubodup / Freesound; its licence summary was not checked).
 `warmArmorFlipSfx()` preloads both. HUNTED vs streak: `resolveLiveHuntControl` shows HUNTED only
 when `lives <= 1 && readTier === 'steady'`; from SHARP up the streak tier shows, and the wall, glow and
 shake follow the same resolver. FLASHES: tier-up and FELL OFF flash the WORD (white `Animated.Text`
@@ -373,7 +373,8 @@ MASTER'S REMATCH outcomes are device-approved and use the shared
 (trimmed to 2.3 s). All Pixabay Content License; see `assets/audio/LICENSES.md` (source page URLs
 not recorded). Volumes in `sfx.ts` are first-guess values that Pete approved by ear on 2026-10-30.
 Files copied through the device tool get an ID3 block (MP3) or a `caBX` chunk (PNG) injected:
-strip it before committing.
+strip it before committing. The two armor flip MP3s carried such a tag (a C2PA/GEOB frame) and were stripped
+losslessly in `4a4cfda` (`ffmpeg -c copy -map_metadata -1 -write_id3v2 0`; decoded MD5 identical).
 
 ## Polybook
 
@@ -547,7 +548,23 @@ The castle gold hit is NOT graded by clue count (2026-11-04). A graded version w
 `DailyCastleStage`); Pete found no readable difference on device and it was removed, so
 `dailyGoldHitKeyframes(calm)` takes one argument again. The clue-count grading of the CLAIM HAPTIC
 stays (`resolveDailyCelebrationGrade` / `dailyCelebrationHaptic` in `dailyClaimPresentation.ts`).
-The payoff for solving early is the unbuilt breach sequence, not lighting.
+The payoff for solving early is the breach (see "THE BREACH" in `CONTEXT.md`), not lighting.
+
+Polly's one-clue blast-off (2026-11-06, `74db273`, Pete on device: "perfect"). On a smash (zero or one clue) she is
+no longer hopped back onto the perch: she is blown off the screen and flies back. `smashTimeline()` in
+`app/ui/pollyDailyBreach.ts`: yell 130, crouch 130, launch 120, the blast 1000 ms (`jumpAngry`; y ease-out quad,
+x ease-in quad so she goes up before she sweeps back, rotation linear to -540 deg, ending at
+`POLLY_BLOWN_AWAY.exit` (-240, -800)), gone 300, flight back 650 on `fly` from `returnFrom` (-60, -800) with the
+arrival's ease, landing bounce 130 in `angry`, then a 500 ms hold. The move is 2960 ms (segments and hold in
+`dailyBreach.ts`: `DAILY_BREACH_POLLY_SMASH_MOVE_SEGMENTS_MS`, `_HOLD_MS`); `dailyBreachPollyMoveEndMs` still delays
+the win beat by it. All numbers are TEST VALUES. The first build (blast 520 ms, ease-out cubic) was a blur because
+she was off a typical phone in about 200 ms; keep her on screen for about half a second of the tumble. The exit
+distances assume the perch sits about 55% down a phone; a screen taller than about 930 pt would need larger values.
+The two lightning bolts fire at about contact +110 / +190 ms, so they land while she tumbles; Pete likes that she
+looks struck. NO new sound: the throw already plays `playPollyReaction('angry')` and the contact (380 ms)
+`playPollyReaction('startled')`, both random picks (Pete heard the pair and likes it). Reduce Motion has no tier
+move. `POLLY_FURY` was renamed `POLLY_BLOWN_AWAY`; the old apex, mid-air shake and fall are gone. Rotation past
+360 deg works on the perch (its interpolation extends).
 
 ## Text sizes
 
@@ -601,9 +618,9 @@ Pete, 2026-10-29: nothing below ~18 for copy.
   in the same timer callback. A new card cancels the pending slam and thump, so only the last cover close
   sounds; it plays with Reduce Motion on; the timer is cleared on unmount. The word-exit slam (`onWordExit`, with
   `bookShut` replacing the old `selectionAsync`) and the Haunt-rematch book shut still call `bookClose`; on the
-  last card of a word Pete hears one slam and likes it, so leave that alone. Licence terms and source pages for
+  last card of a word Pete hears one slam and likes it, so leave that alone. Source pages for
   `wrong_slap.mp3` (freesound_community, id 48025) and `book_shut_door_slam.mp3` (soundreality, id 172171) are
-  NOT verified; `assets/audio/LICENSES.md` says so.
+  recorded in `assets/audio/LICENSES.md` (2026-11-06); their licence summaries were not checked.
 - Outcome strength follows the ROUND (`step.hapticTier` from the pacing phase in
   `huntGenerator.ts`), not momentum, by design (Pete, 2026-10-11). Light rounds 1-4; medium 5-7
   standard / 5-6 fledgling; heavy 8-10 / 7-8; a Returning Haunt round is heavy and the round after
@@ -691,7 +708,10 @@ Pete, 2026-10-29: nothing below ~18 for copy.
   check compares against.
 - Hunt visits: she flies in on `fly` (she cannot know who wins), except the Returning Haunt gloat,
   which flies in on `hauntTaunt`. Only the exit shows the result: mastery exits `flyAngry`; the
-  Haunted gloat exits `flyGrin` but holds the perch, so that exit is rarely seen. Boss entry
+  Haunted gloat exits `flyGrin` but holds the perch, so that exit is rarely seen. A lost Returning Haunt fires `hauntMasterFailed` (the silent gloat) and 400 ms
+  later `hauntFailed`, whose `HAUNT_FAILED_LAUGH` visit hard-cuts the gloat; its bubble is `huntHauntChant`
+  ("Trap. Trap. Trap.", 2026-11-06, `ad27b36`; committed before Pete saw it on device) with the
+  `pollySqwawkLaugh` squawk. `huntLaugh` still serves the game-over laugh. Boss entry
   perches `point` (perchScale 1.05); mastery `angryYell`; Haunted gloat `hauntTaunt` (perchScale
   1.24); streak x10 `embarrassed`; two one-feather lines `laugh03`; laugh visits `bigLaugh`. Exit
   arc: +0.6 × screen width, -(screen height + 80), tilt -1 (nose-up), scale 0.86, `FLY_OUT_MS`
