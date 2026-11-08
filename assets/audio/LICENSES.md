@@ -135,9 +135,26 @@ heard any of them; Pete chose them by ear.
   commercial use was found, and no explicit permission either. Adobe's current sound-effect page allows
   commercial use of the commercially released version if Adobe's guidelines are followed. Adobe's sound effects
   were in beta until 2026-08-20 (not re-checked), so this clip may predate the released version.
-  OPEN (only these remain): whether Firefly showed an in-product notice on 2026-06-29 that sound effects were
-  beta or not for commercial use (Claude cannot see that now); Adobe's written answer, if Pete asks for one;
-  Pete's dated screenshots of the Firefly history entry and of sections 1, 3 and 8.
+  UPDATE 2026-11-08 (later): Pete's screenshots of Firefly Generation history show the entry "funny cartoon parrot
+  laughing 720494 5w6": Audio, 1.5 MB, 8 s, created Jun 29, 2026, 11:04 PM, prompt "funny cartoon parrot laughing".
+  No beta or commercial notice appears in that panel; the Legal notices box only links Terms of Use, Privacy,
+  Cookie preferences. The page shows an Upgrade button (consistent with the free plan). Pete found nothing about
+  licensing or ownership in the account or plan pages; they say paid plans give more generation credits.
+  Claude re-read the Generative AI Product Specific Terms the same day through a page summary: Section 1 Output
+  is "your Content"; no explicit commercial-use grant or ban; no beta wording; sound effects not named, audio only
+  as an output type. Section 8 indemnity applies only to Creative Cloud for teams / enterprise customers with a
+  Pro Plus or Edition 4 plan with Firefly Output indemnification, so Pete's free plan is NOT covered (US$10,000 cap
+  anyway). Section 3.1 forbids removing or altering watermarks or Content Credentials; the game's clip is a
+  copy of the audio samples and the C2PA data lives in the original WAV only. Whether that is a problem is
+  NOT decided.
+  STILL OPEN: whether Firefly showed an in-product notice on 2026-06-29 (not visible in the history panel);
+  Adobe's written answer, if Pete asks; a lawyer's view if he wants certainty. RISK SUMMARY: Adobe's terms give
+  no commercial-use ban and no indemnity for him; the practical fallback is to replace the laugh with a
+  clearly licensed one before public launch.
+  LINEAGE NOTE (2026-11-08): the Higgsfield-made Polly sounds (pollyAngry1-6, pollyStartled1-4,
+  pollyEmbarrassedExit, pollyLaughChamp, pollyLaughBurst8) used `pollySqwawkLaugh.wav` as one of two audio
+  references, so replacing the laugh alone does not remove Adobe's clip from their lineage. Whether a
+  reference clip matters for ownership of the output is NOT decided.
 
 ## Sound effects added 2026-11-02
 
