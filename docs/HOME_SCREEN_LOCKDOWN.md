@@ -64,8 +64,8 @@ The text below is deliberately self-contained so the direction survives missing 
 - Window remains the window on the far wall. It is the Daily destination route.
 - Resting menu order, top to bottom: ENTER THE HUNT / DAILY CHALLENGE / POLYBOOK.
 - Settings must remain available; exact placement is flexible and not yet selected.
-- Moon faces are part of the intended finished Home, but are explicitly deferred until the
-  main layout, art, and movement are right.
+- Moon faces were DROPPED (Pete, 2026-11-08). The moon is a plain real-phase moon with no
+  face; see the 2026-11-08 rulings at the end of this file.
 
 ## 2. Locked app-opening sequence
 
@@ -167,7 +167,7 @@ to be approved. Do not derive a final palette from the rough mockups.
 
 Polly's approved identity/proportions and existing usable art remain protected.
 The window outline and moon shown in the mockups are placement cues, not finished assets.
-Moon expressions come last.
+Moon expressions: dropped 2026-11-08 (no moon faces).
 
 ## 9. Production preparation (technical plan, not final asset approval)
 
@@ -242,8 +242,9 @@ Next three actions:
    also establish Daily and Polybook transition endpoints.
 3. Finish matching artwork, integrate the transitions, and verify the checklist with Pete.
 
-Do not polish moon faces, add new Polly animation systems, redesign other screens, or change
-gameplay during this Home task. Do not spend on final art before the moving geometry works.
+Moon faces are dropped (2026-11-08). Do not add new Polly animation systems, redesign other
+screens, or change gameplay during this Home task. Do not spend on final art before the moving
+geometry works.
 
 For every future session:
 1. Read AGENTS.md, CLAUDE.md, CONTEXT.md, this document, and DESIGN.md.
@@ -468,3 +469,7 @@ closely; nothing here is Claude's invention.
 4. Dive sounds (Pixabay, Content License): Epic Swoosh Boom on the Hunt and Daily dives, Whoosh Super Cape on the Polybook rise, a book thud when the book lands, and the stone slide (`terraceStoneShift`) when the buttons retreat. Pete removed the terrace button press sound. Pete: "everything seems all right on that front".
 5. The Daily streak is OFF the moon and off Home. It shows on the Daily's HUD as "STREAK n" above "DAILY #n" (Pete's choice of three layouts), hidden at 0. It counts consecutive days the Daily was finished, win or lose (counts at finish, not at open; Pete accepted). DAILY #n is the puzzle's calendar number, the same for every player. The line is hidden on phones where it would cover the first clue (`dailyStreakLineFits`; only the 375x667 phone today). Streak milestones (7, 14, 30, 50, 100) currently add only a label; the Gold Feather is the one a win already gives.
 6. Idea only, not decided: after a LOSS, allow a retry of the Daily after a wait. Open problems: same puzzle on retry, and what a retry-win would grant. Pete: parked.
+
+## Pete rulings, 2026-11-08
+
+1. Moon faces are DROPPED. The moon is the plain real-phase moon that rises on app open, with no eyes or face. This supersedes every earlier moon face, eyes and expression idea in this file, including item 10 of the 2026-10-13 rulings (the not-played / lost / won moon states). Win and loss at a glance already show on the Daily plaque: gold while the Daily is unplayed or a Gold Feather is ready, gray once played with none.

@@ -283,8 +283,9 @@ Do not start an SDK 58 migration, new progression systems, more Daily content, a
 
 - **Home scope boundary (updated 2026-10-21):** the outdoor terrace is the real Home; follow
   `docs/HOME_SCREEN_LOCKDOWN.md`. The approved menu label is POLYBOOK. Do not perform an unrelated
-  cosmetic pass, and do not build movement Pete has not described. Moon faces
-  and new Polly animation systems remain deferred while the room/console geometry is established.
+  cosmetic pass, and do not build movement Pete has not described. New Polly animation systems
+  remain deferred while the room/console geometry is established. Moon faces were dropped
+  (Pete, 2026-11-08).
 - New Polly art or WEBP restoration before the articulation inventory.
 - Production Home life-profile animation before the DEV Neutral proof.
 - Crown/Polybook progression, additional relationship states, or Polybook interior changes.
