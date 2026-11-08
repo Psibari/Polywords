@@ -207,3 +207,27 @@ POLYWORDS edits: the slap is trimmed as above; both files had their ID3 tag stri
   licence was not checked). Downloaded as `freesound_community-page-flip-47177.mp3`; the in-game file matches it
   (waveform correlation 0.995). POLYWORDS edit: +8.5 dB gain to reach about -14.8 LUFS, no compression. The
   hidden content-credentials tag was stripped on 2026-11-06 without re-encoding the audio.
+
+## Pixabay full Terms of Service read (2026-11-08)
+
+Claude read the full Pixabay Terms of Service (https://pixabay.com/service/terms/, "Last updated: 20 October,
+2026") on 2026-11-08, not just the licence summary. What section 5 says:
+- Non-CC0 content: irrevocable, worldwide, perpetual, non-exclusive, royalty-free right to download, use, copy,
+  modify and adapt, commercial or non-commercial. Section 6: no attribution required.
+- Prohibited: selling or distributing content on a "Standalone" basis (no creative effort applied, substantially
+  the same form as on Pixabay; filter, recolour, resize or crop is still Standalone). Combining with other media
+  into a new creative work is NOT Standalone. Also prohibited: immoral/illegal/political use, misleading use,
+  use as a trademark or business name.
+- Section 14: no warranty; Pixabay does not promise any third-party consent or licence was obtained. Section 11:
+  if a claim arises over a file, stop using it. Section 1: Pixabay may change the Terms and licences at any time.
+- Nothing in the Terms mentions apps or games by name.
+
+Open points (nothing here is a legal opinion):
+- The GitHub repo https://github.com/Psibari/Polywords appeared public on 2026-11-08. Pixabay audio sitting in a
+  public repo may count as distributing it. Unedited originals are the riskiest. Whether that matters has not
+  been decided; see CONTEXT.md.
+- Page URLs were never recorded for the early batches (see the notes above); one source is flagged AI generated
+  by Pixabay (section 7B puts the AI-terms responsibility on the uploader).
+- Sounds that Pixabay says came from Freesound (page-flip qubodup, metallic clang eben-frostey, face slap) were
+  not traced to their Freesound licences.
+- Save a dated copy (screenshot or print to PDF) of the Terms page before launch.
