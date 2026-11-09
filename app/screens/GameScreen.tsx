@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
-import { Animated, Easing, Image, Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { Animated, Easing, Image, PixelRatio, Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import UiIconButton from '../components/UiIconButton';
 import { HuntPauseMenu } from '../components/HuntPauseMenu';
 import { useFocusEffect } from '@react-navigation/native';
@@ -2094,6 +2094,7 @@ function GameDirector({ navigation }: { navigation: any }) {
           a11yHidden={hudLessonShowing || pauseVisible || exitConfirmVisible}
         />
       ) : null}
+      {__DEV__ && !isDone && <DevWindowReadout />}
       {__DEV__ && !isDone && !isBossRound && (
         <View pointerEvents="box-none" style={styles.devBossOverlay}>
           <Pressable
@@ -2224,6 +2225,18 @@ function GameDirector({ navigation }: { navigation: any }) {
       </Animated.View>
       </SafeAreaView>
     </View>
+  );
+}
+
+// DEV ONLY (Pete, 2026-11-09): the phone's real logical window, pixel ratio and font scale, so
+// the card-to-ledge layout can be checked against real values (Display Zoom changes the window).
+// Rendered only under __DEV__, bottom-left of the Hunt screen; never in a production build.
+function DevWindowReadout() {
+  const { width, height, fontScale } = useWindowDimensions();
+  return (
+    <Text allowFontScaling={false} pointerEvents="none" style={styles.devWindowReadout}>
+      {`${Math.round(width * 100) / 100} x ${Math.round(height * 100) / 100}  PR ${PixelRatio.get()}  font ${fontScale.toFixed(2)}`}
+    </Text>
   );
 }
 
@@ -2446,6 +2459,18 @@ const styles = StyleSheet.create({
     includeFontPadding: false,
     fontSize: 14,
     letterSpacing: 3,
+  },
+  devWindowReadout: {
+    position: 'absolute',
+    left: 10,
+    bottom: 8,
+    zIndex: 200,
+    paddingHorizontal: 6,
+    paddingVertical: 3,
+    borderRadius: 4,
+    backgroundColor: 'rgba(0,0,0,0.72)',
+    color: '#FFFFFF',
+    fontSize: 11,
   },
   devBossOverlay: {
     position: 'absolute',

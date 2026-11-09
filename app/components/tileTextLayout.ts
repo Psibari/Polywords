@@ -1,4 +1,5 @@
 import type { TextProps } from 'react-native';
+import { resolveLedgeOffset } from './bossGauntletLedge';
 
 export const ACTIVE_TILE_BASE_FONT_SIZE = 27;
 export const ACTIVE_TILE_MIN_FONT_SIZE = 22;
@@ -334,6 +335,87 @@ export function resolveBoardVerticalSpacing(
     gridPaddingTop: DEFAULT_GRID_PADDING_TOP - reclaimedTop,
     gridPaddingBottom: DEFAULT_GRID_PADDING_BOTTOM - reclaimedBottom,
   };
+}
+
+// ── Deck placed from the wall ledge (Pete, 2026-11-09) ──────────────────────
+// The deck is laid out from the TOP (above), but the wall's ledge sits a fixed
+// fraction of the screen WIDTH up from the screen BOTTOM. On taller windows the
+// ledge therefore dropped away below the deck. These functions push the deck
+// DOWN (never up) so the active card's bottom overlaps the ledge top by the
+// same amount as on Pete's phone (375x812, iPhone 11 with Display Zoom).
+
+// The active card sits this far below the deck's top edge: SwipeMask's
+// TILE_GAP (its outer marginTop). A test pins the two together.
+export const ACTIVE_CARD_TOP_GAP = 6;
+
+// TEST VALUE (Pete's baseline, 2026-11-09). Points by which the active card's
+// bottom overlaps the ledge top. At 375x812 today's layout computes to about
+// +8.6 (estimated top inset and HUD height); 8 keeps that window at today's
+// 110 / 48 exactly. Confirm on device with the DEV ledge readout.
+export const LEDGE_ANCHOR_CARD_OVERLAP = 8;
+
+// Where the ledge top lands inside the board's scroll viewport, measured from
+// the viewport's top. The viewport ends at the safe-area bottom (everything
+// under it in the board is absolutely positioned) and the wall is drawn at full
+// window width, bottom-anchored to the window, so only measured values are
+// needed: the viewport height, the window width and the bottom inset.
+export function resolveLedgeTopInBoardViewport(
+  viewportHeight: number,
+  windowWidth: number,
+  safeAreaBottom: number,
+): number | null {
+  if (
+    !Number.isFinite(viewportHeight) || viewportHeight <= 0 ||
+    !Number.isFinite(windowWidth) || windowWidth <= 0 ||
+    !Number.isFinite(safeAreaBottom) || safeAreaBottom < 0
+  ) {
+    return null;
+  }
+  return viewportHeight - (resolveLedgeOffset(windowWidth) - safeAreaBottom);
+}
+
+// Positive: the active card's bottom is below the ledge top (overlaps it).
+export function resolveCardLedgeOverlap(
+  deckTop: number,
+  activeCardHeight: number,
+  ledgeTopInViewport: number,
+): number {
+  return deckTop + ACTIVE_CARD_TOP_GAP + activeCardHeight - ledgeTopInViewport;
+}
+
+// Takes resolveBoardVerticalSpacing's result and pushes the deck down only
+// when its card would end above the baseline overlap. The space below shrinks
+// first (never under its 12 pt minimum) and the deck never moves so far that
+// the content outgrows the viewport, so the board never starts to scroll.
+// Short windows, where the card already overlaps by at least the baseline,
+// come back unchanged.
+export function resolveLedgeAnchoredBoardSpacing(
+  spacing: { gridPaddingTop: number; gridPaddingBottom: number },
+  viewportHeight: number,
+  ownedRegionHeight: number,
+  activeCardHeight: number,
+  ledgeTopInViewport: number | null,
+  cardOverlap = LEDGE_ANCHOR_CARD_OVERLAP,
+): { gridPaddingTop: number; gridPaddingBottom: number } {
+  if (
+    ledgeTopInViewport === null || !Number.isFinite(ledgeTopInViewport) ||
+    !Number.isFinite(viewportHeight) || viewportHeight <= 0 ||
+    !Number.isFinite(ownedRegionHeight) || ownedRegionHeight <= 0 ||
+    !Number.isFinite(activeCardHeight) || activeCardHeight <= 0
+  ) {
+    return spacing;
+  }
+  const overlap = resolveCardLedgeOverlap(spacing.gridPaddingTop, activeCardHeight, ledgeTopInViewport);
+  const push = cardOverlap - overlap;
+  if (!(push > 0)) return spacing;
+
+  const maxTop = viewportHeight - ownedRegionHeight - MIN_GRID_PADDING_BOTTOM;
+  const gridPaddingTop = Math.max(spacing.gridPaddingTop, Math.min(spacing.gridPaddingTop + push, maxTop));
+  const gridPaddingBottom = Math.max(
+    MIN_GRID_PADDING_BOTTOM,
+    Math.min(spacing.gridPaddingBottom, viewportHeight - ownedRegionHeight - gridPaddingTop),
+  );
+  return { gridPaddingTop, gridPaddingBottom };
 }
 
 // Extra room above the deck, taken from the space below it so the content

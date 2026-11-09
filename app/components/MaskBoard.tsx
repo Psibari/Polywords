@@ -67,8 +67,12 @@ import {
   resolveActiveCueLayout,
   resolveActiveTileHeight,
   resolveBoardVerticalSpacing,
+  resolveCardLedgeOverlap,
   resolveHeroBookArtBottom,
+  resolveLedgeAnchoredBoardSpacing,
+  resolveLedgeTopInBoardViewport,
 } from './tileTextLayout';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   shouldRenderDecisionStack,
   type HuntInputMode,
@@ -711,7 +715,10 @@ function getResolvedTileState(state: SwipeMaskState | undefined): ResolvedTileSt
 
 
 function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDecisionReady, onSwipeAttempt, inputMode = 'both', showDecisionCard = true, swipeCueMode = 'both', onboardingCaption = null, onboardingCaptionReserve = 0, onEntranceSettled, onDecisionCommitted, firePollyEvent, isBossStage, wrongSquawkCounter }: BoardPresenterProps) {
-  const { fontScale } = useWindowDimensions();
+  const { fontScale, width: windowWidth } = useWindowDimensions();
+  // Bottom inset: the board's scroll viewport ends at the safe-area bottom,
+  // which is how far above the window bottom (and the wall) it stops.
+  const { bottom: safeAreaBottom } = useSafeAreaInsets();
   // Only stepIndex is read here, so select it directly rather than the
   // whole store — this is the per-word presenter, remounted on every swipe
   // resolution, so a whole-store subscription re-rendered it on completely
@@ -2064,10 +2071,19 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
   const ownedGridRegionHeight = showSwipeCues
     ? activeCueLayout.ownedRegionHeight
     : activeTileHeight + 48;
-  const boardSpacing = applyBoardTopReserve(
-    resolveBoardVerticalSpacing(gridViewportHeight, ownedGridRegionHeight, 0),
-    onboardingCaptionReserve,
+  const baseBoardSpacing = resolveBoardVerticalSpacing(gridViewportHeight, ownedGridRegionHeight, 0);
+  // The deck is pushed down (never up) so its card meets the wall ledge as it
+  // does on Pete's phone; the caption reserve and caption band below read the
+  // same result.
+  const ledgeTopInGrid = resolveLedgeTopInBoardViewport(gridViewportHeight, windowWidth, safeAreaBottom);
+  const ledgeBoardSpacing = resolveLedgeAnchoredBoardSpacing(
+    baseBoardSpacing,
+    gridViewportHeight,
+    ownedGridRegionHeight,
+    activeTileHeight,
+    ledgeTopInGrid,
   );
+  const boardSpacing = applyBoardTopReserve(ledgeBoardSpacing, onboardingCaptionReserve);
   const gridHasVerticalOverflow = hasBoardVerticalOverflow(
     gridViewportHeight,
     gridContentHeight,
@@ -2516,6 +2532,15 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
         </View>
       </ScrollView>
 
+      {/* DEV ONLY (2026-11-09): card-to-ledge overlap with today's top-down
+          spacing, how far the ledge rule pushed the deck down, and the bottom
+          inset it used. On Pete's 375x812 the push must read 0. */}
+      {__DEV__ && ledgeTopInGrid !== null && (
+        <Text allowFontScaling={false} pointerEvents="none" style={styles.devLedgeReadout}>
+          {`ledge card ${resolveCardLedgeOverlap(baseBoardSpacing.gridPaddingTop, activeTileHeight, ledgeTopInGrid).toFixed(1)}  push ${(ledgeBoardSpacing.gridPaddingTop - baseBoardSpacing.gridPaddingTop).toFixed(1)}  inset ${safeAreaBottom}`}
+        </Text>
+      )}
+
       {/* Band from the bottom of the book art to the top of the grid content
           (the swipe-up cue, or the card when there is no cue). Absolute, so
           the deck never moves when a caption comes or goes. */}
@@ -2801,6 +2826,18 @@ export function MaskBoard(props: Props) {
 export { BoardPresenter };
 
 const styles = StyleSheet.create({
+  devLedgeReadout: {
+    position: 'absolute',
+    left: 10,
+    bottom: 30,
+    zIndex: 200,
+    paddingHorizontal: 6,
+    paddingVertical: 3,
+    borderRadius: 4,
+    backgroundColor: 'rgba(0,0,0,0.72)',
+    color: '#FFFFFF',
+    fontSize: 11,
+  },
   container: {
     flex: 1,
     paddingHorizontal: 14,
