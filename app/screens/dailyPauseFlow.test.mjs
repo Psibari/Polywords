@@ -25,7 +25,7 @@ for (const source of [card, copy]) {
 
 // Every word on the card comes from dailyPauseCopy.ts.
 assert.match(card, /from '\.\.\/ui\/dailyPauseCopy'/);
-const textChildren = [...card.matchAll(/<Text style=\{[^}]*\}+>([\s\S]*?)<\/Text>/g)].map(m => m[1]);
+const textChildren = [...card.matchAll(/<Text (?:allowFontScaling=\{false\} )?style=\{[^}]*\}+>([\s\S]*?)<\/Text>/g)].map(m => m[1]);
 assert.ok(textChildren.length >= 3, 'the card has its title, bubble and button labels');
 for (const child of textChildren) {
   assert.match(child, /^\{(DAILY_PAUSE_[A-Z_]+|label)\}$/, `card text must come from the copy file: ${child}`);

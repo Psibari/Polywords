@@ -79,7 +79,7 @@ function RecognitionLine({
 
   return (
     <Animated.View style={{ opacity }}>
-      <Text style={styles.recognitionLine}>{text}</Text>
+      <Text allowFontScaling={false} style={styles.recognitionLine}>{text}</Text>
     </Animated.View>
   );
 }
@@ -295,12 +295,12 @@ export function FirstRunHuntOnboarding({
           accessibilityLabel={copy.replace(/\n/g, ' ')}
           style={[styles.copyWrap, compact && styles.copyWrapCompact, { opacity }]}
         >
-          <Text style={[styles.copy, compact && styles.copyCompact]}>{copy}</Text>
+          <Text allowFontScaling={false} style={[styles.copy, compact && styles.copyCompact]}>{copy}</Text>
         </Animated.View>
       )}
       {handoffVisible && (
         <View accessible accessibilityLiveRegion="polite" style={styles.handoffWrap}>
-          <Text style={styles.handoffCopy}>
+          <Text allowFontScaling={false} style={styles.handoffCopy}>
             ONE WORD DOWN.{`\n`}THERE ARE A LOT MORE HIDING IN PLAIN SIGHT.
           </Text>
         </View>

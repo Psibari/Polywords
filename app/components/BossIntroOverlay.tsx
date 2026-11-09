@@ -44,13 +44,13 @@ export function BossIntroOverlay({ onDismiss }: Props) {
   return (
     <Animated.View style={[bo.root, { opacity }]}>
       <View style={bo.card}>
-        <Text style={bo.kicker}>BOSS ROUND</Text>
-        <Text style={bo.headline}>POLLY'S WORD</Text>
-        <Text style={bo.body}>
+        <Text allowFontScaling={false} style={bo.kicker}>BOSS ROUND</Text>
+        <Text allowFontScaling={false} style={bo.headline}>POLLY'S WORD</Text>
+        <Text allowFontScaling={false} style={bo.body}>
           Clear the board and Polly reveals three sealed tiles. Judge each
           one with the same UP or RIGHT rule.
         </Text>
-        <Text style={bo.stakes}>
+        <Text allowFontScaling={false} style={bo.stakes}>
           All three correct: MASTERED. One wrong: HAUNTED.
         </Text>
 
@@ -60,7 +60,7 @@ export function BossIntroOverlay({ onDismiss }: Props) {
           onPress={handleBegin}
           style={({ pressed }) => [bo.beginBtn, pressed && bo.beginPressed]}
         >
-          <Text style={bo.beginLabel}>FACE THE BOSS</Text>
+          <Text allowFontScaling={false} style={bo.beginLabel}>FACE THE BOSS</Text>
         </Pressable>
       </View>
     </Animated.View>

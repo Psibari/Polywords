@@ -829,7 +829,7 @@ export function SwipeMask({
             accessibilityState={{ disabled: !revealable }}
           >
             <FluentEmoji emoji="❓" size={32} />
-            <Text style={styles.hiddenPhrase} numberOfLines={2}>
+            <Text allowFontScaling={false} style={styles.hiddenPhrase} numberOfLines={2}>
               Hidden meaning
             </Text>
           </Pressable>
@@ -961,13 +961,13 @@ export function SwipeMask({
           )}
           {/* Checkmark */}
           {s === 'correct' && (
-            <Text style={isSpecialSplit ? styles.splitCheckmark : styles.checkmark}>
+            <Text allowFontScaling={false} style={isSpecialSplit ? styles.splitCheckmark : styles.checkmark}>
               ✓
             </Text>
           )}
           {/* Wrong-swipe caption — why, not just that */}
           {wrongCaption && (
-            <Text style={styles.wrongCaption}>{wrongCaption}</Text>
+            <Text allowFontScaling={false} style={styles.wrongCaption}>{wrongCaption}</Text>
           )}
           {/* Phrase text */}
           <View
@@ -983,6 +983,7 @@ export function SwipeMask({
             pointerEvents="none"
           >
             <Text
+              allowFontScaling={false}
               style={[
                 isSpecialSplit ? styles.splitPhrase : styles.phrase,
                 isSpecialSplit && { color: splitTextColor },
@@ -1010,7 +1011,7 @@ export function SwipeMask({
                   transform: [{ translateY: eraBadgeTransY }] },
               ]}
             >
-              <Text style={styles.eraBadgeText}>{eraBadge}</Text>
+              <Text allowFontScaling={false} style={styles.eraBadgeText}>{eraBadge}</Text>
             </RNAnimated.View>
           )}
         </Animated.View>

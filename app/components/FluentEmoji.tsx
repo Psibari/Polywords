@@ -106,7 +106,7 @@ export function FluentEmoji({ emoji, size = 32 }: Props) {
 
   if (!path || failed) {
     return (
-      <Text style={{ fontSize: size * 0.82, lineHeight: size, textAlign: 'center' }}>
+      <Text allowFontScaling={false} style={{ fontSize: size * 0.82, lineHeight: size, textAlign: 'center' }}>
         {emoji}
       </Text>
     );

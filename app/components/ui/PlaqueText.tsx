@@ -48,6 +48,7 @@ export default function PlaqueText({
       accessibilityLabel={accessibilityLabel ?? text}
     >
       <Text
+        allowFontScaling={false}
         numberOfLines={numberOfLines}
         adjustsFontSizeToFit={adjustsFontSizeToFit}
         minimumFontScale={minimumFontScale}

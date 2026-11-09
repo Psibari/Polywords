@@ -98,8 +98,8 @@ function LedgerRow({ result, bossMastered }: { result: WordResult; bossMastered:
 
   return (
     <View style={lr.row}>
-      <Text style={lr.word}>{result.word.toUpperCase()}</Text>
-      <Text style={[lr.result, { color: resultColor }]}>{resultText}</Text>
+      <Text allowFontScaling={false} style={lr.word}>{result.word.toUpperCase()}</Text>
+      <Text allowFontScaling={false} style={[lr.result, { color: resultColor }]}>{resultText}</Text>
     </View>
   );
 }
@@ -147,7 +147,7 @@ function StartNewHuntButton({ onPress }: { onPress: () => void }) {
           style={({ pressed }) => [btn.shell, pressed && btn.pressed]}
         >
           <LinearGradient colors={homePlateMaterial.huntFace} style={btn.face}>
-            <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.55} style={btn.label}>
+            <Text allowFontScaling={false} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.55} style={btn.label}>
               {RESULTS_RESTART_LABEL}
             </Text>
           </LinearGradient>
@@ -196,7 +196,7 @@ function ResultsQuietRow({ onShare, onHome }: { onShare: () => void; onHome: () 
         style={({ pressed }) => [qp.shell, pressed && qp.pressed]}
       >
         <LinearGradient colors={homePlateMaterial.quietFace} style={qp.face}>
-          <Text style={qp.label}>SHARE RESULT</Text>
+          <Text allowFontScaling={false} style={qp.label}>SHARE RESULT</Text>
         </LinearGradient>
       </Pressable>
       <Pressable
@@ -206,7 +206,7 @@ function ResultsQuietRow({ onShare, onHome }: { onShare: () => void; onHome: () 
         style={({ pressed }) => [qp.shell, pressed && qp.pressed]}
       >
         <LinearGradient colors={homePlateMaterial.quietFace} style={qp.face}>
-          <Text style={qp.label}>HOME</Text>
+          <Text allowFontScaling={false} style={qp.label}>HOME</Text>
         </LinearGradient>
       </Pressable>
     </View>
@@ -244,8 +244,8 @@ function GoldFeatherButton({ onPress, disabled }: { onPress: () => void; disable
     >
       <Image source={GOLD_FEATHER_IMG} style={gf.feather} resizeMode="contain" />
       <View style={gf.copyBlock}>
-        <Text style={gf.title}>USE GOLD FEATHER</Text>
-        <Text style={gf.copy}>Free life. Run the Hunt back now.</Text>
+        <Text allowFontScaling={false} style={gf.title}>USE GOLD FEATHER</Text>
+        <Text allowFontScaling={false} style={gf.copy}>Free life. Run the Hunt back now.</Text>
       </View>
     </Pressable>
   );
@@ -549,8 +549,8 @@ export default function ResultsScreen({ onRestart, onHome, devPreviewOutcome }: 
               baseStyle={rs.verdict}
             />
           </View>
-          {verdictSub && <Text style={rs.verdictSub}>{verdictSub}</Text>}
-          {flawlessWin && <Text style={rs.flawlessTag}>FLAWLESS</Text>}
+          {verdictSub && <Text allowFontScaling={false} style={rs.verdictSub}>{verdictSub}</Text>}
+          {flawlessWin && <Text allowFontScaling={false} style={rs.flawlessTag}>FLAWLESS</Text>}
         </Animated.View>
       </View>
 
@@ -572,8 +572,8 @@ export default function ResultsScreen({ onRestart, onHome, devPreviewOutcome }: 
             <ResultsConsequencePanel consequences={consequences} onOpenJournal={handleOpenJournal} />
 
             <View style={rs.recapHeader}>
-              <Text style={rs.recapTitle}>HUNT RECAP</Text>
-              <Text style={rs.perfectLine}>
+              <Text allowFontScaling={false} style={rs.recapTitle}>HUNT RECAP</Text>
+              <Text allowFontScaling={false} style={rs.perfectLine}>
                 {perfectCount}/{wordOnlyResults.length} perfect  ·  best chain {displayBestCombo}
               </Text>
             </View>

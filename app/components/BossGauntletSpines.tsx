@@ -926,8 +926,8 @@ export function BossGauntletSpines({
         accessible
         accessibilityLabel={`Choose a seal. ${correctCount} of ${gauntletTiles.length} correct.`}
       >
-        <Text style={styles.instruction}>CHOOSE A SEAL</Text>
-        <Text style={styles.progress}>{correctCount}/{gauntletTiles.length}</Text>
+        <Text allowFontScaling={false} style={styles.instruction}>CHOOSE A SEAL</Text>
+        <Text allowFontScaling={false} style={styles.progress}>{correctCount}/{gauntletTiles.length}</Text>
       </Animated.View>
     </View>
   );

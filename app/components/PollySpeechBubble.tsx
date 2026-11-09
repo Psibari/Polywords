@@ -38,6 +38,7 @@ export function PollySpeechBubble({
         tone === 'loss' && styles.bubbleLoss,
       ]}>
         <Text
+          allowFontScaling={false}
           accessibilityLiveRegion="polite"
           style={[styles.text, { fontSize, lineHeight }, tone === 'loss' && styles.textLoss]}
         >

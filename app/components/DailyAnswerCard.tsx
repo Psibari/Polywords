@@ -736,6 +736,7 @@ export function DailyCastlePlaqueFace({
       {/* The label is centred on the flush face. */}
       <View pointerEvents="none" style={styles.castlePlaqueFront}>
         <Text
+          allowFontScaling={false}
           style={[styles.castlePlaqueLabel, { fontSize }]}
           numberOfLines={1}
           adjustsFontSizeToFit

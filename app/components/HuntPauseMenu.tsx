@@ -33,6 +33,7 @@ function PauseAction({ label, accessibilityLabel, tone, onPress }: ActionProps) 
       ]}
     >
       <Text
+        allowFontScaling={false}
         style={[
           styles.actionLabel,
           tone === 'primary' && styles.actionLabelPrimary,
@@ -80,8 +81,8 @@ export function HuntPauseMenu({ onResume, onHome, onSettings, onQuit }: Props) {
     >
       <Animated.View style={[styles.panel, { transform: [{ scale }] }]}>
         <View style={styles.titleRule} />
-        <Text style={styles.title}>HUNT PAUSED</Text>
-        <Text style={styles.subtitle}>Your run is waiting.</Text>
+        <Text allowFontScaling={false} style={styles.title}>HUNT PAUSED</Text>
+        <Text allowFontScaling={false} style={styles.subtitle}>Your run is waiting.</Text>
 
         <View style={styles.actions}>
           <PauseAction

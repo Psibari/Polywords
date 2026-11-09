@@ -250,9 +250,9 @@ function DailyHUD({
   return (
     <View style={hud.plate}>
       {streak > 0 ? (
-        <Text style={hud.streak} accessibilityLabel={`Streak ${streak} days`}>{`STREAK ${streak}`}</Text>
+        <Text allowFontScaling={false} style={hud.streak} accessibilityLabel={`Streak ${streak} days`}>{`STREAK ${streak}`}</Text>
       ) : null}
-      <Text style={hud.label}>{`DAILY #${challengeNumber}`}</Text>
+      <Text allowFontScaling={false} style={hud.label}>{`DAILY #${challengeNumber}`}</Text>
       <Animated.View style={[hud.feathers, featherPulse && {
         backgroundColor: featherPulse.interpolate({
           inputRange: [0, 0.5, 1],
@@ -312,9 +312,9 @@ function ResultsOverlay({
         showsVerticalScrollIndicator={false}
       >
         <View style={[res.card, isWin ? res.cardWin : res.cardLoss]}>
-        <Text style={res.challenge}>{`DAILY #${dailyResult.challengeNumber}`}</Text>
+        <Text allowFontScaling={false} style={res.challenge}>{`DAILY #${dailyResult.challengeNumber}`}</Text>
 
-        <Text style={[res.title, { color: isWin ? dailyResultsMaterial.titleWin : dailyResultsMaterial.titleLoss }]}>
+        <Text allowFontScaling={false} style={[res.title, { color: isWin ? dailyResultsMaterial.titleWin : dailyResultsMaterial.titleLoss }]}>
           {isWin ? DAILY_WIN_TITLE : DAILY_LOSS_TITLE}
         </Text>
 
@@ -325,7 +325,7 @@ function ResultsOverlay({
               style={styles.featherImage}
               resizeMode="contain"
             />
-            <Text style={styles.featherLabel}>
+            <Text allowFontScaling={false} style={styles.featherLabel}>
               {streakMilestoneReward
                 ? getStreakMilestoneRewardLabel(streakMilestoneReward)
                 : DAILY_WIN_REWARD}
@@ -336,17 +336,17 @@ function ResultsOverlay({
         {(() => {
           if (isWin) {
             return (
-              <Text style={res.stat}>
+              <Text allowFontScaling={false} style={res.stat}>
                 {`${dailyResult.solvedCount}/${DAILY_ROUND_COUNT} words - ${dailyResult.chancesRemaining} lives left`.toUpperCase()}
               </Text>
             );
           }
           const missedIndex = dailyResult.wordResults.findIndex(r => r.status === 'missed');
           const roundLabel = missedIndex >= 0 ? missedIndex + 1 : DAILY_ROUND_COUNT;
-          return <Text style={res.stat}>{`POLYTRAPS GOT YOU ON ROUND ${roundLabel}`.toUpperCase()}</Text>;
+          return <Text allowFontScaling={false} style={res.stat}>{`POLYTRAPS GOT YOU ON ROUND ${roundLabel}`.toUpperCase()}</Text>;
         })()}
 
-        <Text style={res.speedTitle}>CLUE SPEED</Text>
+        <Text allowFontScaling={false} style={res.speedTitle}>CLUE SPEED</Text>
         <View style={res.speedGrid}>
           {dailyResult.wordResults.map((result, i) => {
             const cluesUsed = (result as { cluesUsed?: number }).cluesUsed;
@@ -384,7 +384,7 @@ function ResultsOverlay({
                 accessibilityLabel={`Round ${i + 1}, ${outcome}`}
                 style={[res.speedCell, cellStyle]}
               >
-                {isUnknown && <Text style={res.speedUnknownMark}>–</Text>}
+                {isUnknown && <Text allowFontScaling={false} style={res.speedUnknownMark}>–</Text>}
               </View>
             );
           })}
@@ -393,19 +393,19 @@ function ResultsOverlay({
         <View style={res.speedLegend}>
           <View style={res.speedLegendItem}>
             <View style={[res.speedLegendSwatch, res.speedClue1]} />
-            <Text style={res.speedLegendText}>1 CLUE</Text>
+            <Text allowFontScaling={false} style={res.speedLegendText}>1 CLUE</Text>
           </View>
           <View style={res.speedLegendItem}>
             <View style={[res.speedLegendSwatch, res.speedClue2]} />
-            <Text style={res.speedLegendText}>2 CLUES</Text>
+            <Text allowFontScaling={false} style={res.speedLegendText}>2 CLUES</Text>
           </View>
           <View style={res.speedLegendItem}>
             <View style={[res.speedLegendSwatch, res.speedClue3]} />
-            <Text style={res.speedLegendText}>3 CLUES</Text>
+            <Text allowFontScaling={false} style={res.speedLegendText}>3 CLUES</Text>
           </View>
           <View style={res.speedLegendItem}>
             <View style={[res.speedLegendSwatch, res.speedMissed]} />
-            <Text style={res.speedLegendText}>MISSED</Text>
+            <Text allowFontScaling={false} style={res.speedLegendText}>MISSED</Text>
           </View>
         </View>
 
@@ -425,7 +425,7 @@ function ResultsOverlay({
           accessibilityRole="button"
           accessibilityLabel="Share result"
         >
-          <Text style={res.shareText}>SHARE RESULT</Text>
+          <Text allowFontScaling={false} style={res.shareText}>SHARE RESULT</Text>
         </Pressable>
 
           <Pressable
@@ -434,7 +434,7 @@ function ResultsOverlay({
             accessibilityRole="button"
             accessibilityLabel="Go home"
           >
-            <Text style={res.homeText}>HOME</Text>
+            <Text allowFontScaling={false} style={res.homeText}>HOME</Text>
           </Pressable>
         </View>
       </ScrollView>
@@ -1802,22 +1802,22 @@ export default function DailyChallengeScreen({ navigation }: Props) {
           showsVerticalScrollIndicator={false}
         >
           <View style={styles.startCard}>
-            <Text style={styles.startKicker}>{dailyEntryKicker(challengeNumber)}</Text>
-            <Text style={styles.startTitle}>{DAILY_ENTRY_TITLE}</Text>
-            <Text style={styles.startRule}>{DAILY_ENTRY_RULE}</Text>
+            <Text allowFontScaling={false} style={styles.startKicker}>{dailyEntryKicker(challengeNumber)}</Text>
+            <Text allowFontScaling={false} style={styles.startTitle}>{DAILY_ENTRY_TITLE}</Text>
+            <Text allowFontScaling={false} style={styles.startRule}>{DAILY_ENTRY_RULE}</Text>
             {showEntryRules && (
               <>
-                <Text style={styles.startIntro}>{DAILY_ENTRY_INTRO}</Text>
+                <Text allowFontScaling={false} style={styles.startIntro}>{DAILY_ENTRY_INTRO}</Text>
                 <View style={styles.startRuleList}>
                   {DAILY_ENTRY_RULES.map((line) => (
-                    <Text key={line} style={styles.startRuleLine}>{line}</Text>
+                    <Text allowFontScaling={false} key={line} style={styles.startRuleLine}>{line}</Text>
                   ))}
                 </View>
-                <Text style={styles.startReward}>{DAILY_ENTRY_REWARD}</Text>
-                <Text style={styles.startBody}>{DAILY_ENTRY_REWARD_SUB}</Text>
+                <Text allowFontScaling={false} style={styles.startReward}>{DAILY_ENTRY_REWARD}</Text>
+                <Text allowFontScaling={false} style={styles.startBody}>{DAILY_ENTRY_REWARD_SUB}</Text>
               </>
             )}
-            <Text style={styles.startAttempt}>{DAILY_ENTRY_ATTEMPT}</Text>
+            <Text allowFontScaling={false} style={styles.startAttempt}>{DAILY_ENTRY_ATTEMPT}</Text>
             <Pressable
               accessibilityRole="button"
               accessibilityLabel="Begin today's Daily Challenge"
@@ -1830,7 +1830,7 @@ export default function DailyChallengeScreen({ navigation }: Props) {
                 dailyStarting && styles.startButtonDisabled,
               ]}
             >
-              <Text style={styles.startButtonText}>
+              <Text allowFontScaling={false} style={styles.startButtonText}>
                 {dailyStarting ? DAILY_ENTRY_BEGIN_BUSY : DAILY_ENTRY_BEGIN}
               </Text>
             </Pressable>
@@ -1840,7 +1840,7 @@ export default function DailyChallengeScreen({ navigation }: Props) {
               onPress={handleHome}
               style={({ pressed }) => [styles.startHomeButton, pressed && styles.startButtonPressed]}
             >
-              <Text style={styles.startHomeText}>{DAILY_ENTRY_LEAVE}</Text>
+              <Text allowFontScaling={false} style={styles.startHomeText}>{DAILY_ENTRY_LEAVE}</Text>
             </Pressable>
             {dailyIntroSeen && (
               <Pressable
@@ -1850,12 +1850,12 @@ export default function DailyChallengeScreen({ navigation }: Props) {
                 onPress={() => setRulesOpen(open => !open)}
                 style={({ pressed }) => [styles.startRulesButton, pressed && styles.startButtonPressed]}
               >
-                <Text style={styles.startRulesText}>
+                <Text allowFontScaling={false} style={styles.startRulesText}>
                   {rulesOpen ? DAILY_ENTRY_RULES_HIDE : DAILY_ENTRY_RULES_SHOW}
                 </Text>
               </Pressable>
             )}
-            <Text style={styles.startTaunt}>
+            <Text allowFontScaling={false} style={styles.startTaunt}>
               {dailyIntroSeen ? dailyEntryTaunt(challengeNumber) : DAILY_ENTRY_TAUNT_FIRST}
             </Text>
           </View>
@@ -1885,7 +1885,7 @@ export default function DailyChallengeScreen({ navigation }: Props) {
             />
           </Animated.View>
 
-          <Text style={[styles.actionLabel, { bottom: dailyActionLabelBottom(insets.bottom) }]}>
+          <Text allowFontScaling={false} style={[styles.actionLabel, { bottom: dailyActionLabelBottom(insets.bottom) }]}>
             {displayedDailySession.currentRoundIndex === DAILY_ROUND_COUNT - 1 ? 'FINAL CLAIM · ' : ''}
             {DAILY_ACTION_RULE}
           </Text>
@@ -1936,7 +1936,7 @@ export default function DailyChallengeScreen({ navigation }: Props) {
           }}
           style={styles.devResetBtn}
         >
-          <Text style={styles.devResetText}>DEV - RESET DAILY</Text>
+          <Text allowFontScaling={false} style={styles.devResetText}>DEV - RESET DAILY</Text>
         </Pressable>
       )}
 
@@ -1945,7 +1945,7 @@ export default function DailyChallengeScreen({ navigation }: Props) {
           onPress={() => setCastleTuningVisible((visible) => !visible)}
           style={[styles.devResetBtn, { right: 14, bottom: 104 }]}
         >
-          <Text style={styles.devResetText}>CASTLE TUNE</Text>
+          <Text allowFontScaling={false} style={styles.devResetText}>CASTLE TUNE</Text>
         </Pressable>
       )}
 

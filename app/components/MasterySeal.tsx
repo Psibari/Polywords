@@ -112,6 +112,7 @@ export default function MasterySeal({ x, y, variant, label, onReveal }: Props) {
           <Ellipse cx={36} cy={30} rx={13} ry={8} fill="#FFFFFF" opacity={0.22} />
         </Svg>
         <Animated.Text
+          allowFontScaling={false}
           style={{
             position: 'absolute',
             top: 0, left: 0, right: 0, bottom: 0,

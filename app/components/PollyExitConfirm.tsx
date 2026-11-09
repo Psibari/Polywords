@@ -100,13 +100,13 @@ export function PollyExitConfirm({ onStay, onLeave }: Props) {
           pointerEvents="none"
           style={[ec.speechBubble, { opacity: bubbleOpacity }]}
         >
-          <Text style={ec.speechText}>See you later,{'\n'}LOSER.</Text>
+          <Text allowFontScaling={false} style={ec.speechText}>See you later,{'\n'}LOSER.</Text>
           <View style={ec.speechTail} />
         </Animated.View>
 
         <Animated.View style={[ec.card, { transform: [{ scale: cardScale }] }]}>
-          <Text style={ec.kicker}>LEAVING THE HUNT?</Text>
-          <Text style={ec.body}>
+          <Text allowFontScaling={false} style={ec.kicker}>LEAVING THE HUNT?</Text>
+          <Text allowFontScaling={false} style={ec.body}>
             Leave now and this run ends. Your score and remaining feathers are lost.
           </Text>
 
@@ -116,7 +116,7 @@ export function PollyExitConfirm({ onStay, onLeave }: Props) {
             onPress={handleStay}
             style={({ pressed }) => [ec.stayBtn, pressed && ec.stayPressed]}
           >
-            <Text style={ec.stayLabel}>KEEP HUNTING</Text>
+            <Text allowFontScaling={false} style={ec.stayLabel}>KEEP HUNTING</Text>
           </Pressable>
 
           <Pressable
@@ -125,7 +125,7 @@ export function PollyExitConfirm({ onStay, onLeave }: Props) {
             onPress={handleLeave}
             style={({ pressed }) => [ec.leaveBtn, pressed && ec.leavePressed]}
           >
-            <Text style={ec.leaveLabel}>LEAVE THE HUNT</Text>
+            <Text allowFontScaling={false} style={ec.leaveLabel}>LEAVE THE HUNT</Text>
           </Pressable>
         </Animated.View>
       </View>

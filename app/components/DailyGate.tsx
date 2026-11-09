@@ -193,6 +193,7 @@ export default function DailyGate({
             ]}
           >
             <Text
+              allowFontScaling={false}
               style={[
                 styles.clueText,
                 {

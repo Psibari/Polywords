@@ -208,7 +208,7 @@ function LessonSpotlight({
     <View style={styles.panelInner}>
       <View accessible accessibilityRole="text" accessibilityLabel={content.spokenCopy}>
         {content.lines.map((line, index) => (
-          <Text key={line} style={[styles.line, index === 0 && styles.lineLead]}>
+          <Text allowFontScaling={false} key={line} style={[styles.line, index === 0 && styles.lineLead]}>
             {line}
           </Text>
         ))}
@@ -226,7 +226,7 @@ function LessonSpotlight({
           pressed && styles.continuePressed,
         ]}
       >
-        <Text style={styles.continueLabel}>{content.continueLabel}</Text>
+        <Text allowFontScaling={false} style={styles.continueLabel}>{content.continueLabel}</Text>
       </Pressable>
     </View>
   );

@@ -258,10 +258,11 @@ function KingHeadline({ from, textStyle }: { from: string; textStyle: StyleProp<
 
   return (
     <View accessible accessibilityLabel="King">
-      <Animated.Text style={[textStyle, { opacity: fromOpacity, transform: [{ translateY: fromY }] }]}>
+      <Animated.Text allowFontScaling={false} style={[textStyle, { opacity: fromOpacity, transform: [{ translateY: fromY }] }]}>
         {from}
       </Animated.Text>
       <Animated.Text
+        allowFontScaling={false}
         style={[textStyle, { position: 'absolute', left: 0, right: 0, top: 0, opacity: kingOpacity, transform: [{ translateY: kingY }] }]}
       >
         KING
@@ -351,7 +352,7 @@ export function MasteredOutcomeOverlay({ word, headline = 'MASTERED', onContinue
               />
             </View>
           </View>
-          <Animated.Text style={[styles.plaqueContinue, { opacity: continueOpacity }]}>CONTINUE</Animated.Text>
+          <Animated.Text allowFontScaling={false} style={[styles.plaqueContinue, { opacity: continueOpacity }]}>CONTINUE</Animated.Text>
         </Animated.View>
       </Pressable>
     );
@@ -392,7 +393,7 @@ export function MasteredOutcomeOverlay({ word, headline = 'MASTERED', onContinue
               </View>
             )}
           </View>
-          <Animated.Text style={[styles.plaqueContinue, { opacity: continueOpacity }]}>CONTINUE</Animated.Text>
+          <Animated.Text allowFontScaling={false} style={[styles.plaqueContinue, { opacity: continueOpacity }]}>CONTINUE</Animated.Text>
         </Animated.View>
       </Pressable>
     );
@@ -405,11 +406,11 @@ export function MasteredOutcomeOverlay({ word, headline = 'MASTERED', onContinue
           pointerEvents="none"
           style={[styles.masteredPulseRing, { opacity: pulseOpacity, transform: [{ scale: pulseScale }] }]}
         />
-        <Text style={[styles.outcomeHeadline, styles.masteredOutcomeHeadline]}>{headline}</Text>
-        <Text style={styles.outcomeWord} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.64}>
+        <Text allowFontScaling={false} style={[styles.outcomeHeadline, styles.masteredOutcomeHeadline]}>{headline}</Text>
+        <Text allowFontScaling={false} style={styles.outcomeWord} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.64}>
           {word}
         </Text>
-        <Animated.Text style={[styles.outcomeContinue, { opacity: continueOpacity }]}>CONTINUE</Animated.Text>
+        <Animated.Text allowFontScaling={false} style={[styles.outcomeContinue, { opacity: continueOpacity }]}>CONTINUE</Animated.Text>
       </Animated.View>
     </Pressable>
   );
@@ -532,7 +533,7 @@ export function HauntedOutcomeOverlay({ word, detail, onContinue, isBoss }: Outc
               />
             </View>
           </View>
-          <Animated.Text style={[styles.plaqueContinue, { opacity: continueOpacity }]}>CONTINUE</Animated.Text>
+          <Animated.Text allowFontScaling={false} style={[styles.plaqueContinue, { opacity: continueOpacity }]}>CONTINUE</Animated.Text>
         </Animated.View>
       </Pressable>
     );
@@ -571,7 +572,7 @@ export function HauntedOutcomeOverlay({ word, detail, onContinue, isBoss }: Outc
             />
           </View>
         </View>
-        <Animated.Text style={[styles.plaqueContinue, { opacity: continueOpacity }]}>CONTINUE</Animated.Text>
+        <Animated.Text allowFontScaling={false} style={[styles.plaqueContinue, { opacity: continueOpacity }]}>CONTINUE</Animated.Text>
       </Animated.View>
     </Pressable>
   );
@@ -678,22 +679,24 @@ function BusterOutcomeOverlay({ word, onContinue }: Pick<OutcomeOverlayProps, 'w
         <View style={styles.busterHeadlineRow}>
           <View style={styles.busterSlot}>
             <Animated.Text
+              allowFontScaling={false}
               style={[styles.outcomeHeadline, styles.busterHeadline, { opacity: maOpacity, transform: [{ translateY: maY }] }]}
             >
               {BUSTER_WORD.dropped}
             </Animated.Text>
             <Animated.Text
+              allowFontScaling={false}
               style={[styles.outcomeHeadline, styles.busterHeadline, styles.busterArriving, { opacity: buOpacity, transform: [{ translateY: buY }] }]}
             >
               {BUSTER_WORD.arriving}
             </Animated.Text>
           </View>
-          <Text style={[styles.outcomeHeadline, styles.busterHeadline]}>{BUSTER_WORD.kept}</Text>
+          <Text allowFontScaling={false} style={[styles.outcomeHeadline, styles.busterHeadline]}>{BUSTER_WORD.kept}</Text>
         </View>
-        <Text style={styles.outcomeWord} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.64}>
+        <Text allowFontScaling={false} style={styles.outcomeWord} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.64}>
           {word}
         </Text>
-        <Animated.Text style={[styles.outcomeContinue, { opacity: continueOpacity }]}>CONTINUE</Animated.Text>
+        <Animated.Text allowFontScaling={false} style={[styles.outcomeContinue, { opacity: continueOpacity }]}>CONTINUE</Animated.Text>
       </Animated.View>
     </Pressable>
   );
@@ -2093,6 +2096,7 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
           // could wrap to a 2nd line and overlap the book below it (flagged
           // 2026-08-09, never fixed). Shrinks instead of wrapping.
           <Text
+            allowFontScaling={false}
             style={styles.kickerBossFixed}
             numberOfLines={1}
             adjustsFontSizeToFit
@@ -2101,7 +2105,7 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
             {mechanics.kicker}
           </Text>
         ) : (
-          <Text style={styles.kickerFixed}>{mechanics.kicker}</Text>
+          <Text allowFontScaling={false} style={styles.kickerFixed}>{mechanics.kicker}</Text>
         )
       )}
 
@@ -2202,6 +2206,7 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
               // flash AND the mastered/haunted outcome color, so there is
               // nothing left to stack on top of it.
               <Animated.Text
+                allowFontScaling={false}
                 accessible={false}
                 style={[styles.word, styles.wordBoss, { color: bossHeadwordColor }]}
                 numberOfLines={1}
@@ -2216,6 +2221,7 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
                 second layer. */}
             {!isBoss && (
               <Animated.Text
+                allowFontScaling={false}
                 accessible={false}
                 pointerEvents="none"
                 style={[
@@ -2244,6 +2250,7 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
                 path even if that ever changed. */}
             {isHaunt && !isBoss && (
               <Animated.Text
+                allowFontScaling={false}
                 accessible={false}
                 pointerEvents="none"
                 style={[
@@ -2293,6 +2300,7 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
 
         {/* Vault brand on spine — slides in with the book every round */}
         <Text
+          allowFontScaling={false}
           pointerEvents="none"
           style={styles.vaultLabel}
         >
@@ -2339,6 +2347,7 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
               style={[styles.swipeUpCueRegion, { opacity: cueOpacityAnim }]}
             >
               <Text
+                allowFontScaling={false}
                 key={`up-${cueLayoutIdentity}`}
                 style={[styles.swipeCueText, styles.swipeUpCue]}
                 onLayout={event => handleCueTextLayout('up', event.nativeEvent.layout.height)}
@@ -2401,6 +2410,7 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
                       {backingMask && (
                         <View style={styles.deckBackingPhrasePanel} pointerEvents="none">
                           <Text
+                            allowFontScaling={false}
                             style={[
                               styles.deckBackingPhrase,
                               fittedBackingTextLayout && {
@@ -2493,6 +2503,7 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
               style={[styles.swipeRightCueRegion, { opacity: cueOpacityAnim }]}
             >
               <Text
+                allowFontScaling={false}
                 key={`right-${cueLayoutIdentity}`}
                 style={[styles.swipeCueText, styles.swipeRightCue]}
                 onLayout={event => handleCueTextLayout('right', event.nativeEvent.layout.height)}
@@ -2522,7 +2533,7 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
             },
           ]}
         >
-          <Text style={[styles.swipeCueText, styles.onboardingCaption]}>
+          <Text allowFontScaling={false} style={[styles.swipeCueText, styles.onboardingCaption]}>
             {onboardingCaption.text}
           </Text>
         </View>
@@ -2690,6 +2701,7 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
           {/* Boss-only game/system stinger */}
           {systemStingerWord && (
             <Animated.Text
+              allowFontScaling={false}
               pointerEvents="none"
               style={{
                 position: 'absolute',
@@ -2722,13 +2734,14 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
           pointerEvents="none"
           style={[styles.hauntEntranceBanner, { opacity: hauntBannerOpacity }]}
         >
-          <Text style={styles.hauntEntranceBannerText}>Guess who's back.</Text>
+          <Text allowFontScaling={false} style={styles.hauntEntranceBannerText}>Guess who's back.</Text>
         </Animated.View>
       )}
 
       {/* ── STILL HAUNTED stamp ───────────────────────────────── */}
       {stillHauntedVisible && (
         <Animated.Text
+          allowFontScaling={false}
           pointerEvents="none"
           style={[styles.stillHauntedText, {
             opacity: stillHauntedOpacity,

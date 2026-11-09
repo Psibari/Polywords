@@ -44,12 +44,12 @@ export function HauntIntroOverlay({ onDismiss }: Props) {
   return (
     <Animated.View style={[ho.root, { opacity }]}>
       <View style={ho.card}>
-        <Text style={ho.kicker}>RETURNING HAUNT</Text>
-        <Text style={ho.headline}>GUESS WHO'S BACK?</Text>
-        <Text style={ho.body}>
+        <Text allowFontScaling={false} style={ho.kicker}>RETURNING HAUNT</Text>
+        <Text allowFontScaling={false} style={ho.headline}>GUESS WHO'S BACK?</Text>
+        <Text allowFontScaling={false} style={ho.body}>
           The word that beat you is back to haunt you. Polly wants another win.
         </Text>
-        <Text style={ho.stakes}>
+        <Text allowFontScaling={false} style={ho.stakes}>
           Beat it: BANISHED. Lose: STILL HAUNTED.
           {'\n\n'}DON'T GIVE A PARROT ANOTHER WIN.
         </Text>
@@ -60,7 +60,7 @@ export function HauntIntroOverlay({ onDismiss }: Props) {
           onPress={handleBegin}
           style={({ pressed }) => [ho.beginBtn, pressed && ho.beginPressed]}
         >
-          <Text style={ho.beginLabel}>FACE IT AGAIN</Text>
+          <Text allowFontScaling={false} style={ho.beginLabel}>FACE IT AGAIN</Text>
         </Pressable>
       </View>
     </Animated.View>

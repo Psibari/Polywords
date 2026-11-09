@@ -85,10 +85,10 @@ export function DailyExpiredCard({ number, onDismiss }: Props) {
         onPress={() => close(reduceMotion !== false)}
       >
         <Animated.View style={[ex.card, { transform: [{ scale: cardScale }] }]}>
-          <Text style={ex.title} accessibilityRole="header">
+          <Text allowFontScaling={false} style={ex.title} accessibilityRole="header">
             {DAILY_EXPIRED_TITLE}
           </Text>
-          <Text style={ex.subtitle}>{dailyExpiredSubtitle(number)}</Text>
+          <Text allowFontScaling={false} style={ex.subtitle}>{dailyExpiredSubtitle(number)}</Text>
         </Animated.View>
       </Pressable>
     </Animated.View>

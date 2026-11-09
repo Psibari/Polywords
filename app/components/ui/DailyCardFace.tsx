@@ -32,6 +32,7 @@ export default function DailyCardFace({ label }: Props) {
         style={styles.sheen}
       />
       <Text
+        allowFontScaling={false}
         style={styles.label}
         numberOfLines={1}
         adjustsFontSizeToFit

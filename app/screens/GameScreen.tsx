@@ -231,6 +231,7 @@ function ArmorWord({
   return (
     <View style={{ width, height: textStyle.lineHeight }}>
       <Text
+        allowFontScaling={false}
         numberOfLines={1}
         style={[textStyle, {
           color: ARMOR_BACK_FACE,
@@ -243,6 +244,7 @@ function ArmorWord({
       </Text>
       {/* White-hot: a white copy laid over the gold, pulsing with the beat. */}
       <Animated.Text
+        allowFontScaling={false}
         numberOfLines={1}
         style={[textStyle, { position: 'absolute', left: 0, top: 0, color: '#FFFFFF', opacity: hotOpacity }]}
       >
@@ -586,7 +588,7 @@ function TopBar({
               <View style={[tb.featherHighlight, tb.featherHighlightFilled]} />
             </View>
             <View style={[tb.featherShaft, tb.featherShaftFilled, tb.reserveShaft]} />
-            <Text style={tb.reservePlus}>+</Text>
+            <Text allowFontScaling={false} style={tb.reservePlus}>+</Text>
           </View>
         )}
         {hasGoldFeather && (
@@ -655,7 +657,7 @@ function TopBar({
               ))}
             </View>
             <View style={tb.controlTextColumn}>
-              <Text style={tb.controlContext} numberOfLines={1}>
+              <Text allowFontScaling={false} style={tb.controlContext} numberOfLines={1}>
                 {hud.contextLabel ?? ' '}
               </Text>
               {/* The flashes are on the word itself, never a box behind it
@@ -663,6 +665,7 @@ function TopBar({
                   flashes, laid exactly over the real one. */}
               <View>
                 <Text
+                  allowFontScaling={false}
                   style={[tb.controlLabel, hud.tier === 'rattled' && tb.controlLabelRattled, { color: showFellOffText ? PW.color.wrong : hudAccent }]}
                   numberOfLines={1}
                   adjustsFontSizeToFit
@@ -671,6 +674,7 @@ function TopBar({
                   {showFellOffText ? 'FELL OFF' : hud.label}
                 </Text>
                 <Animated.Text
+                  allowFontScaling={false}
                   pointerEvents="none"
                   style={[tb.controlLabel, tb.controlLabelFlash, { opacity: tierFlashOpacity }]}
                   numberOfLines={1}
@@ -680,6 +684,7 @@ function TopBar({
                   {showFellOffText ? 'FELL OFF' : hud.label}
                 </Animated.Text>
                 <Animated.Text
+                  allowFontScaling={false}
                   pointerEvents="none"
                   style={[tb.controlLabel, tb.controlLabelFlash, { opacity: fellOffFlashOpacity }]}
                   numberOfLines={1}
@@ -889,7 +894,7 @@ function RoundChips({
             {isBoss ? (
               <BossCrownIcon />
             ) : (
-              <Text style={[tb.chipLabel, isCurrent && tb.chipLabelCurrent]}>
+              <Text allowFontScaling={false} style={[tb.chipLabel, isCurrent && tb.chipLabelCurrent]}>
                 {i + 1}
               </Text>
             )}
@@ -2097,7 +2102,7 @@ function GameDirector({ navigation }: { navigation: any }) {
             onPress={() => handleDevJumpToBoss()}
             style={styles.devBossButton}
           >
-            <Text style={styles.devBossButtonText}>BOSS</Text>
+            <Text allowFontScaling={false} style={styles.devBossButtonText}>BOSS</Text>
           </Pressable>
           <Pressable
             accessibilityRole="button"
@@ -2105,7 +2110,7 @@ function GameDirector({ navigation }: { navigation: any }) {
             onPress={() => handleDevJumpToBoss(2)}
             style={[styles.devBossButton, styles.devBossButtonCrisis]}
           >
-            <Text style={styles.devBossButtonText}>BOSS{'\n'}(CRISIS)</Text>
+            <Text allowFontScaling={false} style={styles.devBossButtonText}>BOSS{'\n'}(CRISIS)</Text>
           </Pressable>
           {/* Dev tool: plays the wall fall at its largest size, bypassing gameplay (for tuning the fall's look and sounds). */}
           <Pressable
@@ -2116,7 +2121,7 @@ function GameDirector({ navigation }: { navigation: any }) {
             }}
             style={styles.devBossButton}
           >
-            <Text style={styles.devBossButtonText}>FALL 3</Text>
+            <Text allowFontScaling={false} style={styles.devBossButtonText}>FALL 3</Text>
           </Pressable>
           {/* Dev tool: steps the streak 0 -> 9 -> 12 -> 15 -> 18 -> 0 so the UNTRAPPABLE flip and its four pulse levels can be seen without playing nine words. */}
           <Pressable
@@ -2132,7 +2137,7 @@ function GameDirector({ navigation }: { navigation: any }) {
             }}
             style={styles.devBossButton}
           >
-            <Text style={styles.devBossButtonText}>ARMOR{'\n'}STEP</Text>
+            <Text allowFontScaling={false} style={styles.devBossButtonText}>ARMOR{'\n'}STEP</Text>
           </Pressable>
           {/* Dev tool (Pete, 2026-11-03): replays the HUD lessons without Settings >
               Reset Progress. Clears every lesson flag and puts the streak at 9, so
@@ -2150,7 +2155,7 @@ function GameDirector({ navigation }: { navigation: any }) {
             }}
             style={styles.devBossButton}
           >
-            <Text style={styles.devBossButtonText}>REPLAY{'\n'}LESSONS</Text>
+            <Text allowFontScaling={false} style={styles.devBossButtonText}>REPLAY{'\n'}LESSONS</Text>
           </Pressable>
         </View>
       )}
@@ -2163,6 +2168,7 @@ function GameDirector({ navigation }: { navigation: any }) {
       <View style={styles.effectsOverlay} pointerEvents="none">
         {showMercyFloat && (
           <Animated.Text
+            allowFontScaling={false}
             style={[
               gs.mercyFloat,
               {
@@ -2196,10 +2202,10 @@ function GameDirector({ navigation }: { navigation: any }) {
 
       {bossTransitionActive && isBossRound && (
         <View style={styles.bossTransition} pointerEvents="none" accessible accessibilityLabel="Polly's Word. One last breath.">
-          <Text style={styles.bossTransitionKicker}>
+          <Text allowFontScaling={false} style={styles.bossTransitionKicker}>
             {activeStep.kind === 'word' && activeStep.isMasteryRematch ? "MASTER'S REMATCH" : "POLLY'S WORD"}
           </Text>
-          <Text style={styles.bossTransitionCopy}>ONE LAST BREATH</Text>
+          <Text allowFontScaling={false} style={styles.bossTransitionCopy}>ONE LAST BREATH</Text>
         </View>
       )}
 

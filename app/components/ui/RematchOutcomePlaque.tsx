@@ -288,7 +288,7 @@ export default function RematchOutcomePlaque({ word, kind, onContinue }: Props) 
             </>
           )}
         </Animated.View>
-        <Animated.Text style={[styles.plaqueContinue, { opacity: continueOpacity }]}>CONTINUE</Animated.Text>
+        <Animated.Text allowFontScaling={false} style={[styles.plaqueContinue, { opacity: continueOpacity }]}>CONTINUE</Animated.Text>
       </Animated.View>
     </Pressable>
   );

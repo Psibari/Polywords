@@ -53,6 +53,7 @@ export function FoilWord({
           exact box (left:0, right:0) makes their fit decisions identical by
           construction, independent of numberOfLines. */}
       <Text
+        allowFontScaling={false}
         {...textProps}
         accessible={false}
         pointerEvents="none"
@@ -62,6 +63,7 @@ export function FoilWord({
         {word}
       </Text>
       <Text
+        allowFontScaling={false}
         {...textProps}
         accessible={false}
         style={[baseStyle, styles.deboss, { transform: [{ translateY: debossY }] }]}
@@ -69,6 +71,7 @@ export function FoilWord({
         {word}
       </Text>
       <Text
+        allowFontScaling={false}
         {...textProps}
         accessible={false}
         style={[baseStyle, styles.catchLight, { transform: [{ translateY: catchLightY }] }]}
@@ -76,6 +79,7 @@ export function FoilWord({
         {word}
       </Text>
       <Text
+        allowFontScaling={false}
         {...textProps}
         accessible={false}
         style={[baseStyle, styles.fill, { textShadowRadius: edgeRadius }]}

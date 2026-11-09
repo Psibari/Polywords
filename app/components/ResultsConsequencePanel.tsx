@@ -20,7 +20,7 @@ export function ResultsConsequencePanel({ consequences, onOpenJournal }: Props) 
 
   return (
     <View style={styles.wrap}>
-      <Text style={styles.kicker}>WHAT CHANGED</Text>
+      <Text allowFontScaling={false} style={styles.kicker}>WHAT CHANGED</Text>
       <View style={styles.records}>
         {consequences.map((consequence, index) => (
           <View
@@ -35,6 +35,7 @@ export function ResultsConsequencePanel({ consequences, onOpenJournal }: Props) 
             />
             <View style={styles.copyBlock}>
               <Text
+                allowFontScaling={false}
                 style={styles.word}
                 numberOfLines={1}
                 adjustsFontSizeToFit
@@ -42,7 +43,7 @@ export function ResultsConsequencePanel({ consequences, onOpenJournal }: Props) 
               >
                 {consequence.word}
               </Text>
-              <Text style={styles.copy}>{consequence.copy}</Text>
+              <Text allowFontScaling={false} style={styles.copy}>{consequence.copy}</Text>
             </View>
           </View>
         ))}
@@ -54,8 +55,9 @@ export function ResultsConsequencePanel({ consequences, onOpenJournal }: Props) 
         onPress={onOpenJournal}
         style={({ pressed }) => [styles.journalButton, pressed && styles.pressed]}
       >
-        <Text style={styles.journalKicker}>POLLY WROTE ABOUT THIS</Text>
+        <Text allowFontScaling={false} style={styles.journalKicker}>POLLY WROTE ABOUT THIS</Text>
         <Text
+          allowFontScaling={false}
           style={styles.journalAction}
           numberOfLines={1}
           adjustsFontSizeToFit

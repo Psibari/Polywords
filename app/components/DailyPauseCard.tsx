@@ -51,7 +51,7 @@ function PauseAction({ label, accessibilityLabel, tone, last, onPress }: ActionP
         pressed && dp.pressed,
       ]}
     >
-      <Text style={[dp.actionLabel, tone === 'primary' && dp.actionLabelPrimary]}>{label}</Text>
+      <Text allowFontScaling={false} style={[dp.actionLabel, tone === 'primary' && dp.actionLabelPrimary]}>{label}</Text>
     </Pressable>
   );
 }
@@ -135,12 +135,12 @@ export function DailyPauseCard({ onContinue, onHome, onSettings }: Props) {
           pointerEvents="none"
           style={[dp.speechBubble, { opacity: bubbleOpacity }]}
         >
-          <Text style={dp.speechText}>{DAILY_PAUSE_POLLY_LINE}</Text>
+          <Text allowFontScaling={false} style={dp.speechText}>{DAILY_PAUSE_POLLY_LINE}</Text>
           <View style={dp.speechTail} />
         </Animated.View>
 
         <Animated.View style={[dp.card, { transform: [{ scale: cardScale }] }]}>
-          <Text style={dp.kicker}>{DAILY_PAUSE_KICKER}</Text>
+          <Text allowFontScaling={false} style={dp.kicker}>{DAILY_PAUSE_KICKER}</Text>
           <PauseAction
             label={DAILY_PAUSE_CONTINUE}
             accessibilityLabel={DAILY_PAUSE_CONTINUE_A11Y}
