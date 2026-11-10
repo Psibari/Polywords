@@ -24,12 +24,17 @@ double meanings are welcome; constant puns are not.
 Good lanes: `Thought so.`, `Gotcha.`, `There it is.`, and `My traps remember you.`
 
 Avoid generic encouragement, tutorials, genuinely hateful or contextless cruelty,
-ownership/stolen-language framing, long joke setups, generated dialogue, and system copy spoken
+ownership/stolen-language framing of the player's words, masteries or progress (the one exception
+is the feather exception below), long joke setups, generated dialogue, and system copy spoken
 as Polly. Direct insults are allowed and should not be rejected merely because they target the
 player; relationship-aware insults can be more personal when Polly's memory earns them. `BINGO BANGO ZZZZINGO!` is
 unassigned system text only. The five lines that broke the non-thief ruling (Pete, 2026-08-29) were retired on
-2026-09-01; no live Hunt or Daily line uses stealing language. The later Polybook "Mine."
+2026-09-01; no live Hunt or Daily line uses stealing language about words. The later Polybook "Mine."
 lines were also replaced; do not reopen possession language without a new ruling.
+
+Feather exception (Pete, 2026-11-09). Polly may say she TAKES a feather: a life lost to a wrong call
+('I’ll take that one.'). She still never claims, keeps, steals or owns the player's words, masteries or
+progress. The Polybook 'Mine.' ban stands.
 
 ## Line pools
 
@@ -56,10 +61,13 @@ that register.
   look ready."
 - First Hunt: FINE challenge ("Think you know this word?", "Let’s see how sure you are.") and
   guided results ("That one was easy.", "Almost sounded right.").
-- HUD lessons: one reply after the player taps past the rule, never over it: "And you lost to
-  a bird." (feathers), "Try not to ruin it." (run), "There it is." (run broken), "Assuming you
-  make it that far." (Hunt progress). Reactive Hunt visits are held off while a lesson owns
-  the screen.
+- HUD lessons: one reply after the player taps past the rule, never over it: "I’ll take that
+  one." (feathers; was "And you lost to a bird." until 2026-11-09), "Try not to ruin it." (run),
+  "There it is." (run broken), "Assuming you make it that far." (Hunt progress), "I’ll wait."
+  (armor), "I wasn’t finished watching you lose." (Mercy). Reactive Hunt visits are held off while
+  a lesson owns the screen. The Mercy reply echoes the Polybook journal line "I wasn’t finished
+  with them yet." (`mercyNotFinished` in `app/game/pollyBookLines.ts`); Pete accepted the echo
+  (2026-11-09).
 - Results may acknowledge outcomes without praising or humiliating the player.
 - Daily correct-claim reactions draw from `DAILY_MOOD_LINES` using the existing rivalry state
   read-only; Daily does not change that state. Session-level lost-life/win/loss lines are

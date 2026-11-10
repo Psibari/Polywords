@@ -229,6 +229,24 @@ glow. Do not re-add any of them. `TorchGlow.tsx` stays (Settings uses it).
   outer wrapper. Any backing shape must fit inside the painted silhouette. The black
   `deckTopCardSlot` shadow (0.24, r22, 16 pt down) is not the cause. Android: Android 9+ tints the
   elevation shadow with `shadowColor` but has no opacity, radius or offset; not handled yet.
+- Deck placed from the wall ledge (2026-11-09, `81abbae`): the wall is drawn full width,
+  bottom-anchored, so the ledge top sits at windowHeight − `LEDGE_OFFSET_RATIO` (about 0.58) ×
+  windowWidth (`bossGauntletLedge.ts`), while the deck is laid out from the top. `tileTextLayout.ts`
+  now pushes the deck DOWN (never up) so the active card overlaps the ledge by
+  `LEDGE_ANCHOR_CARD_OVERLAP` 8 pt (TEST VALUE), with `ACTIVE_CARD_TOP_GAP` 6 (= SwipeMask
+  `TILE_GAP`): `resolveLedgeTopInBoardViewport`, `resolveCardLedgeOverlap`,
+  `resolveLedgeAnchoredBoardSpacing`. Inputs are measured: the board viewport height (`onLayout`),
+  window width and `useSafeAreaInsets().bottom` (the viewport ends at the safe-area bottom), never
+  `measureInWindow`, which picks up shake and wall-fall transforms. The space below shrinks first,
+  never under 12, and the board never starts to scroll; short windows keep today's 110 / 48. The
+  result goes through `applyBoardTopReserve` in `MaskBoard.tsx` (the onboarding caption band reads
+  from it; Boss words use the same code). Pinned by `app/components/ledgeAnchoredDeck.test.ts`. The
+  290 pt card width cap is unchanged. DEV-only readouts, bottom-left of the Hunt: `<w> x <h>  PR <n>
+  font <scale>` (`DevWindowReadout`, `GameScreen.tsx`) and, just above it, `ledge card <overlap>
+  push <pt>  inset <pt>` (`MaskBoard.tsx`). Pete's phone (iPhone 11, Display Zoom Larger Text)
+  reports 375 x 812 at PR 2, bottom inset 31, measured overlap 8.6, push 0. NOT yet checked on a
+  tall phone. On 430+ pt phones the pointing Polly bubble can cover the SWIPE RIGHT cue (Pete
+  accepted).
 
 ### Hunt pause / resumable navigation
 
@@ -279,6 +297,31 @@ Player-facing flow/copy: `docs/GAME_REFERENCE.md`.
   321 pt of usable bar width at 375 pt and overflowed about 11 pt a side, clipping on BOTH faces;
   unnoticed because the front border is a dim line and first-run testing uses the 8-round fledgling
   arc, where it fit. 26 + 5 measures 305. Still tight on a 320 pt screen.
+- MERCY LESSON (2026-11-09, `22fcbe2`, gap fix `2e203db`): a sixth HUD lesson, `mercy`, due the
+  first time Mercy revives on an ordinary word; once per save. Copy (pinned by `hudLessons.test.ts`):
+  "YOU’RE OUT OF FEATHERS." / "POLLY GIVES {n} MERCY FEATHERS." / "ONCE PER HUNT." / "ONLY FOR YOUR
+  FIRST {g} HUNTS." Polly (smug): "I wasn’t finished watching you lose." {n} is the revive amount
+  stored with the pending card (`mercyPendingFeathers`) at the moment the revive fires (3 in Hunts
+  1-3, 2 in Hunts 4-10), NEVER re-read from the current feathers (a DEV double-press showed 1 once).
+  {g} = `GRACE_RUNS`. The four Mercy constants live in `app/game/mercyPolicy.ts` (the store imports
+  them). Only a Hunt that reaches Results counts toward the 10; a pause-menu quit does not.
+  Spotlight target: `feathers`. When the card owns the revive (`mercyLessonOwnsRevive`), GameScreen
+  skips the POLLY ISN'T DONE WITH YOU float, squawk and haptic. The card claims a revive only if it
+  can show on this word (cards left on the word, or the next step is an ordinary word): the board
+  completes a word about a second after its last swipe, so on the last card before Polly's Word,
+  before a Returning Haunt or at the end of the Hunt the float plays and the card waits for a later
+  revive (gap found by trace, fixed in `2e203db`). Old saves load the flag false (like armor), so
+  established players are taught once. Telemetry: `onboarding_hud_mercy_completed`. DEV: a MERCY
+  button beside BOSS / FALL 3 / ARMOR STEP / REPLAY LESSONS sets feathers to 1 and arms the real
+  revive (the Hunt's own amount, or 3 if it has none); it does nothing while any lesson is due or
+  showing (`devMercyArmAllowed`), on Polly's Word, on a Returning Haunt or after game over. REPLAY
+  LESSONS clears the mercy flag. Finishing a Hunt after using it still records that Hunt; quit it to
+  keep progress clean.
+- FEATHER LESSON (2026-11-09, `22fcbe2`): now three lines (THESE ARE YOUR FEATHERS. / THEY’RE YOUR
+  LIVES. / WRONG CALLS COST ONE.); "LOSE THEM ALL, AND POLLY WINS THE HUNT." was cut (Pete: players
+  know what zero feathers means, and it contradicted Mercy). Polly's reply is "I’ll take that one."
+  (was "And you lost to a bird."), fired after CONTINUE. Taking a feather is the one possession
+  exception in `docs/POLLY_DIALOGUE_BANK.md`.
 - HUD lessons teach feathers, momentum, broken run and Hunt progress only after the player lives
   the event. `HudLessonLayer.tsx` owns the spotlight and accessibility lock. Do not use
   `gameplayGateActive` for this because it unmounts gameplay.
@@ -584,6 +627,14 @@ Pete, 2026-10-29: nothing below ~18 for copy.
 - Polly speech bubble default 23 (line height 25) via `POLLY_BUBBLE_FONT_SIZE` /
   `POLLY_BUBBLE_LINE_HEIGHT` in `PollySpeechBubble.tsx`, Results included.
 - Onboarding, HUD lesson, Boss/Haunt intro and Daily entry card text enlarged (numbers only).
+- Gameplay text ignores the iPhone system text size (2026-11-09, `7580264`): every player-facing
+  `Text` / `Animated.Text` in the Hunt, Results and the Daily carries `allowFontScaling={false}`.
+  Reason: `tileTextLayout.ts` fits card text from an exact glyph table that assumes 1.0x, so iOS
+  Dynamic Type or Bold Text clipped the last letter ("WHETHER YOU LIK"). `Text.defaultProps` does not
+  work on React 19.2 / RN 0.86 (function components), so the prop sits on each tag, guarded by
+  `app/components/gameplayTextScaling.test.mjs` (the file list lives there). `PollySpeechBubble` is
+  shared, so Polly's Home bubble is fixed-size too; Settings and the Polybook still scale.
+  Device-checked by Pete at max Text Size + Bold Text.
 
 ## Audio and Haptics
 
