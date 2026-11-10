@@ -16,6 +16,7 @@ import {
   hudLessonPollyVisit,
   resolveHudLessonPresentation,
   resolveHudSpotlightGeometry,
+  type HudLessonContext,
   type HudLessonTarget,
   type Rect,
   type SpotlightGeometry,
@@ -46,7 +47,11 @@ type Props = {
   // True while the rule panel is up, so the screen can hide everything else
   // from screen readers.
   onShowingChange: (showing: boolean) => void;
+  // Live values for lesson copy (the Mercy lesson's feather count).
+  context?: HudLessonContext;
 };
+
+const NO_LESSON_CONTEXT: HudLessonContext = { mercyFeathers: null };
 
 function measureInWindow(view: View): Promise<Rect | null> {
   return new Promise(resolve => {
@@ -67,6 +72,7 @@ export function HudLessonLayer({
   targetLabels,
   onComplete,
   onShowingChange,
+  context = NO_LESSON_CONTEXT,
 }: Props) {
   const reduceMotion = useReducedMotionPreference() !== false;
   const layerRef = useRef<View>(null);
@@ -88,7 +94,7 @@ export function HudLessonLayer({
       return;
     }
     setStage({ kind: 'settling', lesson });
-    const content = resolveHudLessonPresentation(lesson, reduceMotion);
+    const content = resolveHudLessonPresentation(lesson, reduceMotion, context);
     let retryTimer: ReturnType<typeof setTimeout> | null = null;
 
     const measure = async (attempt: number) => {
@@ -128,7 +134,7 @@ export function HudLessonLayer({
   // rule once, and arm the continue control after a short guard.
   useEffect(() => {
     if (!showingLesson) return;
-    const content = resolveHudLessonPresentation(showingLesson, reduceMotion);
+    const content = resolveHudLessonPresentation(showingLesson, reduceMotion, context);
     panelOpacity.stopAnimation();
     if (content.panelFadeMs === 0) {
       panelOpacity.setValue(1);
@@ -147,7 +153,7 @@ export function HudLessonLayer({
 
   function handleContinue() {
     if (stage.kind !== 'showing' || !armed) return;
-    const content = resolveHudLessonPresentation(stage.lesson, reduceMotion);
+    const content = resolveHudLessonPresentation(stage.lesson, reduceMotion, context);
     setArmed(false);
     setStage({ kind: 'polly', lesson: stage.lesson });
     visitIdRef.current += 1;
@@ -175,9 +181,10 @@ export function HudLessonLayer({
           lesson={stage.lesson}
           geometry={stage.geometry}
           reduceMotion={reduceMotion}
+          context={context}
           opacity={panelOpacity}
           armed={armed}
-          targetLabel={targetLabels[resolveHudLessonPresentation(stage.lesson, reduceMotion).target]}
+          targetLabel={targetLabels[resolveHudLessonPresentation(stage.lesson, reduceMotion, context).target]}
           onContinue={handleContinue}
         />
       )}
@@ -190,6 +197,7 @@ function LessonSpotlight({
   lesson,
   geometry,
   reduceMotion,
+  context,
   opacity,
   armed,
   targetLabel,
@@ -198,12 +206,13 @@ function LessonSpotlight({
   lesson: HudLessonId;
   geometry: SpotlightGeometry | null;
   reduceMotion: boolean;
+  context: HudLessonContext;
   opacity: Animated.Value;
   armed: boolean;
   targetLabel: string;
   onContinue: () => void;
 }) {
-  const content = resolveHudLessonPresentation(lesson, reduceMotion);
+  const content = resolveHudLessonPresentation(lesson, reduceMotion, context);
   const panel = (
     <View style={styles.panelInner}>
       <View accessible accessibilityRole="text" accessibilityLabel={content.spokenCopy}>

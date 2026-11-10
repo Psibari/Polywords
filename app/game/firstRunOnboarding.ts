@@ -65,7 +65,7 @@ export type ActiveOnboardingRun = {
 // They are global and monotonic: a lesson flag only ever goes false → true,
 // and it lives outside activeRun because activeRun is cleared at the FINE
 // hand-off while later lessons can land on any later ordinary word.
-export type HudLessonId = 'feather' | 'multiplier' | 'streakBreak' | 'progress' | 'armor';
+export type HudLessonId = 'feather' | 'multiplier' | 'streakBreak' | 'progress' | 'armor' | 'mercy';
 
 export type HudLessonState = {
   feather: boolean;
@@ -73,11 +73,16 @@ export type HudLessonState = {
   streakBreak: boolean;
   progress: boolean;
   armor: boolean;
-  // Feather and streak-break are events, not durable Hunt state, so the store
-  // captures them when the wrong call lands. Keyed by the Hunt's runSeed so a
-  // pending lesson never leaks into a different Hunt.
+  mercy: boolean;
+  // Feather, streak-break and Mercy are events, not durable Hunt state, so the
+  // store captures them when the wrong call lands. Keyed by the Hunt's runSeed
+  // so a pending lesson never leaks into a different Hunt.
   featherPendingRunSeed: number | null;
   streakBreakPendingRunSeed: number | null;
+  mercyPendingRunSeed: number | null;
+  // The feathers the Mercy revive actually gave, saved in the same update the
+  // revive fires, so the card can never disagree with what was given.
+  mercyPendingFeathers: number | null;
 };
 
 export type FirstRunOnboardingState = {
@@ -106,8 +111,13 @@ function createHudLessonState(completed: boolean): HudLessonState {
     // Armor is newer than every existing save, so nobody has been taught it.
     // It never inherits the established-player default.
     armor: false,
+    // Mercy (2026-11-09) is newer than every save too, and players who already
+    // got a revive were never told why; they are taught it the next time it fires.
+    mercy: false,
     featherPendingRunSeed: null,
     streakBreakPendingRunSeed: null,
+    mercyPendingRunSeed: null,
+    mercyPendingFeathers: null,
   };
 }
 
@@ -128,6 +138,11 @@ function hydratePendingSeed(value: unknown): number | null {
   return typeof value === 'number' && Number.isFinite(value) ? value >>> 0 : null;
 }
 
+// A feather count is only trusted as a whole number of 1 or more.
+function hydrateFeatherCount(value: unknown): number | null {
+  return typeof value === 'number' && Number.isInteger(value) && value >= 1 ? value : null;
+}
+
 // Saves written before HUD lessons existed carry no hudLessons. A player who
 // already finished core onboarding is treated as having learned the HUD, so
 // nobody is suddenly tutorialized; a player still in their first run gets them.
@@ -142,8 +157,12 @@ function hydrateHudLessons(value: unknown, coreCompleted: boolean): HudLessonSta
     // Absent in every save written before 2026-11-03, which is the point: it
     // hydrates false so existing players still get taught armor once.
     armor: saved.armor === true,
+    // Absent in every save written before 2026-11-09: hydrates false, like armor.
+    mercy: saved.mercy === true,
     featherPendingRunSeed: hydratePendingSeed(saved.featherPendingRunSeed),
     streakBreakPendingRunSeed: hydratePendingSeed(saved.streakBreakPendingRunSeed),
+    mercyPendingRunSeed: hydratePendingSeed(saved.mercyPendingRunSeed),
+    mercyPendingFeathers: hydrateFeatherCount(saved.mercyPendingFeathers),
   };
 }
 
@@ -358,7 +377,7 @@ export function resolveOnboardingBoardPresentation(
 // ─── HUD lessons ────────────────────────────────────────────
 
 // Boss and Returning Haunt words own locked choreography; no lesson lands on them.
-function isOrdinaryWordStep(game: GameState): boolean {
+export function isOrdinaryWordStep(game: GameState): boolean {
   const step = game.session[game.stepIndex];
   return step?.kind === 'word' &&
     step.eventType !== 'bossWord' &&
@@ -388,8 +407,9 @@ export function isOnboardingHandoffOpen(
 // input is locked while any lesson is due, and the only Hunt change that can
 // still happen (the judged word completing) makes nothing higher-priority due.
 //
-// Order: a multiplier just earned, then a real feather loss, then the short
-// streak-break reinforcement, then the round-progress lesson in the hand-off.
+// Order: a multiplier just earned, then a real feather loss, then a Mercy
+// revive, then the short streak-break reinforcement, then armor, then the
+// round-progress lesson in the hand-off.
 export function resolveHudLesson(
   state: FirstRunOnboardingState,
   game: GameState,
@@ -399,6 +419,7 @@ export function resolveHudLesson(
   if (isOrdinaryWordStep(game)) {
     if (!lessons.multiplier && game.chainMultiplier >= 1.5) return 'multiplier';
     if (!lessons.feather && lessons.featherPendingRunSeed === game.runSeed) return 'feather';
+    if (!lessons.mercy && lessons.mercyPendingRunSeed === game.runSeed) return 'mercy';
     if (
       !lessons.streakBreak &&
       lessons.multiplier &&
@@ -446,7 +467,36 @@ export function captureHudLessonEvents(
   ) {
     hudLessons = { ...hudLessons, streakBreakPendingRunSeed: next.runSeed };
   }
+  // Mercy fired in this update (resolveLifeLoss counts every revive in
+  // mercyUsed). Only ordinary words reach here, so a revive on Polly's Word or
+  // a Returning Haunt keeps its usual float and teaches nothing.
+  if (
+    !lessons.mercy &&
+    (next.mercyUsed ?? 0) > (prev.mercyUsed ?? 0) &&
+    lessons.mercyPendingRunSeed !== next.runSeed
+  ) {
+    // next.lives is what resolveLifeLoss just set: the revive amount.
+    hudLessons = {
+      ...hudLessons,
+      mercyPendingRunSeed: next.runSeed,
+      mercyPendingFeathers: hydrateFeatherCount(next.lives),
+    };
+  }
   return hudLessons === lessons ? state : { ...state, hudLessons };
+}
+
+// True when this Hunt's Mercy revive is being explained by the Mercy lesson,
+// so the screen skips the usual POLLY ISN'T DONE WITH YOU float (and its
+// squawk and haptic): the player gets one or the other, never both.
+export function mercyLessonOwnsRevive(state: FirstRunOnboardingState, runSeed: number): boolean {
+  return !state.hudLessons.mercy && state.hudLessons.mercyPendingRunSeed === runSeed;
+}
+
+// DEV ONLY: whether the MERCY dev button may arm a revive. Only on a live
+// ordinary word, and never while any HUD lesson is due, which covers its
+// settle, its card and Polly's reply (a lesson stays due until it completes).
+export function devMercyArmAllowed(state: FirstRunOnboardingState, game: GameState): boolean {
+  return game.status === 'playing' && isOrdinaryWordStep(game) && resolveHudLesson(state, game) === null;
 }
 
 // DEV ONLY (Pete, 2026-11-03): clears every HUD lesson flag so the lessons can
@@ -471,6 +521,7 @@ export function completeHudLesson(
     [lesson]: true,
     ...(lesson === 'feather' ? { featherPendingRunSeed: null } : {}),
     ...(lesson === 'streakBreak' ? { streakBreakPendingRunSeed: null } : {}),
+    ...(lesson === 'mercy' ? { mercyPendingRunSeed: null, mercyPendingFeathers: null } : {}),
   };
   const next = { ...state, hudLessons };
   return lesson === 'progress' ? finishOnboardingHandoff(next) : next;

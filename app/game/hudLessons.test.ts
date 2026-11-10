@@ -4,8 +4,11 @@ import {
   captureHudLessonEvents,
   completeHudLesson,
   createDefaultOnboardingState,
+  devMercyArmAllowed,
+  devResetHudLessons,
   dismissCompletedOnboardingHandoffOnResume,
   hydrateOnboardingState,
+  mercyLessonOwnsRevive,
   reconcileOnboardingRun,
   resolveHudLesson,
   resolveOnboardingBoardPresentation,
@@ -31,6 +34,12 @@ import {
   type GameState,
 } from './polyRunEngine';
 import { generateHunt } from './huntGenerator';
+import {
+  FLEDGLING_MERCY_LIVES,
+  FLEDGLING_RUNS,
+  GRACE_MERCY_LIVES,
+  GRACE_RUNS,
+} from './mercyPolicy';
 import { huntActionsForInputMode } from '../components/tileAccessibility';
 import {
   isHuntTileInteractive,
@@ -91,7 +100,7 @@ const fresh = createDefaultOnboardingState();
 
 // ── Persistence defaults (no version bump) ──────────────────
 eq(ONBOARDING_VERSION, 1, 'HUD lessons ship without an onboarding version bump');
-for (const lesson of ['feather', 'multiplier', 'streakBreak', 'progress', 'armor'] as const) {
+for (const lesson of ['feather', 'multiplier', 'streakBreak', 'progress', 'armor', 'mercy'] as const) {
   eq(fresh.hudLessons[lesson], false, `fresh install: ${lesson} lesson pending`);
 }
 {
@@ -110,8 +119,12 @@ for (const lesson of ['feather', 'multiplier', 'streakBreak', 'progress', 'armor
     false,
     'an older save still gets the armor lesson: it is newer than the save',
   );
+  // Same exception for Mercy (2026-11-09): players revived before the lesson
+  // existed were never told why, so they are taught it the next time it fires.
+  eq(hydratedVeteran.hudLessons.mercy, false, 'an older save still gets the mercy lesson');
+  eq(hydratedVeteran.hudLessons.mercyPendingRunSeed, null, 'an older save has no pending mercy lesson');
   const legacyNewcomer = JSON.stringify({ ...fresh, hudLessons: undefined });
-  for (const lesson of ['feather', 'multiplier', 'streakBreak', 'progress', 'armor'] as const) {
+  for (const lesson of ['feather', 'multiplier', 'streakBreak', 'progress', 'armor', 'mercy'] as const) {
     eq(hydrateOnboardingState(legacyNewcomer).hudLessons[lesson], false, `an older mid-first-run save still gets the ${lesson} lesson`);
   }
   eq(hydrateOnboardingState(null, true).hudLessons.feather, true, 'the retired intro migrates as lessons learned');
@@ -426,9 +439,9 @@ function fineOnboarding(mode: 'first-run' | 'replay' = 'first-run'): FirstRunOnb
 }
 
 // ── 21. Reduced Motion keeps every lesson whole ─────────────
-for (const lesson of ['feather', 'multiplier', 'streakBreak', 'progress', 'armor'] as const) {
-  const full = resolveHudLessonPresentation(lesson, false);
-  const reduced = resolveHudLessonPresentation(lesson, true);
+for (const lesson of ['feather', 'multiplier', 'streakBreak', 'progress', 'armor', 'mercy'] as const) {
+  const full = resolveHudLessonPresentation(lesson, false, { mercyFeathers: 3 });
+  const reduced = resolveHudLessonPresentation(lesson, true, { mercyFeathers: 3 });
   eq(reduced.lines.join('|'), full.lines.join('|'), `21: ${lesson} keeps every line under Reduce Motion`);
   eq(reduced.requiresAcknowledgement, true, `21: ${lesson} still waits for the player under Reduce Motion`);
   eq(reduced.continueLabel, full.continueLabel, `21: ${lesson} keeps its continue control`);
@@ -443,10 +456,21 @@ for (const lesson of ['feather', 'multiplier', 'streakBreak', 'progress', 'armor
 // ── Approved copy ───────────────────────────────────────────
 eq(
   HUD_LESSON_CONTENT.feather.lines.join(' / '),
-  'THESE ARE YOUR FEATHERS. / THEY’RE YOUR LIVES. / WRONG CALLS COST ONE. / LOSE THEM ALL, AND POLLY WINS THE HUNT.',
+  'THESE ARE YOUR FEATHERS. / THEY’RE YOUR LIVES. / WRONG CALLS COST ONE.',
   'feather copy',
 );
-eq(HUD_LESSON_CONTENT.feather.pollyLine, 'And you lost to a bird.', 'feather Polly line');
+eq(HUD_LESSON_CONTENT.feather.pollyLine, 'I’ll take that one.', 'feather Polly line');
+eq(HUD_LESSON_CONTENT.feather.pollyPose, 'smug', 'feather: Polly is smug');
+eq(
+  resolveHudLessonPresentation('feather', false).spokenPolly,
+  'Polly says, I’ll take that one.',
+  'feather: the reply reads naturally to a screen reader',
+);
+eq(
+  resolveHudLessonPresentation('feather', false).spokenCopy,
+  'These are your feathers. They’re your lives. Wrong calls cost one.',
+  'feather: the rule reads naturally to a screen reader',
+);
 eq(
   HUD_LESSON_CONTENT.multiplier.lines.join(' / '),
   'YOU’RE ON A RUN. / THREE CORRECT CALLS MOVE YOU UP A TIER. / REACH UNTRAPPABLE AND POLLY CAN’T TOUCH YOUR FEATHERS.',
@@ -588,6 +612,166 @@ for (const width of [320, 375, 390, 393, 402, 430, 440]) {
     !HUD_LESSON_CONTENT.multiplier.lines.some(line => /SCORE|3×/.test(line)),
     'the run-meter lesson no longer promises a score or 3×',
   );
+}
+
+// ── Mercy lesson (2026-11-09) ───────────────────────────────
+{
+  // The copy's numbers come from the same constants startGame uses.
+  eq(FLEDGLING_RUNS, 3, 'mercy: 3 feathers in Hunts 1-3');
+  eq(GRACE_RUNS, 10, 'mercy: the net ends after 10 Hunts');
+  eq(FLEDGLING_MERCY_LIVES, 3, 'mercy: fledgling revive gives 3');
+  eq(GRACE_MERCY_LIVES, 2, 'mercy: grace revive gives 2');
+
+  const taughtBasics = withLessons(fresh, {
+    feather: true, multiplier: true, streakBreak: true, progress: true, armor: true,
+  });
+  function loseUntilMercy(reviveLives: number, onboarding: FirstRunOnboardingState, runSeed = seed): Session {
+    let session: Session = { game: createGame(steps, reviveLives, runSeed, 0), onboarding };
+    for (let i = 0; i < 30 && (session.game.mercyUsed ?? 0) === 0; i += 1) {
+      session = decide(session, false);
+    }
+    eq(session.game.mercyUsed, 1, 'mercy: the revive fired');
+    eq(session.game.status, 'playing', 'mercy: the Hunt goes on');
+    return session;
+  }
+
+  const fledgling = loseUntilMercy(FLEDGLING_MERCY_LIVES, taughtBasics);
+  eq(fledgling.game.lives, 3, 'mercy: the fledgling revive left 3 feathers');
+  eq(resolveHudLesson(fledgling.onboarding, fledgling.game), 'mercy', 'mercy: due the moment the revive fires');
+  eq(resolveOnboardingInputMode(fledgling.onboarding, fledgling.game), 'locked', 'mercy: the lesson locks the next decision');
+  ok(mercyLessonOwnsRevive(fledgling.onboarding, fledgling.game.runSeed), 'mercy: the lesson replaces the float');
+  // GameScreen gives the card the count stored when the revive fired.
+  const cardFeathers = (session: Session) => (
+    resolveHudLesson(session.onboarding, session.game) === 'mercy'
+      ? session.onboarding.hudLessons.mercyPendingFeathers
+      : null
+  );
+  eq(fledgling.onboarding.hudLessons.mercyPendingFeathers, 3, 'mercy: the revive amount is stored as it fires');
+  const three = resolveHudLessonPresentation('mercy', false, { mercyFeathers: cardFeathers(fledgling) });
+  eq(
+    three.lines.join(' / '),
+    'YOU’RE OUT OF FEATHERS. / POLLY GIVES 3 MERCY FEATHERS. / ONCE PER HUNT. / ONLY FOR YOUR FIRST 10 HUNTS.',
+    'mercy copy, n = 3',
+  );
+
+  const grace = loseUntilMercy(GRACE_MERCY_LIVES, taughtBasics);
+  eq(grace.game.lives, 2, 'mercy: the grace revive left 2 feathers');
+  eq(grace.onboarding.hudLessons.mercyPendingFeathers, 2, 'mercy: the grace revive amount is stored');
+  eq(
+    resolveHudLessonPresentation('mercy', true, { mercyFeathers: cardFeathers(grace) }).lines.join(' / '),
+    'YOU’RE OUT OF FEATHERS. / POLLY GIVES 2 MERCY FEATHERS. / ONCE PER HUNT. / ONLY FOR YOUR FIRST 10 HUNTS.',
+    'mercy copy, n = 2',
+  );
+
+  // The card keeps the number it was given even if the feathers change after
+  // the revive (the screenshot case: a DEV button set them to 1 mid-lesson).
+  {
+    const changed: Session = { ...fledgling, game: { ...fledgling.game, lives: 1 } };
+    eq(resolveHudLesson(changed.onboarding, changed.game), 'mercy', 'mercy: still due after the feathers change');
+    eq(
+      resolveHudLessonPresentation('mercy', false, { mercyFeathers: cardFeathers(changed) }).lines[1],
+      'POLLY GIVES 3 MERCY FEATHERS.',
+      'mercy: the card keeps the revive amount, not the current feathers',
+    );
+  }
+  // No stored count (an old or damaged save): the line drops the number cleanly.
+  eq(
+    resolveHudLessonPresentation('mercy', false, { mercyFeathers: null }).lines[1],
+    'POLLY GIVES MERCY FEATHERS.',
+    'mercy: with no count the card still reads cleanly',
+  );
+  ok(
+    !resolveHudLessonPresentation('mercy', false).lines.some(line => line.includes('{')),
+    'mercy: a missing count never shows the raw token',
+  );
+  eq(HUD_LESSON_CONTENT.mercy.pollyLine, 'I wasn’t finished watching you lose.', 'mercy Polly line');
+  eq(HUD_LESSON_CONTENT.mercy.pollyPose, 'smug', 'mercy: Polly is smug');
+  eq(HUD_LESSON_CONTENT.mercy.target, 'feathers', 'mercy spotlights the feather row');
+  eq(HUD_LESSON_CONTENT.mercy.lines.length, 4, 'mercy: four lines, no extra jab');
+
+  // Shown once: after it completes, a later Hunt's Mercy keeps the float.
+  const taught = completeHudLesson(fledgling.onboarding, 'mercy');
+  eq(taught.hudLessons.mercy, true, 'mercy: completing sets the flag');
+  eq(taught.hudLessons.mercyPendingRunSeed, null, 'mercy: completing clears the pending Hunt');
+  eq(taught.hudLessons.mercyPendingFeathers, null, 'mercy: completing clears the stored count');
+  eq(resolveHudLesson(taught, fledgling.game), null, 'mercy: not due again in the same Hunt');
+  ok(!mercyLessonOwnsRevive(taught, fledgling.game.runSeed), 'mercy: the float is back once taught');
+  const later = loseUntilMercy(GRACE_MERCY_LIVES, taught, seed + 1);
+  eq(resolveHudLesson(later.onboarding, later.game), null, 'mercy: shown once per save');
+  ok(!mercyLessonOwnsRevive(later.onboarding, later.game.runSeed), 'mercy: later revives keep the float');
+  eq(completeHudLesson(taught, 'mercy'), taught, 'mercy: completing twice changes nothing');
+
+  // A revive on Polly's Word teaches nothing, so its float plays as usual.
+  {
+    const base = freshGame();
+    const prev: GameState = { ...base, stepIndex: bossIndex, lives: 1, mistakesOnWord: 0, mercyUsed: 0 };
+    const next: GameState = { ...prev, lives: 3, mistakesOnWord: 1, mercyUsed: 1, mercyTriggered: true };
+    const captured = captureHudLessonEvents(taughtBasics, prev, next);
+    eq(captured.hudLessons.mercyPendingRunSeed, null, 'mercy: a Boss-word revive is not captured');
+    eq(captured.hudLessons.mercyPendingFeathers, null, 'mercy: a Boss-word revive stores no count');
+    ok(!mercyLessonOwnsRevive(captured, next.runSeed), 'mercy: a Boss-word revive keeps the float');
+  }
+
+  // The DEV MERCY button (GameScreen) on a Hunt that has no revive: one
+  // feather, revive armed at 3, streak 0. The next wrong swipe runs the real
+  // revive and the real lesson capture.
+  {
+    const veteranGame = createGame(steps, 0, seed + 2, 0);
+    eq(veteranGame.mercyReviveLives, 0, 'dev mercy: this Hunt starts with no revive');
+    const armed: GameState = {
+      ...veteranGame, lives: 1, mercyReviveLives: FLEDGLING_MERCY_LIVES, streak: 0, chainMultiplier: 1,
+    };
+    const afterMiss = decide({ game: armed, onboarding: taughtBasics }, false);
+    eq(afterMiss.game.mercyUsed, 1, 'dev mercy: the next miss fires the real revive');
+    eq(afterMiss.game.lives, 3, 'dev mercy: the revive gives 3');
+    eq(resolveHudLesson(afterMiss.onboarding, afterMiss.game), 'mercy', 'dev mercy: the lesson is due');
+    eq(afterMiss.onboarding.hudLessons.mercyPendingFeathers, 3, 'dev mercy: the card will say 3');
+  }
+
+  // DEV MERCY guard: only on a live ordinary word with no lesson due or showing.
+  {
+    const allTaught = withLessons(fresh, {
+      feather: true, multiplier: true, streakBreak: true, progress: true, armor: true, mercy: true,
+    });
+    const clean = freshGame();
+    ok(devMercyArmAllowed(allTaught, clean), 'guard: allowed on a live ordinary word with no lesson due');
+    ok(!devMercyArmAllowed(fledgling.onboarding, fledgling.game), 'guard: blocked while the Mercy card is due');
+    const featherDue = {
+      ...allTaught,
+      hudLessons: { ...allTaught.hudLessons, feather: false, featherPendingRunSeed: clean.runSeed },
+    };
+    eq(resolveHudLesson(featherDue, clean), 'feather', 'guard setup: feather lesson due');
+    ok(!devMercyArmAllowed(featherDue, clean), 'guard: blocked while the feather card is due');
+    const armorDue = withLessons(allTaught, { armor: false });
+    const armored: GameState = { ...clean, streak: 9, chainMultiplier: 2.5 };
+    eq(resolveHudLesson(armorDue, armored), 'armor', 'guard setup: armor lesson due');
+    ok(!devMercyArmAllowed(armorDue, armored), 'guard: blocked while the armor card is due');
+    ok(!devMercyArmAllowed(allTaught, { ...clean, stepIndex: bossIndex }), 'guard: blocked on Polly’s Word');
+    ok(!devMercyArmAllowed(allTaught, { ...clean, status: 'gameOver' }), 'guard: blocked when the Hunt is over');
+  }
+
+  // Saves: the flag and the stored count round-trip, old or damaged saves load
+  // with no count, and DEV REPLAY LESSONS clears both.
+  const saved = hydrateOnboardingState(JSON.stringify(fledgling.onboarding));
+  eq(saved.hudLessons.mercyPendingRunSeed, fledgling.game.runSeed >>> 0, 'mercy: a pending lesson survives a resume');
+  eq(saved.hudLessons.mercyPendingFeathers, 3, 'mercy: the stored count survives a reload');
+  {
+    const { mercyPendingFeathers: _dropped, ...withoutCount } = fledgling.onboarding.hudLessons;
+    const oldSave = hydrateOnboardingState(JSON.stringify({ ...fledgling.onboarding, hudLessons: withoutCount }));
+    eq(oldSave.hudLessons.mercyPendingFeathers, null, 'mercy: an old save loads with no count');
+    for (const bad of [0, -2, 2.5, '3', true, null]) {
+      const damaged = hydrateOnboardingState(JSON.stringify({
+        ...fledgling.onboarding,
+        hudLessons: { ...fledgling.onboarding.hudLessons, mercyPendingFeathers: bad },
+      }));
+      eq(damaged.hudLessons.mercyPendingFeathers, null, `mercy: a stored count of ${JSON.stringify(bad)} loads as none`);
+    }
+  }
+  eq(hydrateOnboardingState(JSON.stringify(taught)).hudLessons.mercy, true, 'mercy: a taught flag survives a reload');
+  const replayed = devResetHudLessons(fledgling.onboarding);
+  eq(replayed.hudLessons.mercy, false, 'mercy: DEV REPLAY LESSONS clears the flag');
+  eq(replayed.hudLessons.mercyPendingRunSeed, null, 'mercy: DEV REPLAY LESSONS clears the pending Hunt');
+  eq(replayed.hudLessons.mercyPendingFeathers, null, 'mercy: DEV REPLAY LESSONS clears the stored count');
 }
 
 console.log('hudLessons tests passed');

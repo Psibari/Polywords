@@ -57,7 +57,10 @@ import {
   resolvePollyRelationshipBeat,
   resolvePollyRelationshipPresentation,
 } from '../game/pollyRelationship';
+import { FLEDGLING_MERCY_LIVES } from '../game/mercyPolicy';
 import {
+  devMercyArmAllowed,
+  mercyLessonOwnsRevive,
   recognitionOpensWithHold,
   resolveHudLesson,
   resolveOnboardingBoardPresentation,
@@ -1693,6 +1696,11 @@ function GameDirector({ navigation }: { navigation: any }) {
   useEffect(() => {
     if (!game.mercyTriggered) return;
     consumeMercy();
+    // The first Mercy on an ordinary word is explained by the Mercy HUD lesson
+    // instead (Pete, 2026-11-09): no float, squawk or haptic here, so the
+    // player never gets both. The lesson was captured in the same store update
+    // as the revive. Every later Mercy plays this beat unchanged.
+    if (mercyLessonOwnsRevive(onboarding, game.runSeed)) return;
     playSfx('pollySqwawkLaugh');
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
     mercyFloatY.setValue(0);
@@ -2158,6 +2166,33 @@ function GameDirector({ navigation }: { navigation: any }) {
           >
             <Text allowFontScaling={false} style={styles.devBossButtonText}>REPLAY{'\n'}LESSONS</Text>
           </Pressable>
+          {/* Dev tool (Pete, 2026-11-09): arms the REAL Mercy on the current
+              ordinary word. One feather left and a revive armed (the Hunt's own
+              amount, or 3 when this Hunt has none), the streak reset so armor
+              cannot absorb the miss. The next wrong swipe then runs
+              resolveLifeLoss and the lesson capture exactly as in play. Does
+              nothing while any HUD lesson is due or showing. Changes only the
+              live Hunt, never progress or runsCompleted. */}
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Dev: arm Mercy so the next wrong swipe revives"
+            onPress={() => {
+              const { game: g, onboarding: ob } = useGameStore.getState();
+              if (hudLessonShowing || !devMercyArmAllowed(ob, g)) return;
+              useGameStore.setState({
+                game: {
+                  ...g,
+                  lives: 1,
+                  mercyReviveLives: g.mercyReviveLives > 0 ? g.mercyReviveLives : FLEDGLING_MERCY_LIVES,
+                  streak: 0,
+                  chainMultiplier: chainMultiplierForStreak(0),
+                },
+              });
+            }}
+            style={styles.devBossButton}
+          >
+            <Text allowFontScaling={false} style={styles.devBossButtonText}>MERCY</Text>
+          </Pressable>
         </View>
       )}
 
@@ -2191,6 +2226,7 @@ function GameDirector({ navigation }: { navigation: any }) {
         targetLabels={hudTargetLabels}
         onComplete={completeHudLesson}
         onShowingChange={setHudLessonShowing}
+        context={{ mercyFeathers: hudLesson === 'mercy' ? onboarding.hudLessons.mercyPendingFeathers : null }}
       />
 
       {bossIntroSeen === false && isBossRound && (

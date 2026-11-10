@@ -2,6 +2,15 @@
 // HudLessonLayer renders it, firstRunOnboarding decides which lesson is due.
 import type { HudLessonId } from './firstRunOnboarding';
 import type { VisitSpec } from './pollyVisitPolicy';
+import { GRACE_RUNS } from './mercyPolicy';
+
+// Live values a lesson's copy depends on. mercyFeathers: the feathers the
+// Mercy revive that fired actually gave, stored with the pending lesson the
+// moment it fired (HudLessonState.mercyPendingFeathers), never read from the
+// current feather count.
+export type HudLessonContext = { mercyFeathers: number | null };
+
+const MERCY_FEATHERS_TOKEN = '{n}';
 
 export type HudLessonTarget = 'feathers' | 'streak' | 'rounds' | 'momentumBar';
 
@@ -24,10 +33,9 @@ export const HUD_LESSON_CONTENT: Record<HudLessonId, HudLessonContent> = {
       'THESE ARE YOUR FEATHERS.',
       'THEY’RE YOUR LIVES.',
       'WRONG CALLS COST ONE.',
-      'LOSE THEM ALL, AND POLLY WINS THE HUNT.',
     ],
     continueLabel: 'CONTINUE',
-    pollyLine: 'And you lost to a bird.',
+    pollyLine: 'I’ll take that one.',
     pollyPose: 'smug',
     settleMs: 950,
   },
@@ -82,7 +90,37 @@ export const HUD_LESSON_CONTENT: Record<HudLessonId, HudLessonContent> = {
     // UNTRAPPABLE land and pulse once before the panel takes the screen.
     settleMs: 950,
   },
+  // Mercy (Pete, 2026-11-09). Due the first time a revive fires on an
+  // ordinary word; it replaces that revive's POLLY ISN'T DONE WITH YOU float.
+  // {n} is filled from HudLessonContext.mercyFeathers, the stored revive amount (3 in Hunts 1-3, 2 in
+  // Hunts 4-10); the Hunt count comes from GRACE_RUNS. Mercy is once per Hunt
+  // in the engine (resolveLifeLoss zeroes mercyReviveLives when it fires).
+  mercy: {
+    target: 'feathers',
+    lines: [
+      'YOU’RE OUT OF FEATHERS.',
+      `POLLY GIVES ${MERCY_FEATHERS_TOKEN} MERCY FEATHERS.`,
+      'ONCE PER HUNT.',
+      `ONLY FOR YOUR FIRST ${GRACE_RUNS} HUNTS.`,
+    ],
+    continueLabel: 'CONTINUE',
+    pollyLine: 'I wasn’t finished watching you lose.',
+    pollyPose: 'smug',
+    // Same beat as the feather lesson: the wrong card's exit and the feather
+    // row refilling land before the panel takes the screen.
+    settleMs: 950,
+  },
 };
+
+// Fills {n}. A missing or invalid count drops the number rather than ever
+// showing the raw token.
+function fillLessonLine(line: string, context: HudLessonContext): string {
+  if (!line.includes(MERCY_FEATHERS_TOKEN)) return line;
+  const n = context.mercyFeathers;
+  return Number.isInteger(n) && (n as number) > 0
+    ? line.replace(MERCY_FEATHERS_TOKEN, String(n))
+    : line.replace(` ${MERCY_FEATHERS_TOKEN}`, '');
+}
 
 // A tap still in flight from the swipe that triggered the lesson must not
 // dismiss it, so the continue control arms a moment after the panel appears.
@@ -101,13 +139,16 @@ export type HudLessonPresentation = HudLessonContent & {
 export function resolveHudLessonPresentation(
   lesson: HudLessonId,
   reduceMotion: boolean,
+  context: HudLessonContext = { mercyFeathers: null },
 ): HudLessonPresentation {
   const content = HUD_LESSON_CONTENT[lesson];
+  const lines = content.lines.map(line => fillLessonLine(line, context));
   return {
     ...content,
+    lines,
     panelFadeMs: reduceMotion ? 0 : PANEL_FADE_MS,
     requiresAcknowledgement: true,
-    spokenCopy: content.lines.map(line => sentenceCase(line)).join(' '),
+    spokenCopy: lines.map(line => sentenceCase(line)).join(' '),
     spokenPolly: `Polly says, ${content.pollyLine}`,
   };
 }

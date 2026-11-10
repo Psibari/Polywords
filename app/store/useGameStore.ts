@@ -103,15 +103,14 @@ import {
 } from '../notifications/dailyReminder';
 import { foldRunIntoBookLog, localDateKey } from '../game/bookLog';
 import { resolveHuntPerformance } from '../game/pollyMood';
-
-// Onboarding taper: a hard cliff from full protection to zero protection at
-// run 4 felt unfair in simulation (finish rate fell from ~32% to ~6% for an
-// unchanged player). Fledgling gets the full ramp; Grace keeps a lighter
-// safety net for several more runs before the game goes full stakes.
-const FLEDGLING_RUNS = 3;
-const GRACE_RUNS = 10;
-const FLEDGLING_MERCY_LIVES = 3;
-const GRACE_MERCY_LIVES = 2;
+// Mercy taper constants (and why they taper) live in mercyPolicy.ts so the
+// Mercy HUD lesson reads the same numbers.
+import {
+  FLEDGLING_MERCY_LIVES,
+  FLEDGLING_RUNS,
+  GRACE_MERCY_LIVES,
+  GRACE_RUNS,
+} from '../game/mercyPolicy';
 
 const GAME_KEY = 'polywords_active_game';
 const GHOSTS_KEY = 'polywords_ghosts';
@@ -229,6 +228,7 @@ const HUD_LESSON_COMPLETED_EVENTS: Record<HudLessonId, PlaytestEventName> = {
   streakBreak: 'onboarding_hud_streak_break_completed',
   progress: 'onboarding_hud_progress_completed',
   armor: 'onboarding_hud_armor_completed',
+  mercy: 'onboarding_hud_mercy_completed',
 };
 
 // A committed Hunt decision and any HUD lesson it just made due land in one
