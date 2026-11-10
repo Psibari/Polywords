@@ -378,10 +378,27 @@ export function resolveOnboardingBoardPresentation(
 
 // Boss and Returning Haunt words own locked choreography; no lesson lands on them.
 export function isOrdinaryWordStep(game: GameState): boolean {
-  const step = game.session[game.stepIndex];
+  return isOrdinaryStep(game.session[game.stepIndex]);
+}
+
+function isOrdinaryStep(step: GameState['session'][number] | undefined): boolean {
   return step?.kind === 'word' &&
     step.eventType !== 'bossWord' &&
     step.isHauntReturn !== true;
+}
+
+// True when a HUD lesson that becomes due now could still be on screen when
+// it appears. A due lesson locks input, so the word can only move on by
+// itself once every visible card is judged: the board then completes the word
+// about a second after the last swipe (the wrong card's exit, then 290 ms,
+// useBoardMechanics), right as the 950 ms settle ends. If the next step is not
+// an ordinary word (Polly's Word, a Returning Haunt, or the end of the Hunt),
+// resolveHudLesson stops returning the lesson and it never shows on this word.
+function lessonCanShowOnThisWord(game: GameState): boolean {
+  const visible = game.shuffledMasks[game.stepIndex] ?? [];
+  const cardsLeft = visible.some(mask =>
+    !game.swipedUpIds.includes(mask.id) && !game.swipedDownIds.includes(mask.id));
+  return cardsLeft || isOrdinaryStep(game.session[game.stepIndex + 1]);
 }
 
 // The FINE hand-off window: the opening word is done, the next word is on the
@@ -469,11 +486,15 @@ export function captureHudLessonEvents(
   }
   // Mercy fired in this update (resolveLifeLoss counts every revive in
   // mercyUsed). Only ordinary words reach here, so a revive on Polly's Word or
-  // a Returning Haunt keeps its usual float and teaches nothing.
+  // a Returning Haunt keeps its usual float and teaches nothing. The same goes
+  // for a revive on the last card before one of those: the card could not show
+  // in time, so the float plays and the card waits for a later revive. The
+  // player always gets one or the other, never both and never neither.
   if (
     !lessons.mercy &&
     (next.mercyUsed ?? 0) > (prev.mercyUsed ?? 0) &&
-    lessons.mercyPendingRunSeed !== next.runSeed
+    lessons.mercyPendingRunSeed !== next.runSeed &&
+    lessonCanShowOnThisWord(next)
   ) {
     // next.lives is what resolveLifeLoss just set: the revive amount.
     hudLessons = {

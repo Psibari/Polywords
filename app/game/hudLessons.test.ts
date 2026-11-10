@@ -8,6 +8,7 @@ import {
   devResetHudLessons,
   dismissCompletedOnboardingHandoffOnResume,
   hydrateOnboardingState,
+  isOrdinaryWordStep,
   mercyLessonOwnsRevive,
   reconcileOnboardingRun,
   resolveHudLesson,
@@ -726,6 +727,54 @@ for (const width of [320, 375, 390, 393, 402, 430, 440]) {
     eq(afterMiss.game.lives, 3, 'dev mercy: the revive gives 3');
     eq(resolveHudLesson(afterMiss.onboarding, afterMiss.game), 'mercy', 'dev mercy: the lesson is due');
     eq(afterMiss.onboarding.hudLessons.mercyPendingFeathers, 3, 'dev mercy: the card will say 3');
+  }
+
+  // The Polly's Word gap: a revive on the last card of the word before Polly's
+  // Word. The board completes that word about a second after the swipe, right
+  // as the card would appear, and the card cannot show on Polly's Word. So the
+  // player must get the float instead: one or the other, never neither.
+  {
+    function reviveOnLastCard(stepIndex: number, cardsLeft: number): Session {
+      const base: GameState = {
+        ...freshGame(), stepIndex, lives: 1, mercyReviveLives: FLEDGLING_MERCY_LIVES, streak: 0, chainMultiplier: 1,
+      };
+      const visible = base.shuffledMasks[stepIndex];
+      const judged = visible.slice(0, visible.length - cardsLeft);
+      const ready: GameState = {
+        ...base,
+        swipedUpIds: judged.filter(mask => mask.isReal).map(mask => mask.id),
+        swipedDownIds: judged.filter(mask => !mask.isReal).map(mask => mask.id),
+      };
+      const after = decide({ game: ready, onboarding: taughtBasics }, false);
+      eq(after.game.mercyUsed, 1, `gap setup: the revive fired on word ${stepIndex}`);
+      return after;
+    }
+    // What the player gets for this revive: the float now, or the card on this
+    // word or the next (the board advances the word after the last card).
+    function outcome(session: Session) {
+      const gotFloat = !mercyLessonOwnsRevive(session.onboarding, session.game.runSeed);
+      const advanced = completeWord(session.game);
+      const gotCard = resolveHudLesson(session.onboarding, session.game) === 'mercy' &&
+        resolveHudLesson(session.onboarding, advanced) === 'mercy';
+      return { gotFloat, gotCard };
+    }
+
+    const lastOrdinary = bossIndex - 1;
+    ok(isOrdinaryWordStep({ ...freshGame(), stepIndex: lastOrdinary }), 'gap setup: the word before Polly’s Word is ordinary');
+    ok(isOrdinaryWordStep({ ...freshGame(), stepIndex: lastOrdinary - 1 }), 'gap setup: the word before that is ordinary');
+
+    const beforeBoss = outcome(reviveOnLastCard(lastOrdinary, 1));
+    ok(beforeBoss.gotFloat, 'gap: a revive on the last card before Polly’s Word plays the float');
+    ok(!beforeBoss.gotCard, 'gap: and no card is promised that could not show');
+    ok(beforeBoss.gotFloat !== beforeBoss.gotCard, 'gap: the player gets exactly one of card or float');
+
+    const cardsRemain = outcome(reviveOnLastCard(lastOrdinary, 2));
+    ok(!cardsRemain.gotFloat, 'gap control: with cards left on the word, the card owns the revive');
+    eq(resolveHudLesson(reviveOnLastCard(lastOrdinary, 2).onboarding, reviveOnLastCard(lastOrdinary, 2).game), 'mercy', 'gap control: the card is due while cards remain');
+
+    const beforeOrdinary = outcome(reviveOnLastCard(lastOrdinary - 1, 1));
+    ok(!beforeOrdinary.gotFloat, 'gap control: before an ordinary word the card owns the revive');
+    ok(beforeOrdinary.gotCard, 'gap control: and the card carries on to the next ordinary word');
   }
 
   // DEV MERCY guard: only on a live ordinary word with no lesson due or showing.
