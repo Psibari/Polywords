@@ -721,8 +721,14 @@ Pete, 2026-10-29: nothing below ~18 for copy.
   (`POLLY_READ_NOTICE_MS` 500 ms + 15 characters a second, capped at 5000 ms; TEST VALUES). `perchMs` is
   now a MINIMUM. This runs in `PollyHuntVisit.tsx`, so the onboarding and HUD-lesson visits get it too.
   A word change no longer fast-exits a heckle (`usePollyVisits.ts`); only a guaranteed visit cuts one.
-  The Daily perch still holds every bubble a fixed 2.5 s. Device-checked by Pete 2026-11-11 ("way
-  better now with the timing").
+  Device-checked by Pete 2026-11-11 ("way better now with the timing").
+- Daily bubble reading time (2026-11-11): `PollyDailyPerch.tsx` holds a reaction's bubble for
+  `DAILY_BUBBLE_MIN_MS` 2500 or the line's `pollyLineReadMs`, whichever is longer (four long mood lines
+  gain up to 0.5 s; the reaction completes that much later). First-miss dance: the dance's own bubble
+  keyframes (`POLLY_DANCE_BUBBLE`, in at 850, out from 1650) are UNCHANGED, but once it is fully in the
+  perch sets its own `bubbleOpacity` to 1 underneath, so the bubble stays beside her after she lands,
+  until 850 + reading time (about 2.95 s for the butter-knife line; was about 0.8 s on screen). The sum
+  of the two opacities is clamped to 1. The dance itself is untouched. NOT yet device-checked.
 - Polly's short wrong-swipe squawk fires always when a real chain FELL OFF, otherwise on every
   third other wrong swipe. The count lives in `GameScreen` for the whole Hunt (reset per run),
   not in the board, which remounts per word.
