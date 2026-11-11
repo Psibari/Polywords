@@ -47,6 +47,9 @@ import {
 // screen owns navigation; this component draws the layers and reports taps.
 // Geometry comes from resolveTerraceLayout (one width-fit, bottom-anchored frame).
 
+// The terrace's own perch stick (assets/images/home/terrace/perch.png). Off: see where it is used.
+const TERRACE_SCENE_PERCH_ENABLED: boolean = false;
+
 const ART = {
   bg: require('../../assets/images/home/terrace/bg.webp'),
   front: require('../../assets/images/home/terrace/front.webp'),
@@ -422,8 +425,13 @@ export function HomeTerraceScene(props: Props) {
       />
       </Animated.View>
 
-      {/* The perch Polly lands on: a short wooden stick sticking out of the wall. */}
-      <Image source={ART.perch} style={[styles.img, rects.perch]} resizeMode="stretch" />
+      {/* The terrace's own perch stick is NOT drawn (Pete, 2026-11-11). Every Polly pose carries its own
+          log, so the stick showed as a second perch behind her (clearest under the angry pose). The empty
+          log she lands on and leaves behind now comes from PollyHomePerch (POLLY_HOME_EMPTY_PERCH). The
+          art, its rect and its DEV positioner entry stay; set this to true to draw the stick again. */}
+      {TERRACE_SCENE_PERCH_ENABLED && (
+        <Image source={ART.perch} style={[styles.img, rects.perch]} resizeMode="stretch" />
+      )}
 
       {/* Polly, perched on the back wall. */}
       {polly}

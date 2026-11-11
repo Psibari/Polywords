@@ -231,7 +231,11 @@ export default function PollyHomePerch({ drop }: PollyHomePerchProps = {}) {
   const flownAwayRef = useRef(false);
   // Shows the empty perch she left behind (rig poses only; see
   // POLLY_HOME_EMPTY_PERCH). Off whenever she is on her perch.
-  const [emptyPerchShown, setEmptyPerchShown] = useState(false);
+  // It also waits for her on the entrance (she is still above the screen), when
+  // the pose she will land in is a rig pose; hidden again the moment she settles.
+  const [emptyPerchShown, setEmptyPerchShown] = useState(
+    () => isEntrance && drop !== undefined && POLLY_PERCH_RIG_ENABLED && pollyHomePoseUsesRig(settledPose),
+  );
   // Mirrors `settledPose` on every render (a plain ref write, not an effect,
   // so there is no lag) so the doze timer — set up once inside an effect
   // keyed on [isFocused, reduceMotion, wasEntrance], not on pose — can read
@@ -299,6 +303,7 @@ export default function PollyHomePerch({ drop }: PollyHomePerchProps = {}) {
     if (reduceMotion) {
       slideY.setValue(0);
       setPose(settledPoseRef.current);
+      setEmptyPerchShown(false);
       entranceSettledRef.current = true;
     }
 
@@ -319,6 +324,7 @@ export default function PollyHomePerch({ drop }: PollyHomePerchProps = {}) {
     // when the entrance started.
     const poseT = setTimeout(() => {
       setPose(settledPoseRef.current);
+      setEmptyPerchShown(false);
       entranceSettledRef.current = true;
     }, reduceMotion ? 0 : 650);
     const showDelay = reduceMotion ? 0 : 900;
