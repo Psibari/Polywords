@@ -336,7 +336,10 @@ const styles = StyleSheet.create({
     position: 'absolute',
     left: '15%',
     right: '15%',
-    top: '54.5%',
+    // TEST VALUE (2026-11-10, green-crown art): carved KING ends ~54.4% of the
+    // frame; PlaqueText's ink starts ~6 pt (~2.2%) below this box top at size 50
+    // on iOS, so the word's ink top lands ~58.7%, the old art's ~4.3% gap.
+    top: '56.5%',
   },
   kingFlash: {
     pointerEvents: 'none',
