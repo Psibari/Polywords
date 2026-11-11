@@ -17,6 +17,15 @@ import {
 import { resolveHomeRestingPose } from '../game/pollyHomeRestingPose';
 import { homePerch } from '../ui/pwHomeMaterials';
 import { resolveHomePollyMoment } from '../game/pollyMemory';
+import { POLLY_LINES, PollyLineId } from '../game/pollyCharacter';
+import {
+  HOME_IDLE_JAB_MAX_PER_VISIT,
+  HOME_IDLE_JAB_SHOW_MS,
+  homeIdleJabStartMs,
+  pickHomeIdleJab,
+  rememberHomeIdleJab,
+  resolveHomeIdleJabMood,
+} from '../game/pollyHomeIdleJabs';
 import {
   derivePollyRelationshipContext,
   resolvePollyRelationshipBeat,
@@ -37,6 +46,14 @@ let enteredThisSession = false;
 // only). Once the count rises, a Hunt has been played this session and the
 // "back after an absence" look relaxes (homeBeatForSession).
 let sessionStartRunsCompleted: number | null = null;
+// The idle jabs she has said lately this app session (in memory only), so the
+// next pick skips them. Deliberately NOT the store's rememberPollyLine: that
+// advances the Home greeting rotation and would push Hunt lines out of the
+// shared recent-line memory.
+let recentHomeIdleJabs: PollyLineId[] = [];
+// Bubble fade times, the same as the greeting's.
+const IDLE_JAB_FADE_IN_MS = 220;
+const IDLE_JAB_FADE_OUT_MS = 260;
 
 // Home doze switch (Pete, 2026-11-11): OFF. The idle face rig (sprite4 art) and
 // the master asleep pose are different drawings, and testers could see the swap.
@@ -197,6 +214,11 @@ export default function PollyHomePerch({ drop }: PollyHomePerchProps = {}) {
   const entranceSettledRef = useRef(!isEntrance);
   const showRig = POLLY_PERCH_RIG_ENABLED && pollyHomePoseUsesRig(pose);
   const [dozeStage, setDozeStage] = useState<DozeStage>('awake');
+  // The idle jab in the bubble, once she has said one; null until then, so the
+  // bubble keeps the greeting. Left set after the fade (the bubble is invisible).
+  const [idleJabLine, setIdleJabLine] = useState<string | null>(null);
+  const idleJabShowing = useRef(false);
+  const idleJabBaselineUsed = useRef(false);
   // Mirrors `settledPose` on every render (a plain ref write, not an effect,
   // so there is no lag) so the doze timer — set up once inside an effect
   // keyed on [isFocused, reduceMotion, wasEntrance], not on pose — can read
@@ -432,6 +454,60 @@ export default function PollyHomePerch({ drop }: PollyHomePerchProps = {}) {
     };
   }, [isFocused, lifeProfile.dozeDelayMultiplier, reduceMotion, wasEntrance, wasFirstHomeBeat]);
 
+  // Idle jabs (Pete, 2026-11-11): while the player just sits on Home she
+  // needles them, up to HOME_IDLE_JAB_MAX_PER_VISIT times per focus, then goes
+  // quiet. The clock starts when Home gains focus (after the greeting bubble
+  // has gone, on the entrance visit) and restarts on every later focus. Each
+  // jab reads her CURRENT resting pose when it fires (normal or sore-loser
+  // pool; the embarrassed pose says nothing). Silent, like the greeting. The
+  // very first Home visit belongs to her four intro lines, so no jabs there.
+  // Plain timers: each fade is its own short animation, never chained.
+  useEffect(() => {
+    if (!isFocused || reduceMotion === null) return;
+    const entranceVisit = wasEntrance && !idleJabBaselineUsed.current;
+    idleJabBaselineUsed.current = true;
+    if (entranceVisit && wasFirstHomeBeat) return;
+    const baseline = entranceVisit ? GREETING_FADE_END_MS : 0;
+
+    const timers: ReturnType<typeof setTimeout>[] = [];
+    for (let index = 0; index < HOME_IDLE_JAB_MAX_PER_VISIT; index += 1) {
+      const showAt = baseline + homeIdleJabStartMs(index);
+      timers.push(setTimeout(() => {
+        const mood = resolveHomeIdleJabMood(settledPoseRef.current);
+        if (mood === null) return;
+        const lineId = pickHomeIdleJab(mood, recentHomeIdleJabs, Math.random());
+        recentHomeIdleJabs = rememberHomeIdleJab(recentHomeIdleJabs, lineId);
+        setIdleJabLine(POLLY_LINES[lineId]);
+        idleJabShowing.current = true;
+        Animated.timing(bubbleOpacity, {
+          toValue: 1,
+          duration: reduceMotion ? 0 : IDLE_JAB_FADE_IN_MS,
+          useNativeDriver: true,
+        }).start();
+      }, showAt));
+      timers.push(setTimeout(() => {
+        if (!idleJabShowing.current) return;
+        idleJabShowing.current = false;
+        Animated.timing(bubbleOpacity, {
+          toValue: 0,
+          duration: reduceMotion ? 0 : IDLE_JAB_FADE_OUT_MS,
+          useNativeDriver: true,
+        }).start();
+      }, showAt + HOME_IDLE_JAB_SHOW_MS));
+    }
+
+    return () => {
+      timers.forEach(clearTimeout);
+      // Leaving Home mid-jab: hide the bubble at once so it is not still up
+      // when Home comes back. Only when a jab owns the bubble, never the greeting.
+      if (idleJabShowing.current) {
+        idleJabShowing.current = false;
+        bubbleOpacity.stopAnimation();
+        bubbleOpacity.setValue(0);
+      }
+    };
+  }, [isFocused, reduceMotion, wasEntrance, wasFirstHomeBeat, bubbleOpacity]);
+
   const isAsleep = dozeStage === 'asleep';
 
   // Z loop: runs only while she is fully asleep on a focused Home with motion
@@ -596,7 +672,9 @@ export default function PollyHomePerch({ drop }: PollyHomePerchProps = {}) {
 
       {/* Greeting bubble — to her right, tail points left at her */}
       <Animated.View style={[styles.bubbleWrap, { opacity: bubbleOpacity }]}>
-        <PollySpeechBubble line={wasFirstHomeBeat ? FIRST_HOME_LINES[firstHomeLineIndex] : moment.line} />
+        <PollySpeechBubble
+          line={idleJabLine ?? (wasFirstHomeBeat ? FIRST_HOME_LINES[firstHomeLineIndex] : moment.line)}
+        />
       </Animated.View>
     </Animated.View>
   );
