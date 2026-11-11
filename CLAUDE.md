@@ -838,7 +838,16 @@ Pete, 2026-10-29: nothing below ~18 for copy.
   sibling of the sliding root, shown only while she is away FROM a rig pose, and on the way back only
   if she lands IN a rig pose. From angry or embarrassed the perch leaves with her (no art; Pete chose
   this, option 2). The rig log can sit up to about 3.7 pt above the static perch at takeoff (her
-  breathing), so the log may jolt slightly as she pushes off. NOT yet device-checked.
+  breathing), so the log may jolt slightly as she pushes off. Jabs, flustered pool and fly-away
+  device-checked by Pete 2026-11-11 ("everything works how we want it to work"; `955848a`).
+- TERRACE PERCH STICK OFF (Pete, 2026-11-11). `HomeTerraceScene.tsx` no longer draws
+  `assets/images/home/terrace/perch.png` (`TERRACE_SCENE_PERCH_ENABLED` false). It sat behind Polly and,
+  because every pose has its own log, showed as a second perch (clearest under the angry pose; Pete's
+  screenshots). The art, its rect in `TERRACE_DEFAULTS` and its DEV positioner entry stay, but moving
+  `Perch` in the positioner now shows nothing. In its place the empty rig log (`POLLY_HOME_EMPTY_PERCH`)
+  also waits for her on the app-open entrance when she will land in a rig pose, and hides the moment
+  she settles. Entering angry or embarrassed, no perch shows until she lands (no art). NOT yet
+  device-checked.
 - Home sleep: master `asleep` plus three looping Z's (`HOME_Z_*`, native driver), running only
   while fully asleep, Home focused and motion allowed; Reduce Motion shows one still medium Z. She
   wakes only when Home loses focus; touches on Home do not wake her (Pete accepted).
