@@ -860,7 +860,10 @@ assert.equal(DAILY_BREACH_PLAQUE_PRESS.inMs + DAILY_BREACH_PLAQUE_PRESS.outMs, 9
   // the bubble, faded in by the reaction itself.
   assert.match(perch, /const plays = dailyBreachEffects\(reduceMotion, true\);\n\s*if \(!plays\.motion\) \{/);
   assert.match(perch, /\} else if \(reaction === 'happy' && plays\.pollyDance\) \{/);
-  assert.match(perch, /if \(!\(reaction === 'happy' && plays\.pollyDance\)\) \{\n\s*Animated\.timing\(bubbleOpacity/);
+  // The dance holds the bubble at 1 underneath its own keyframes once they are
+  // fully in; every other reaction (and the calm dance) fades it in itself.
+  assert.match(perch, /const dances = reaction === 'happy' && plays\.pollyDance;\n\s*if \(dances\) \{\n\s*Animated\.timing\(bubbleOpacity, \{\n\s*toValue: 1,\n\s*duration: 0,\n\s*delay: POLLY_DANCE_BUBBLE\.inAtMs \+ POLLY_DANCE_BUBBLE\.inMs,/);
+  assert.match(perch, /\} else \{\n\s*Animated\.timing\(bubbleOpacity, \{\n\s*toValue: 1,\n\s*duration: 180,\n\s*delay: bubbleDelay,/);
   // (The arrival's own `if (reduceMotion)` sits after `if (reduceMotion === null) return;`.)
   const reactionEffect = perch.slice(perch.indexOf('const isReacting ='), perch.indexOf('}, [reaction, reactionKey]);'));
   assert.doesNotMatch(reactionEffect, /if \(reduceMotion\)|!reduceMotion/, 'no truthy check that would read unknown as motion');
