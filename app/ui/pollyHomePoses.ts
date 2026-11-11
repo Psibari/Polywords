@@ -17,6 +17,9 @@ const POLLY_HOME_POSES = {
   idle: POLLY_POSES.idle,
   smug: POLLY_POSES.idle,
   fly: require('../../assets/images/polly/master/fly.png'),
+  // Leaving after her idle jabs (pollyHomeIdleJabs.ts picks which by mood).
+  flyAngry: require('../../assets/images/polly/master/flyAngry.png'),
+  flyGrin: require('../../assets/images/polly/master/flyGrin.png'),
   // Post-win resting pose: the closed-beak glare. (The open-beak angryYell is
   // the Hunt's mastery reaction; next to the blinking rig it was jarring.)
   angry: require('../../assets/images/polly/master/angry.png'),
@@ -41,6 +44,8 @@ const POLLY_HOME_POSE_SCALE: Record<PollyHomePoseName, number> = {
   idle: POLLY_POSE_SCALE.idle,
   smug: POLLY_POSE_SCALE.idle,
   fly: 1, // the entrance is a different shape; it keeps its natural size
+  flyAngry: 1,
+  flyGrin: 1,
   angry: POLLY_HOME_MASTER_SCALE,
   embarrassed: POLLY_HOME_MASTER_SCALE,
   asleep: POLLY_HOME_MASTER_SCALE,
@@ -54,6 +59,13 @@ export function pollyHomePoseArt(pose: PollyHomePoseName): { source: ImageSource
 export function pollyHomePoseUsesRig(pose: PollyHomePoseName): boolean {
   return POLLY_HOME_POSES[pose] === POLLY_POSES.idle;
 }
+
+// The empty perch she leaves behind when she flies off from a rig pose (idle,
+// smug). Cut from rig2/polly_base.png (same 283 x 413 canvas, so it sits exactly
+// under the rig's log) with her feet painted out by an automatic fill
+// (Claude, 2026-11-11); swap for artist art when it exists. The master angry and
+// embarrassed poses have their own, different logs and no empty-perch art yet.
+export const POLLY_HOME_EMPTY_PERCH = require('../../assets/images/polly/rig2/polly_perch_empty.png');
 
 // ── Sleeping Z's ────────────────────────────────────────────────────────────
 // The three Z images, each at its natural size in master-canvas pixels.

@@ -8,6 +8,7 @@ import {
 } from 'react-native';
 import {
   PollyHomePoseName,
+  POLLY_HOME_EMPTY_PERCH,
   POLLY_HOME_Z_ART,
   POLLY_HOME_Z_START_CANVAS,
   homeMasterCanvasToBox,
@@ -19,9 +20,12 @@ import { homePerch } from '../ui/pwHomeMaterials';
 import { resolveHomePollyMoment } from '../game/pollyMemory';
 import { POLLY_LINES, PollyLineId } from '../game/pollyCharacter';
 import {
+  HOME_IDLE_JAB_FADE_OUT_MS,
   HOME_IDLE_JAB_MAX_PER_VISIT,
   HOME_IDLE_JAB_SHOW_MS,
   homeIdleJabStartMs,
+  homeIdleLeaveMs,
+  resolveHomeLeavePose,
   pickHomeIdleJab,
   rememberHomeIdleJab,
   resolveHomeIdleJabMood,
@@ -51,9 +55,11 @@ let sessionStartRunsCompleted: number | null = null;
 // advances the Home greeting rotation and would push Hunt lines out of the
 // shared recent-line memory.
 let recentHomeIdleJabs: PollyLineId[] = [];
-// Bubble fade times, the same as the greeting's.
+// Bubble fade-in, the same as the greeting's (the fade-out is HOME_IDLE_JAB_FADE_OUT_MS).
 const IDLE_JAB_FADE_IN_MS = 220;
-const IDLE_JAB_FADE_OUT_MS = 260;
+// Coming back after she flew off: the drop-in reaches the perch and her pose
+// changes from flying to resting this long in (the entrance's own 650 ms).
+const RETURN_SETTLE_MS = 650;
 
 // Home doze switch (Pete, 2026-11-11): OFF. The idle face rig (sprite4 art) and
 // the master asleep pose are different drawings, and testers could see the swap.
@@ -121,7 +127,7 @@ const HOME_Z_LAYERS = POLLY_HOME_Z_ART.map(z => {
 // by mount/unmount made each switch create a fresh image view, which draws
 // empty for a frame or two. To give a new awake pose a layer, add it here.
 const HOME_AWAKE_LAYER_POSES: readonly PollyHomePoseName[] = [
-  'idle', 'smug', 'fly', 'angry', 'embarrassed',
+  'idle', 'smug', 'fly', 'flyAngry', 'flyGrin', 'angry', 'embarrassed',
 ];
 // Poses the face rig draws (idle, smug) share the one rig layer.
 const HOME_AWAKE_IMAGE_POSES = HOME_AWAKE_LAYER_POSES.filter(
@@ -219,6 +225,13 @@ export default function PollyHomePerch({ drop }: PollyHomePerchProps = {}) {
   const [idleJabLine, setIdleJabLine] = useState<string | null>(null);
   const idleJabShowing = useRef(false);
   const idleJabBaselineUsed = useRef(false);
+  // True from the moment she flies off after her jabs until she has landed
+  // again on the next Home focus. A ref: the pose-follow effect and the timers
+  // must see it at once.
+  const flownAwayRef = useRef(false);
+  // Shows the empty perch she left behind (rig poses only; see
+  // POLLY_HOME_EMPTY_PERCH). Off whenever she is on her perch.
+  const [emptyPerchShown, setEmptyPerchShown] = useState(false);
   // Mirrors `settledPose` on every render (a plain ref write, not an effect,
   // so there is no lag) so the doze timer — set up once inside an effect
   // keyed on [isFocused, reduceMotion, wasEntrance], not on pose — can read
@@ -344,7 +357,7 @@ export default function PollyHomePerch({ drop }: PollyHomePerchProps = {}) {
   // After the entrance, her pose follows the live resting pose: a Hunt that
   // changes the streaks or the profile updates her while Home is hidden.
   useEffect(() => {
-    if (!entranceSettledRef.current) return;
+    if (!entranceSettledRef.current || flownAwayRef.current) return;
     setPose(settledPose);
   }, [settledPose]);
 
@@ -458,10 +471,15 @@ export default function PollyHomePerch({ drop }: PollyHomePerchProps = {}) {
   // needles them, up to HOME_IDLE_JAB_MAX_PER_VISIT times per focus, then goes
   // quiet. The clock starts when Home gains focus (after the greeting bubble
   // has gone, on the entrance visit) and restarts on every later focus. Each
-  // jab reads her CURRENT resting pose when it fires (normal or sore-loser
-  // pool; the embarrassed pose says nothing). Silent, like the greeting. The
+  // jab reads her CURRENT resting pose when it fires (normal, sore-loser or
+  // flustered pool). Silent, like the greeting. The
   // very first Home visit belongs to her four intro lines, so no jabs there.
   // Plain timers: each fade is its own short animation, never chained.
+  // After the last jab she flies off (Pete, 2026-11-11): the drop-in reversed,
+  // on the flight pose that fits her mood, silent. From a rig pose she leaves
+  // the empty perch behind; from the master angry or embarrassed pose the perch
+  // goes with her (no empty-perch art for those logs yet). She stays gone until
+  // Home is focused again (the effect below). Terrace Home only: it needs `drop`.
   useEffect(() => {
     if (!isFocused || reduceMotion === null) return;
     const entranceVisit = wasEntrance && !idleJabBaselineUsed.current;
@@ -474,7 +492,6 @@ export default function PollyHomePerch({ drop }: PollyHomePerchProps = {}) {
       const showAt = baseline + homeIdleJabStartMs(index);
       timers.push(setTimeout(() => {
         const mood = resolveHomeIdleJabMood(settledPoseRef.current);
-        if (mood === null) return;
         const lineId = pickHomeIdleJab(mood, recentHomeIdleJabs, Math.random());
         recentHomeIdleJabs = rememberHomeIdleJab(recentHomeIdleJabs, lineId);
         setIdleJabLine(POLLY_LINES[lineId]);
@@ -490,14 +507,38 @@ export default function PollyHomePerch({ drop }: PollyHomePerchProps = {}) {
         idleJabShowing.current = false;
         Animated.timing(bubbleOpacity, {
           toValue: 0,
-          duration: reduceMotion ? 0 : IDLE_JAB_FADE_OUT_MS,
+          duration: reduceMotion ? 0 : HOME_IDLE_JAB_FADE_OUT_MS,
           useNativeDriver: true,
         }).start();
       }, showAt + HOME_IDLE_JAB_SHOW_MS));
     }
+    if (drop) {
+      timers.push(setTimeout(() => {
+        const from = settledPoseRef.current;
+        flownAwayRef.current = true;
+        setEmptyPerchShown(POLLY_PERCH_RIG_ENABLED && pollyHomePoseUsesRig(from));
+        setPose(resolveHomeLeavePose(from));
+        if (reduceMotion) {
+          slideY.setValue(-drop.fromAbove);
+          return;
+        }
+        Animated.timing(slideY, {
+          toValue: -drop.fromAbove,
+          duration: drop.ms,
+          easing: Easing.in(Easing.cubic),
+          useNativeDriver: true,
+        }).start();
+      }, baseline + homeIdleLeaveMs()));
+    }
 
     return () => {
       timers.forEach(clearTimeout);
+      // Leaving Home while she is flying off: finish the exit at once, so she
+      // is fully out of sight when Home comes back and drops her in.
+      if (flownAwayRef.current && drop) {
+        slideY.stopAnimation();
+        slideY.setValue(-drop.fromAbove);
+      }
       // Leaving Home mid-jab: hide the bubble at once so it is not still up
       // when Home comes back. Only when a jab owns the bubble, never the greeting.
       if (idleJabShowing.current) {
@@ -507,6 +548,44 @@ export default function PollyHomePerch({ drop }: PollyHomePerchProps = {}) {
       }
     };
   }, [isFocused, reduceMotion, wasEntrance, wasFirstHomeBeat, bubbleOpacity]);
+
+  // Coming back: if she flew off, the next Home focus drops her in again like
+  // the entrance (no greeting). The empty perch waits for her only when the
+  // pose she lands in is a rig pose, so the log under her never changes drawing.
+  useEffect(() => {
+    if (!isFocused || reduceMotion === null || !flownAwayRef.current || !drop) return;
+    const landingUsesRig = POLLY_PERCH_RIG_ENABLED && pollyHomePoseUsesRig(settledPoseRef.current);
+    const land = () => {
+      flownAwayRef.current = false;
+      setEmptyPerchShown(false);
+      setPose(settledPoseRef.current);
+    };
+    if (reduceMotion) {
+      slideY.setValue(0);
+      land();
+      return;
+    }
+    setEmptyPerchShown(landingUsesRig);
+    setPose('fly');
+    slideY.setValue(-drop.fromAbove);
+    Animated.timing(slideY, {
+      toValue: 0,
+      duration: drop.ms,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: true,
+    }).start();
+    const landT = setTimeout(land, RETURN_SETTLE_MS);
+    return () => {
+      clearTimeout(landT);
+      // Left Home again before she landed: back out of sight, still away.
+      if (flownAwayRef.current) {
+        slideY.stopAnimation();
+        slideY.setValue(-drop.fromAbove);
+      }
+    };
+    // Keyed to focus and the motion preference only, like the entrance.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isFocused, reduceMotion]);
 
   const isAsleep = dozeStage === 'asleep';
 
@@ -552,6 +631,15 @@ export default function PollyHomePerch({ drop }: PollyHomePerchProps = {}) {
   const asleepArt = pollyHomePoseArt('asleep');
 
   return (
+    <>
+    {/* The empty perch she leaves behind. A sibling of the sliding root, so it
+        stays put while she flies off and drops back in. Always mounted (so it is
+        decoded); shown only while she is away from a rig pose. */}
+    <View style={[styles.root, { opacity: emptyPerchShown ? 1 : 0 }]}>
+      <View style={styles.pollyWrap}>
+        <Image source={POLLY_HOME_EMPTY_PERCH} resizeMode="contain" style={styles.pollyImage} />
+      </View>
+    </View>
     <Animated.View style={[styles.root, { transform: [{ translateY: slideY }] }]}>
       {/* Polly — whole-image motion only; her branch is part of the pose art,
           rooted off the left edge */}
@@ -677,6 +765,7 @@ export default function PollyHomePerch({ drop }: PollyHomePerchProps = {}) {
         />
       </Animated.View>
     </Animated.View>
+    </>
   );
 }
 

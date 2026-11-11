@@ -2,24 +2,29 @@ import assert from 'node:assert/strict';
 import { POLLY_LINES, type PollyLineId } from './pollyCharacter';
 import {
   HOME_IDLE_JABS_ANGRY,
+  HOME_IDLE_JABS_EMBARRASSED,
   HOME_IDLE_JABS_NORMAL,
+  HOME_IDLE_JAB_FADE_OUT_MS,
   HOME_IDLE_JAB_FIRST_MS,
   HOME_IDLE_JAB_GAP_MS,
   HOME_IDLE_JAB_MAX_PER_VISIT,
   HOME_IDLE_JAB_RECENT_LIMIT,
   HOME_IDLE_JAB_SHOW_MS,
+  HOME_IDLE_LEAVE_AFTER_MS,
   homeIdleJabStartMs,
+  homeIdleLeaveMs,
   pickHomeIdleJab,
   rememberHomeIdleJab,
   resolveHomeIdleJabMood,
+  resolveHomeLeavePose,
 } from './pollyHomeIdleJabs';
 
 // Pose to mood: the rig poses are normal, angry is the sore loser, and the
-// embarrassed pose stays quiet (no approved lines yet).
+// embarrassed pose is flustered.
 assert.equal(resolveHomeIdleJabMood('idle'), 'normal');
 assert.equal(resolveHomeIdleJabMood('smug'), 'normal');
 assert.equal(resolveHomeIdleJabMood('angry'), 'angry');
-assert.equal(resolveHomeIdleJabMood('embarrassed'), null);
+assert.equal(resolveHomeIdleJabMood('embarrassed'), 'embarrassed');
 
 // The exact approved copy (Pete, 2026-11-11). A wording change must be his.
 assert.deepEqual(HOME_IDLE_JABS_NORMAL.map(id => POLLY_LINES[id]), [
@@ -50,10 +55,20 @@ assert.deepEqual(HOME_IDLE_JABS_ANGRY.map(id => POLLY_LINES[id]), [
   'Who did you pay to play for you?',
   'Must be AI.',
 ]);
+assert.deepEqual(HOME_IDLE_JABS_EMBARRASSED.map(id => POLLY_LINES[id]), [
+  'I wasn\u2019t even trying.',
+  'I meant to do that.',
+  'My crown slipped. That\u2019s all.',
+  'It\u2019s hot out here. That\u2019s all.',
+  'I\u2019m fine. This is my fine face.',
+  'I guess miracles do happen.',
+  'Whatever.',
+  'No one will believe you anyway.',
+]);
 
-// No line sits in both pools, and no pool repeats a line.
+// No line sits in two pools, and no pool repeats a line.
 {
-  const all = [...HOME_IDLE_JABS_NORMAL, ...HOME_IDLE_JABS_ANGRY];
+  const all = [...HOME_IDLE_JABS_NORMAL, ...HOME_IDLE_JABS_ANGRY, ...HOME_IDLE_JABS_EMBARRASSED];
   assert.equal(new Set(all).size, all.length);
 }
 
@@ -61,6 +76,7 @@ assert.deepEqual(HOME_IDLE_JABS_ANGRY.map(id => POLLY_LINES[id]), [
 for (const roll of [0, 0.01, 0.25, 0.5, 0.75, 0.999, 1]) {
   assert.ok(HOME_IDLE_JABS_NORMAL.includes(pickHomeIdleJab('normal', [], roll)));
   assert.ok(HOME_IDLE_JABS_ANGRY.includes(pickHomeIdleJab('angry', [], roll)));
+  assert.ok(HOME_IDLE_JABS_EMBARRASSED.includes(pickHomeIdleJab('embarrassed', [], roll)));
 }
 
 // Recent lines are skipped, so a visit's jabs never repeat.
@@ -93,10 +109,25 @@ assert.ok(HOME_IDLE_JABS_ANGRY.includes(pickHomeIdleJab('angry', [...HOME_IDLE_J
 // Both pools are bigger than the recent list, so a fresh line always exists.
 assert.ok(HOME_IDLE_JABS_NORMAL.length > HOME_IDLE_JAB_RECENT_LIMIT);
 assert.ok(HOME_IDLE_JABS_ANGRY.length > HOME_IDLE_JAB_RECENT_LIMIT);
+assert.ok(HOME_IDLE_JABS_EMBARRASSED.length > HOME_IDLE_JAB_RECENT_LIMIT);
 
 // Schedule: first jab, then one per gap; a jab is gone before the next starts.
 assert.equal(homeIdleJabStartMs(0), HOME_IDLE_JAB_FIRST_MS);
 assert.equal(homeIdleJabStartMs(2), HOME_IDLE_JAB_FIRST_MS + 2 * HOME_IDLE_JAB_GAP_MS);
-assert.ok(HOME_IDLE_JAB_SHOW_MS + 260 < HOME_IDLE_JAB_GAP_MS);
+assert.ok(HOME_IDLE_JAB_SHOW_MS + HOME_IDLE_JAB_FADE_OUT_MS < HOME_IDLE_JAB_GAP_MS);
+
+// Leaving: after the last jab has gone, plus the wait; never before a jab.
+assert.equal(
+  homeIdleLeaveMs(),
+  homeIdleJabStartMs(HOME_IDLE_JAB_MAX_PER_VISIT - 1) +
+    HOME_IDLE_JAB_SHOW_MS + HOME_IDLE_JAB_FADE_OUT_MS + HOME_IDLE_LEAVE_AFTER_MS,
+);
+assert.ok(homeIdleLeaveMs() > homeIdleJabStartMs(HOME_IDLE_JAB_MAX_PER_VISIT - 1) + HOME_IDLE_JAB_SHOW_MS);
+
+// The flight pose she leaves on follows her mood.
+assert.equal(resolveHomeLeavePose('idle'), 'fly');
+assert.equal(resolveHomeLeavePose('smug'), 'flyGrin');
+assert.equal(resolveHomeLeavePose('angry'), 'flyAngry');
+assert.equal(resolveHomeLeavePose('embarrassed'), 'fly');
 
 console.log('pollyHomeIdleJabs: ok');

@@ -216,6 +216,16 @@ export const POLLY_LINES = {
   homeSoreCheater: 'Cheater.',
   homeSorePaid: 'Who did you pay to play for you?',
   homeSoreAi: 'Must be AI.',
+  // homeFluster* = the flustered set, for the embarrassed resting pose (a comeback
+  // win after a rough patch: she is covering, not raging).
+  homeFlusterNotTrying: 'I wasn’t even trying.',
+  homeFlusterMeantTo: 'I meant to do that.',
+  homeFlusterCrown: 'My crown slipped. That’s all.',
+  homeFlusterHot: 'It’s hot out here. That’s all.',
+  homeFlusterFineFace: 'I’m fine. This is my fine face.',
+  homeFlusterMiracles: 'I guess miracles do happen.',
+  homeFlusterWhatever: 'Whatever.',
+  homeFlusterBelieve: 'No one will believe you anyway.',
   bossCage: 'I was still in the cage when I learned that one.',
   bossForYou: 'This one’s for you.',
   bossWaiting: 'I’ve been waiting to use this.',
