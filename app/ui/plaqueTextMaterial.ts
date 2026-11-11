@@ -1,4 +1,10 @@
-export type PlaqueTextMaterialName = 'goldPlaque' | 'purplePlaque' | 'stonePlaque' | 'carvedStonePlaque' | 'carvedGoldPlaque';
+export type PlaqueTextMaterialName =
+  | 'goldPlaque'
+  | 'purplePlaque'
+  | 'stonePlaque'
+  | 'carvedStonePlaque'
+  | 'carvedGoldPlaque'
+  | 'raisedGoldPlaque';
 
 export type PlaqueTextMaterial = {
   face: string;
@@ -53,6 +59,19 @@ export const PLAQUE_TEXT_MATERIALS: Record<PlaqueTextMaterialName, PlaqueTextMat
     shadow: 'rgba(20, 4, 35, 0.72)',
     edgeOffset: { width: 0, height: 1.8 },
     edgeRadius: 0.5,
+  },
+  // BUSTER lettering (Pete, 2026-11-10): BU, STER, BUSTER and the round's word on the purple BUSTER
+  // plaque. purplePlaque's opaque amber copy 2 pt down-right made the gold read as floating. One
+  // text node carries one shadow, so this is a gold face with a tight dark plum edge sitting slightly
+  // down-right (light from the upper left); no separate light rim is possible without a second node.
+  // purplePlaque is now unused and left in place.
+  raisedGoldPlaque: {
+    face: '#F5C842', // TEST VALUE (palette gold, same as before)
+    depth: 'rgba(42, 12, 64, 0.85)', // TEST VALUE: dark plum edge
+    highlight: '#FFF1A6', // unused by PlaqueText; kept for the type
+    shadow: 'rgba(20, 4, 35, 0.72)', // unused by PlaqueText; kept for the type
+    edgeOffset: { width: 0.6, height: 0.9 }, // TEST VALUE: tight, slightly down-right
+    edgeRadius: 0.8, // TEST VALUE: must stay > 0 (Android drops a radius-0 text shadow)
   },
 };
 

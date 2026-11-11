@@ -191,7 +191,7 @@ export default function RematchOutcomePlaque({ word, kind, onContinue }: Props) 
   const imagePhase = resolvePlaqueImagePhase(phase);
   const finalArt = kind === 'king' ? kingPlaqueArt : busterPlaqueArt;
   const plaqueArt = imagePhase === 'master' ? masteredPlaqueArt : finalArt;
-  const finalMaterial = kind === 'king' ? 'carvedGoldPlaque' : 'purplePlaque';
+  const finalMaterial = kind === 'king' ? 'carvedGoldPlaque' : 'raisedGoldPlaque';
   const wordMaterial = phase === 'master' ? 'goldPlaque' : finalMaterial;
 
   return (
@@ -263,16 +263,16 @@ export default function RematchOutcomePlaque({ word, kind, onContinue }: Props) 
               {phase === 'swap' && (
                 <View style={styles.busterHeadlineRow}>
                   <Animated.View style={{ opacity: buOpacity, transform: [{ translateY: buY }] }}>
-                    <PlaqueText text="BU" material="purplePlaque" fontSize={36} fontFamily={FONTS.label} containerStyle={styles.busterPrefix} />
+                    <PlaqueText text="BU" material="raisedGoldPlaque" fontSize={36} fontFamily={FONTS.label} containerStyle={styles.busterPrefix} />
                   </Animated.View>
-                  <PlaqueText text="STER" material="purplePlaque" fontSize={36} fontFamily={FONTS.label} containerStyle={styles.busterSuffix} />
+                  <PlaqueText text="STER" material="raisedGoldPlaque" fontSize={36} fontFamily={FONTS.label} containerStyle={styles.busterSuffix} />
                 </View>
               )}
 
               {phase === 'final' && (
                 <PlaqueText
                   text="BUSTER"
-                  material="purplePlaque"
+                  material="raisedGoldPlaque"
                   fontSize={36}
                   fontFamily={FONTS.label}
                   containerStyle={styles.masterLabel}

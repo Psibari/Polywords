@@ -35,6 +35,17 @@ assert.notEqual(carvedGold.depth, gold.depth, 'carved gold draws a light edge, n
 assert.deepEqual(carvedGold.edgeOffset, { width: 0, height: 1.8 });
 assert.equal(carvedGold.edgeRadius, 0.5);
 assert.equal(gold.edgeOffset, undefined, 'the existing gold material keeps its default shadow');
+assert.equal(purple.edgeOffset, undefined, 'purplePlaque (now unused) keeps its default shadow');
+
+const raisedGold = PLAQUE_TEXT_MATERIALS.raisedGoldPlaque;
+assert.equal(raisedGold.face, '#F5C842');
+assert.equal(raisedGold.depth, 'rgba(42, 12, 64, 0.85)');
+assert.equal(raisedGold.highlight, '#FFF1A6');
+assert.equal(raisedGold.shadow, 'rgba(20, 4, 35, 0.72)');
+assert.deepEqual(raisedGold.edgeOffset, { width: 0.6, height: 0.9 });
+assert.equal(raisedGold.edgeRadius, 0.8);
+assert.ok((raisedGold.edgeRadius ?? 0) > 0, 'Android drops a text shadow whose radius is 0');
+assert.notEqual(raisedGold.depth, purple.depth, 'BUSTER no longer uses the amber drop shadow');
 
 assert.deepEqual(resolveBusterTransformFrame('master'), {
   visibleWord: 'MASTER',
