@@ -7,7 +7,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Defs, Path, RadialGradient, Rect, Stop } from 'react-native-svg';
 import { FONTS } from '../constants/fonts';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { chainMultiplierForStreak, currentStep, isArmored } from '../game/polyRunEngine';
+import { chainMultiplierForStreak, currentStep, isArmored, type GameState } from '../game/polyRunEngine';
+import { applyDevMasteryRematch } from '../game/devMasteryRematch';
 import { resolveHuntHud, resolveLiveHuntControl, HuntReadTier } from '../game/huntControl';
 import {
   fallWall,
@@ -1829,10 +1830,10 @@ function GameDirector({ navigation }: { navigation: any }) {
     navigation.navigate('Home', undefined, { pop: true });
   }
 
-  function handleDevJumpToBoss(livesOverride?: number) {
+  function handleDevJumpToBoss(livesOverride?: number, baseGame?: GameState) {
     if (!__DEV__) return;
 
-    const currentGame = useGameStore.getState().game;
+    const currentGame = baseGame ?? useGameStore.getState().game;
     const bossIndex = currentGame.session.findIndex(
       step => step.kind === 'word' && step.eventType === 'bossWord'
     );
@@ -1856,6 +1857,20 @@ function GameDirector({ navigation }: { navigation: any }) {
       },
     });
     setMissedCount(0);
+  }
+
+  // DEV: swaps this Hunt's Boss for a real MASTER'S REMATCH (app/game/devMasteryRematch.ts),
+  // then jumps to it like BOSS. Changes only the live Hunt; judging runs the normal store path.
+  function handleDevJumpToRematch() {
+    if (!__DEV__) return;
+    const { game: currentGame, progress, ghosts } = useGameStore.getState();
+    const rematch = applyDevMasteryRematch(
+      currentGame,
+      progress.masteredWords.map((record) => record.word),
+      ghosts.map((ghost) => ghost.wordId),
+    );
+    if (!rematch) return;
+    handleDevJumpToBoss(undefined, rematch);
   }
 
   const isDone =
@@ -2120,6 +2135,15 @@ function GameDirector({ navigation }: { navigation: any }) {
             style={[styles.devBossButton, styles.devBossButtonCrisis]}
           >
             <Text allowFontScaling={false} style={styles.devBossButtonText}>BOSS{'\n'}(CRISIS)</Text>
+          </Pressable>
+          {/* Dev tool (Pete, 2026-11-10): starts a real MASTER'S REMATCH to test the KING counter. */}
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Dev: jump to a Master's Rematch"
+            onPress={() => handleDevJumpToRematch()}
+            style={styles.devBossButton}
+          >
+            <Text allowFontScaling={false} style={styles.devBossButtonText}>REMATCH</Text>
           </Pressable>
           {/* Dev tool: plays the wall fall at its largest size, bypassing gameplay (for tuning the fall's look and sounds). */}
           <Pressable
