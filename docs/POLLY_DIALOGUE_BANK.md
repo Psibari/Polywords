@@ -58,8 +58,9 @@ that register.
 
 - Hunt visits obey `usePollyVisits`; Home greets once and settles.
 - Home idle jabs (Pete, 2026-11-11): if the player just sits on Home she needles them a few times,
-  then goes quiet. Two pools in `app/game/pollyHomeIdleJabs.ts`: normal (idle and smug poses) and
-  sore loser (the angry pose, after the player beat her). The embarrassed pose has no lines yet.
+  then goes quiet. Three pools in `app/game/pollyHomeIdleJabs.ts`: normal (idle and smug poses),
+  sore loser (the angry pose, after the player beat her) and flustered (the embarrassed pose, a
+  comeback win after a rough patch; the losing register below).
   Pete approved every line and wrote several; the exact copy is pinned by `pollyHomeIdleJabs.test.ts`.
 - First-ever Home: "Who are you?", "What do you want?", "You think you know words?", "You don’t
   look ready."

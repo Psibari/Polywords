@@ -815,14 +815,30 @@ Pete, 2026-10-29: nothing below ~18 for copy.
   up `HOME_IDLE_JAB_SHOW_MS` 4 s, `HOME_IDLE_JAB_MAX_PER_VISIT` 3 per focus, then quiet; the clock
   restarts on every Home focus. All four are TEST VALUES (Claude's first guesses). Pools and the pure
   picker live in `app/game/pollyHomeIdleJabs.ts` (pinned by `pollyHomeIdleJabs.test.ts`, exact copy
-  included); line text is `homeIdle*` / `homeSore*` in `pollyCharacter.ts`; the timers are one effect in
+  included); line text is `homeIdle*` / `homeSore*` / `homeFluster*` in `pollyCharacter.ts`; the timers are one effect in
   `PollyHomePerch.tsx`. Mood is read from her resting pose WHEN A JAB FIRES: idle and smug use the
-  normal pool, angry (the player beat her) uses the sore-loser pool, embarrassed says nothing (no
-  approved lines yet). No repeat within the last 5, kept in memory for the app session only: jabs do
+  normal pool, angry (the player beat her) uses the sore-loser pool, embarrassed (a comeback win after
+  a rough patch) uses the flustered pool (`homeFluster*`). No repeat within the last 5, kept in memory for the app session only: jabs do
   NOT go through `rememberPollyLine`, because surface `home` advances the greeting rotation and the
   shared recent-line list would lose Hunt lines. Silent. None on the first-ever Home visit (her four
   intro lines own it). Leaving Home mid-jab hides the bubble at once. Copy is Pete's (several lines are
-  his own); change it only on his word. Type-check clean; NOT yet device-checked.
+  his own); change it only on his word. Pete saw the jabs on POLYWORDS DEV 2026-11-11 ("she says the
+  lines"); Pete then tested the flustered pool the same day and it passed.
+- HOME FLY-AWAY (Pete, 2026-11-11). `HOME_IDLE_LEAVE_AFTER_MS` 3 s (TEST VALUE) after the third jab has
+  faded she flies off, silent: the drop-in reversed (`slideY` to `-drop.fromAbove` over `drop.ms`,
+  ease-in), on the flight pose `resolveHomeLeavePose` picks (angry `flyAngry`, smug `flyGrin`, idle and
+  embarrassed `fly`; the smug and embarrassed picks are Claude's guess). She stays gone until Home is
+  focused again, then drops in like the entrance (pose settles at `RETURN_SETTLE_MS` 650, no greeting)
+  and the jab clock restarts. `flownAwayRef` blocks the pose-follow effect while she is away. Terrace
+  Home only (needs the `drop` prop). Reduce Motion: she is simply gone, and simply back.
+  EMPTY PERCH: her log is drawn into every pose and the three logs (rig, master angry, master
+  embarrassed) are different drawings. `assets/images/polly/rig2/polly_perch_empty.png`
+  (`POLLY_HOME_EMPTY_PERCH`) is the rig's log cut from `polly_base.png` on the same 283x413 canvas with
+  her feet filled in automatically (smooth patches, no grain; Pete: "perch, it's fine"). It is a
+  sibling of the sliding root, shown only while she is away FROM a rig pose, and on the way back only
+  if she lands IN a rig pose. From angry or embarrassed the perch leaves with her (no art; Pete chose
+  this, option 2). The rig log can sit up to about 3.7 pt above the static perch at takeoff (her
+  breathing), so the log may jolt slightly as she pushes off. NOT yet device-checked.
 - Home sleep: master `asleep` plus three looping Z's (`HOME_Z_*`, native driver), running only
   while fully asleep, Home focused and motion allowed; Reduce Motion shows one still medium Z. She
   wakes only when Home loses focus; touches on Home do not wake her (Pete accepted).
