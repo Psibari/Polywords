@@ -39,6 +39,11 @@ import {
   addRealMaskIdFound,
   backfillHiddenPairIdsFound,
 } from '../game/hiddenProgressPersistence';
+import {
+  applyKingWin,
+  hydrateKingWins,
+  kingWinId,
+} from '../game/kingWins';
 import { generateHunt } from '../game/huntGenerator';
 import {
   buildDailySession,
@@ -294,6 +299,8 @@ const DEFAULT_PROGRESS: PlayerProgress = {
   // Set only by loadProgress, once, on first load of a save that predates it.
   // Kept undefined here so there is one code path that ever assigns it.
   bookSeed: undefined,
+  // MASTER'S REMATCH wins (Polybook KING tally). See app/game/kingWins.ts.
+  kingWins: 0,
 };
 
 type GameStore = {
@@ -347,6 +354,8 @@ type GameStore = {
     flawless: boolean,
     priorHauntAttempts: number,
   ) => void;
+  /** MASTER'S REMATCH win: KING counter +1, once per win id. */
+  recordKingWin: (winId: string) => void;
   recordHiddenPairIdFound: (pairId: string) => void;
   recordRealMaskIdFound: (maskId: string) => void;
   recordRunComplete: (finalScore: number) => void;
@@ -731,6 +740,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
             visiblePerfect,
             priorHauntAttempts,
           );
+        } else {
+          // MASTER'S REMATCH win: no crown, no mastery, but the KING counter goes up by 1.
+          // Same moment and same one-time `terminal` guard as recordMastery above.
+          get().recordKingWin(kingWinId(prev.runSeed, prev.stepIndex, step.word));
         }
         // invariant: a mastered word is never also a pending ghost (covers die→revive→master)
         const wordId = step.word.trim().toUpperCase();
@@ -861,6 +874,14 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const next = upsertMasteredRecord(
       current, word, isBoss, hiddenPairsFound, flawless, priorHauntAttempts,
     );
+    set({ progress: next });
+    AsyncStorage.setItem(PROGRESS_KEY, JSON.stringify(next)).catch(() => {});
+  },
+
+  recordKingWin: (winId) => {
+    const current = get().progress;
+    const next = applyKingWin(current, { isMasteryRematch: true, won: true, winId });
+    if (next === current) return;
     set({ progress: next });
     AsyncStorage.setItem(PROGRESS_KEY, JSON.stringify(next)).catch(() => {});
   },
@@ -1008,7 +1029,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
       if (raw) {
         const parsed = JSON.parse(raw);
         const merged: PlayerProgress = { ...DEFAULT_PROGRESS, ...parsed };
-        const backfilled = backfillHiddenPairIdsFound(merged);
+        // kingWins: older saves lack it (loads as 0); a bad value becomes 0.
+        const backfilled = hydrateKingWins(backfillHiddenPairIdsFound(merged));
         // Generated once, ever, right here. Date.now() is fine — it is a
         // seed, not a secret. Never regenerate an existing one: that would
         // rewrite what she wrote on every past day.

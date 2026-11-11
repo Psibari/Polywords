@@ -379,7 +379,7 @@ export default function VaultScreen({ navigation }: Props) {
 
         <View style={styles.polybookArea}>
           {POLYBOOK_SPREAD_ENABLED ? (
-            <PolybookSpread progress={progress} pollyMemory={pollyMemory} onRiseEnd={showPage} />
+            <PolybookSpread progress={progress} pollyMemory={pollyMemory} onRiseEnd={showPage} kingCount={progress.kingWins} />
           ) : (
             <LexiconPrototype
               hauntedWords={ghostsToShow.map((ghost) => ghost.word)}

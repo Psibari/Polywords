@@ -222,6 +222,13 @@ export type PlayerProgress = {
    *  two players don't open an identical book. Optional only for saves that
    *  predate it; the store fills it on load. */
   bookSeed?: number;
+  /** MASTER'S REMATCH wins (the Polybook KING tally). +1 per rematch win, never
+   *  for a loss or a normal Boss win. Optional only for saves that predate it;
+   *  loadProgress sanitizes it to a whole number >= 0. See app/game/kingWins.ts. */
+  kingWins?: number;
+  /** Id (runSeed:round:WORD) of the last counted rematch win, saved with
+   *  kingWins so a restored Hunt that replays the same win cannot count it twice. */
+  lastKingWinId?: string;
 };
 
 /** A single day in Polly's Polybook work log.
