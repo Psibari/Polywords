@@ -721,7 +721,8 @@ Pete, 2026-10-29: nothing below ~18 for copy.
   (`POLLY_READ_NOTICE_MS` 500 ms + 15 characters a second, capped at 5000 ms; TEST VALUES). `perchMs` is
   now a MINIMUM. This runs in `PollyHuntVisit.tsx`, so the onboarding and HUD-lesson visits get it too.
   A word change no longer fast-exits a heckle (`usePollyVisits.ts`); only a guaranteed visit cuts one.
-  The Daily perch still holds every bubble a fixed 2.5 s. NOT yet device-checked.
+  The Daily perch still holds every bubble a fixed 2.5 s. Device-checked by Pete 2026-11-11 ("way
+  better now with the timing").
 - Polly's short wrong-swipe squawk fires always when a real chain FELL OFF, otherwise on every
   third other wrong swipe. The count lives in `GameScreen` for the whole Hunt (reset per run),
   not in the board, which remounts per word.
@@ -852,8 +853,8 @@ Pete, 2026-10-29: nothing below ~18 for copy.
   screenshots). The art, its rect in `TERRACE_DEFAULTS` and its DEV positioner entry stay, but moving
   `Perch` in the positioner now shows nothing. In its place the empty rig log (`POLLY_HOME_EMPTY_PERCH`)
   also waits for her on the app-open entrance when she will land in a rig pose, and hides the moment
-  she settles. Entering angry or embarrassed, no perch shows until she lands (no art). NOT yet
-  device-checked.
+  she settles. Entering angry or embarrassed, no perch shows until she lands (no art). Seen by Pete on
+  his phone 2026-11-11 and kept; he plans to make the two missing empty logs himself later.
 - Home sleep: master `asleep` plus three looping Z's (`HOME_Z_*`, native driver), running only
   while fully asleep, Home focused and motion allowed; Reduce Motion shows one still medium Z. She
   wakes only when Home loses focus; touches on Home do not wake her (Pete accepted).
