@@ -17,13 +17,13 @@ import { playPollyReaction } from '../audio/pollyReactionSfx';
 import { PollyScreenPoseName, pollyScreenPoseArt, pollyScreenPoseUsesRig } from '../ui/pollyScreenPoses';
 import { POLLY_LINES, PollyLineId } from '../game/pollyCharacter';
 import { BookRivalryState } from '../game/pollyBookLines';
-import { pickFreshLine } from '../game/pollyVisitPolicy';
+import { pickFreshLine, pollyLineReadMs } from '../game/pollyVisitPolicy';
 import { useGameStore } from '../store/useGameStore';
 import { usePollyAmbientMotion } from '../hooks/usePollyAmbientMotion';
 import { PollyPerchRig, POLLY_PERCH_RIG_ENABLED } from './PollyPerchRig';
 import { PollySpeechBubble } from './PollySpeechBubble';
 import { DAILY_POLLY_BUBBLE } from '../ui/dailyCastleScene';
-import { POLLY_DANCE_MS } from '../ui/pollyDailyDance';
+import { POLLY_DANCE_BUBBLE, POLLY_DANCE_MS } from '../ui/pollyDailyDance';
 import { dailyBreachEffects } from '../ui/dailyBreach';
 import {
   DAILY_PERCH_EXIT_POSE,
@@ -133,6 +133,9 @@ const DAILY_POLLY_PARKED_Y = -4000;
 // Fly-out arc, copied from PollyHuntVisit's runExit (Hunt, 2026-10-08): up
 // and to the right off the top edge, nose-up, shrinking. Kept in step by hand.
 const FLY_OUT_MS = 500;
+// How long a reaction's bubble stays up, at least (the old fixed time). A line
+// that needs longer to be read gets longer (pollyLineReadMs; Pete, 2026-11-11).
+const DAILY_BUBBLE_MIN_MS = 2500;
 const EXIT_X_FRAC = 0.6;
 const EXIT_Y_HEADROOM = 80;
 
@@ -448,11 +451,24 @@ export default function PollyDailyPerch({
     const bubbleDelay = reaction === 'correct' || reaction === 'shocked' ? throwDelayMs : 0;
     bubbleOpacity.stopAnimation();
     bubbleOpacity.setValue(0);
-    setBubbleLine(getLine(reaction, dailyLossLineId, pickedCorrectLineId));
-    // The dance shows its bubble itself (in at 850 ms, out from 1650 ms, on its
-    // clock); every other reaction, and the calm dance (the laugh pose on the
-    // perch), fades it in here as before.
-    if (!(reaction === 'happy' && plays.pollyDance)) {
+    const reactionLine = getLine(reaction, dailyLossLineId, pickedCorrectLineId);
+    setBubbleLine(reactionLine);
+    // The dance fades its bubble in itself (at 850 ms, on its clock) and would
+    // take it away again 0.8 s later, when the hover ends: too short to read
+    // "Sharp as a butter knife." (Pete, 2026-11-11). So once the dance's bubble
+    // is fully in, this opacity is set to 1 underneath it; the dance's own
+    // fade-out then changes nothing and the bubble stays beside her after she
+    // lands, until the timer below. Every other reaction, and the calm dance
+    // (the laugh pose on the perch), fades it in here as before.
+    const dances = reaction === 'happy' && plays.pollyDance;
+    if (dances) {
+      Animated.timing(bubbleOpacity, {
+        toValue: 1,
+        duration: 0,
+        delay: POLLY_DANCE_BUBBLE.inAtMs + POLLY_DANCE_BUBBLE.inMs,
+        useNativeDriver: true,
+      }).start();
+    } else {
       Animated.timing(bubbleOpacity, {
         toValue: 1,
         duration: 180,
@@ -460,6 +476,11 @@ export default function PollyDailyPerch({
         useNativeDriver: true,
       }).start();
     }
+    // The bubble stays for the old 2.5 s or the line's reading time, whichever
+    // is longer, counted from when it appears (850 ms into the dance).
+    const bubbleHoldMs = dances
+      ? Math.max(DAILY_BUBBLE_MIN_MS, POLLY_DANCE_BUBBLE.inAtMs + pollyLineReadMs(reactionLine))
+      : bubbleDelay + Math.max(DAILY_BUBBLE_MIN_MS, pollyLineReadMs(reactionLine));
 
     if (bubbleTimerRef.current) clearTimeout(bubbleTimerRef.current);
     bubbleTimerRef.current = setTimeout(() => {
@@ -478,7 +499,7 @@ export default function PollyDailyPerch({
         setBubbleLine('');
         onReactionCompleteRef.current?.(key);
       });
-    }, 2500 + bubbleDelay);
+    }, bubbleHoldMs);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [reaction, reactionKey]);
 
@@ -538,7 +559,12 @@ export default function PollyDailyPerch({
     };
   }, [danceClock, danceLive, hitClock, hitLive, ownOpacity, rigOwnOpacity, smashClock, smashLive]);
   const bubbleShown = useMemo(
-    () => Animated.add(bubbleOpacity, perch.danceBubble),
+    // Clamped: during the dance both can be 1 at once (see the handoff above).
+    () => Animated.add(bubbleOpacity, perch.danceBubble).interpolate({
+      inputRange: [0, 1],
+      outputRange: [0, 1],
+      extrapolate: 'clamp',
+    }),
     [perch, bubbleOpacity],
   );
 
