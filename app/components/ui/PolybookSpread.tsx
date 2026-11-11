@@ -8,7 +8,9 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  useWindowDimensions,
   View,
+  type LayoutChangeEvent,
 } from "react-native";
 import { useRoute } from "@react-navigation/native";
 import { FONTS } from "../../constants/fonts";
@@ -24,8 +26,27 @@ import { useGameStore } from "../../store/useGameStore";
 import { useReducedMotionPreference } from "../../hooks/usePollyAmbientMotion";
 import { TERRACE_BOOK_DIVE, TERRACE_DIVE_SFX, terraceBookRiseTransform, type BookRiseFrom } from "../../ui/homeTerraceDive";
 import { playSfx } from "../../audio/sfx";
+import { countPolybookTally, type PolybookTallyKind } from "../../game/polybookTally";
+import {
+  POLYBOOK_TALLY_COLUMN_GAP,
+  POLYBOOK_TALLY_CROWN_BOXES,
+  POLYBOOK_TALLY_CROWN_TEXT_GAP,
+  POLYBOOK_TALLY_DEV_COUNTS,
+  POLYBOOK_TALLY_FONT_SCALE_CAP,
+  POLYBOOK_TALLY_LABELS,
+  POLYBOOK_TALLY_ORDER,
+  POLYBOOK_TALLY_ROW_GAP,
+  resolveCrownFrame,
+  resolveTallyLayout,
+} from "../../ui/polybookTally";
 
-const POLYBOOK_CROWN = require("../../../assets/images/polybook/polybook_crown.png");
+// MASTERY tally crowns (Pete, 2026-11-10). Mastered and Banished are the crowns the Results panel uses.
+const TALLY_CROWN_ART: Record<PolybookTallyKind, number> = {
+  mastered: require("../../../assets/images/results/GoldenCrown.png"),
+  king: require("../../../assets/images/results/kingcrown.png"),
+  banished: require("../../../assets/images/results/banishcrown.png"),
+  haunted: require("../../../assets/images/results/hauntcrown.png"),
+};
 
 type Section = "TODAY" | "JOURNAL" | "BEATEN";
 const SECTIONS: readonly Section[] = ["TODAY", "JOURNAL", "BEATEN"];
@@ -46,6 +67,11 @@ type Props = {
   pollyMemory: PollyMemory;
   /** Called once the cover has risen out of the Home hall and landed (Home's Polybook dive). */
   onRiseEnd?: () => void;
+  /**
+   * MASTER'S REMATCH wins. No saved counter exists yet (a rematch win records nothing), so this
+   * is 0 until a separate change adds the counter and passes it down.
+   */
+  kingCount?: number;
 };
 type PolybookRouteParams = {
   polybookSection?: Section;
@@ -54,7 +80,7 @@ type PolybookRouteParams = {
   polybookRiseFrom?: BookRiseFrom;
 };
 
-export function PolybookSpread({ progress, pollyMemory, onRiseEnd }: Props) {
+export function PolybookSpread({ progress, pollyMemory, onRiseEnd, kingCount = 0 }: Props) {
   const route = useRoute<any>();
   const routeParams = (route.params ?? {}) as PolybookRouteParams;
   const deepLinkSection = routeParams.polybookSection;
@@ -66,7 +92,12 @@ export function PolybookSpread({ progress, pollyMemory, onRiseEnd }: Props) {
   const [devTodayIndex, setDevTodayIndex] = useState(0);
   const [devJournalRows, setDevJournalRows] = useState<"REAL" | "SHORT" | "MEDIUM" | "FULL">("REAL");
   const [journalPage, setJournalPage] = useState(0);
-  const [masteryPage, setMasteryPage] = useState(0);
+  // DEV only: index into POLYBOOK_TALLY_DEV_COUNTS shown on all four tiles; null shows the real counts.
+  const [devTallyIndex, setDevTallyIndex] = useState<number | null>(null);
+  const [tallyArea, setTallyArea] = useState<{ width: number; height: number } | null>(null);
+  const [tallyTextHeight, setTallyTextHeight] = useState<number | undefined>(undefined);
+  const { fontScale } = useWindowDimensions();
+  const ghosts = useGameStore((state) => state.ghosts);
   const playerName = useGameStore((state) => state.playerName);
   const playerLabel = playerName.trim() || "PLAYER";
 
@@ -219,34 +250,41 @@ export function PolybookSpread({ progress, pollyMemory, onRiseEnd }: Props) {
     [section, journalPages.length],
   );
 
-  const masteryPages = useMemo(() => {
-    const CROWNS_PER_PAGE = 12;
-    const pages = [];
-    for (let index = 0; index < progress.masteredWords.length; index += CROWNS_PER_PAGE) {
-      pages.push(progress.masteredWords.slice(index, index + CROWNS_PER_PAGE));
-    }
-    return pages.length > 0 ? pages : [[]];
-  }, [progress.masteredWords]);
+  const tally = useMemo(() => {
+    const real = countPolybookTally({
+      masteredWords: progress.masteredWords,
+      wordRivalries: pollyMemory.wordRivalries,
+      ghosts,
+      kingCount,
+    });
+    if (!__DEV__ || devTallyIndex === null) return real;
+    const n = POLYBOOK_TALLY_DEV_COUNTS[devTallyIndex];
+    return { mastered: n, king: n, banished: n, haunted: n };
+  }, [progress.masteredWords, pollyMemory.wordRivalries, ghosts, kingCount, devTallyIndex]);
 
-  useEffect(() => {
-    setMasteryPage((current) => Math.min(current, masteryPages.length - 1));
-  }, [masteryPages.length]);
-
-  const turnMasteryPage = (delta: number) => {
-    setMasteryPage((current) => Math.max(0, Math.min(masteryPages.length - 1, current + delta)));
-  };
-
-  const masteryPanResponder = useMemo(
-    () => PanResponder.create({
-      onMoveShouldSetPanResponder: (_, gesture) =>
-        section === "BEATEN" && Math.abs(gesture.dx) > 18 && Math.abs(gesture.dx) > Math.abs(gesture.dy),
-      onPanResponderRelease: (_, gesture) => {
-        if (gesture.dx <= -44) turnMasteryPage(1);
-        else if (gesture.dx >= 44) turnMasteryPage(-1);
-      },
-    }),
-    [section, masteryPages.length],
+  // The 2x2 tally is sized from the space actually left under the heading, MASTERY label and rule
+  // (those follow the iPhone Text Size, so their height is not fixed).
+  const tallyLayout = useMemo(
+    () => tallyArea
+      ? resolveTallyLayout({
+          areaWidth: tallyArea.width,
+          areaHeight: tallyArea.height,
+          fontScale,
+          measuredTextBlockHeight: tallyTextHeight,
+        })
+      : null,
+    [tallyArea, fontScale, tallyTextHeight],
   );
+
+  function onTallyAreaLayout(event: LayoutChangeEvent) {
+    const { width, height } = event.nativeEvent.layout;
+    setTallyArea((current) => current && current.width === width && current.height === height ? current : { width, height });
+  }
+
+  function onTallyTextLayout(event: LayoutChangeEvent) {
+    const { height } = event.nativeEvent.layout;
+    setTallyTextHeight((current) => current !== undefined && Math.abs(current - height) < 0.5 ? current : height);
+  }
 
   const rivalryState = useMemo(
     () => resolveRivalryState({
@@ -291,14 +329,12 @@ export function PolybookSpread({ progress, pollyMemory, onRiseEnd }: Props) {
   function openTo(next: Section) {
     setOpenBookArtReady(false);
     if (next === "JOURNAL") setJournalPage(0);
-    if (next === "BEATEN") setMasteryPage(0);
     setSection(next);
     setIsOpen(true);
   }
 
   function selectSection(next: Section) {
     if (next === "JOURNAL" && section !== "JOURNAL") setJournalPage(0);
-    if (next === "BEATEN" && section !== "BEATEN") setMasteryPage(0);
     setSection(next);
   }
   function cycleDevState() {
@@ -315,6 +351,13 @@ export function PolybookSpread({ progress, pollyMemory, onRiseEnd }: Props) {
   function cycleDevJournalRows() {
     const modes = ["REAL", "SHORT", "MEDIUM", "FULL"] as const;
     setDevJournalRows((current) => modes[(modes.indexOf(current) + 1) % modes.length]);
+  }
+  function cycleDevTally() {
+    // REAL -> 0 -> 1 -> 7 -> 48 -> 123 -> REAL. Display only; saved data is untouched.
+    setDevTallyIndex((current) => {
+      const next = current === null ? 0 : current + 1;
+      return next >= POLYBOOK_TALLY_DEV_COUNTS.length ? null : next;
+    });
   }
 
   if (!isOpen) {
@@ -344,9 +387,15 @@ export function PolybookSpread({ progress, pollyMemory, onRiseEnd }: Props) {
 
   return (
     <View style={styles.root}>
-      {__DEV__ && (section === "TODAY" || section === "JOURNAL") && (
+      {__DEV__ && (
         <View style={styles.devControls}>
-          {section === "TODAY" ? (
+          {section === "BEATEN" ? (
+            <Pressable style={styles.devButton} onPress={cycleDevTally}>
+              <Text style={styles.devButtonText}>
+                TALLY {devTallyIndex === null ? "REAL" : POLYBOOK_TALLY_DEV_COUNTS[devTallyIndex]}
+              </Text>
+            </Pressable>
+          ) : section === "TODAY" ? (
             <>
               <Pressable style={styles.devButton} onPress={cycleDevState}>
                 <Text style={styles.devButtonText}>{displayedRivalryState}</Text>
@@ -442,40 +491,68 @@ export function PolybookSpread({ progress, pollyMemory, onRiseEnd }: Props) {
                 )}
 
                 {section === "BEATEN" && (
-                  <View key="BEATEN" style={styles.masteryPage} {...masteryPanResponder.panHandlers}>
+                  <View key="BEATEN" style={styles.masteryPage}>
                     <View style={styles.masteryPageContent}>
                       <Text style={styles.sectionHeading} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.62}>
                         {playerLabel.toUpperCase()}
                       </Text>
                       <Text style={styles.masteryLabel}>MASTERY</Text>
                       <View style={styles.inkRule} />
-                      <View style={styles.masteryGrid}>
-                        {masteryPages[masteryPage].map((record) => (
-                          <View
-                            key={record.word}
-                            accessible
-                            accessibilityLabel={`Mastered word: ${record.word}`}
-                            style={styles.masteryItem}
-                          >
-                            <Image source={POLYBOOK_CROWN} resizeMode="contain" style={styles.crown} />
+                      <View style={styles.tallyArea} onLayout={onTallyAreaLayout}>
+                        {tallyLayout && [0, 1].map((row) => (
+                          <View key={row} style={[styles.tallyRow, row === 1 && styles.tallyRowSecond]}>
+                            {POLYBOOK_TALLY_ORDER.slice(row * 2, row * 2 + 2).map((kind, column) => {
+                              const frame = resolveCrownFrame(POLYBOOK_TALLY_CROWN_BOXES[kind], tallyLayout.crownWidth);
+                              const label = POLYBOOK_TALLY_LABELS[kind];
+                              const measureText = row === 0 && column === 0;
+                              return (
+                                <View
+                                  key={kind}
+                                  accessible
+                                  accessibilityLabel={`${label.charAt(0)}${label.slice(1).toLowerCase()}: ${tally[kind]}`}
+                                  style={[styles.tallyTile, { width: tallyLayout.columnWidth }]}
+                                >
+                                  <View style={[styles.tallyCrownSlot, { width: tallyLayout.crownWidth, height: tallyLayout.slotHeight }]}>
+                                    <View style={[styles.tallyCrownClip, { width: frame.width, height: frame.height }]}>
+                                      <Image
+                                        source={TALLY_CROWN_ART[kind]}
+                                        style={{
+                                          position: "absolute",
+                                          left: frame.imageLeft,
+                                          top: frame.imageTop,
+                                          width: frame.imageWidth,
+                                          height: frame.imageHeight,
+                                        }}
+                                      />
+                                    </View>
+                                  </View>
+                                  <View style={styles.tallyText} onLayout={measureText ? onTallyTextLayout : undefined}>
+                                    <Text
+                                      style={[styles.tallyCount, { fontSize: tallyLayout.countFontSize }]}
+                                      numberOfLines={1}
+                                      adjustsFontSizeToFit
+                                      minimumFontScale={0.5}
+                                      maxFontSizeMultiplier={POLYBOOK_TALLY_FONT_SCALE_CAP}
+                                    >
+                                      {tally[kind]}
+                                    </Text>
+                                    <Text
+                                      style={[styles.tallyLabel, { fontSize: tallyLayout.labelFontSize }]}
+                                      numberOfLines={1}
+                                      adjustsFontSizeToFit
+                                      minimumFontScale={0.5}
+                                      maxFontSizeMultiplier={POLYBOOK_TALLY_FONT_SCALE_CAP}
+                                    >
+                                      {label}
+                                    </Text>
+                                  </View>
+                                </View>
+                              );
+                            })}
                           </View>
                         ))}
                       </View>
-                      <Text style={styles.masteryCount}>
-                        {progress.masteredWords.length} {progress.masteredWords.length === 1 ? "CROWN" : "CROWNS"}
-                      </Text>
                     </View>
-                    {masteryPages.length > 1 && (
-                      <View style={styles.pageTurner}>
-                        <Pressable accessibilityRole="button" accessibilityLabel="Previous mastery page" disabled={masteryPage === 0} hitSlop={10} onPress={() => turnMasteryPage(-1)} style={({ pressed }) => [styles.pageTurnButton, masteryPage === 0 && styles.pageTurnDisabled, pressed && styles.pressed]}>
-                          <Text style={styles.pageTurnArrow}>‹</Text>
-                        </Pressable>
-                        <Text style={styles.pageTurnLabel}>PAGE {masteryPage + 1} OF {masteryPages.length}</Text>
-                        <Pressable accessibilityRole="button" accessibilityLabel="Next mastery page" disabled={masteryPage === masteryPages.length - 1} hitSlop={10} onPress={() => turnMasteryPage(1)} style={({ pressed }) => [styles.pageTurnButton, masteryPage === masteryPages.length - 1 && styles.pageTurnDisabled, pressed && styles.pressed]}>
-                          <Text style={styles.pageTurnArrow}>›</Text>
-                        </Pressable>
-                      </View>
-                    )}
                   </View>
                 )}
               </View>
@@ -585,10 +662,16 @@ const styles = StyleSheet.create({
   masteryPage: { flex: 1, minHeight: 0, overflow: "hidden", paddingHorizontal: 12, paddingTop: 22, paddingBottom: 48 },
   masteryPageContent: { flex: 1, minHeight: 0, overflow: "hidden" },
   masteryLabel: { fontFamily: FONTS.ui, fontSize: 12, letterSpacing: 1.5, color: "#4A382D", marginBottom: 10 },
-  masteryGrid: { flexDirection: "row", flexWrap: "wrap", justifyContent: "center", alignContent: "flex-start", rowGap: 18 },
-  masteryItem: { width: "33.333%", alignItems: "center", justifyContent: "center", minHeight: 64 },
-  crown: { width: 54, height: 54 },
-  masteryCount: { fontFamily: FONTS.ui, fontSize: 12, letterSpacing: 1.25, color: "#4A382D", textAlign: "center", marginTop: 20 },
+  // MASTERY tally. Inks are the page's own: the heading ink for the count, the MASTERY label ink for the label.
+  tallyArea: { flex: 1, minHeight: 0, justifyContent: "center" },
+  tallyRow: { flexDirection: "row", justifyContent: "center", gap: POLYBOOK_TALLY_COLUMN_GAP },
+  tallyRowSecond: { marginTop: POLYBOOK_TALLY_ROW_GAP },
+  tallyTile: { alignItems: "center" },
+  tallyCrownSlot: { justifyContent: "flex-end", alignItems: "center" },
+  tallyCrownClip: { overflow: "hidden" },
+  tallyText: { alignSelf: "stretch", alignItems: "center", marginTop: POLYBOOK_TALLY_CROWN_TEXT_GAP },
+  tallyCount: { alignSelf: "stretch", fontFamily: FONTS.hud, color: "#120B08", textAlign: "center" },
+  tallyLabel: { alignSelf: "stretch", fontFamily: FONTS.ui, letterSpacing: 1.2, color: "#4A382D", textAlign: "center" },
   devControls: { position: "absolute", top: 2, right: 66, zIndex: 30, flexDirection: "row", gap: 4 },
   devButton: { backgroundColor: "rgba(15,13,42,0.92)", borderWidth: 1, borderColor: "rgba(245,200,66,0.75)", borderRadius: 4, paddingHorizontal: 7, paddingVertical: 5 },
   devButtonText: { fontFamily: FONTS.ui, fontSize: 9, color: "#F5C842", letterSpacing: 0.4 },
