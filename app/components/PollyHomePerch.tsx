@@ -38,6 +38,12 @@ let enteredThisSession = false;
 // "back after an absence" look relaxes (homeBeatForSession).
 let sessionStartRunsCompleted: number | null = null;
 
+// Home doze switch (Pete, 2026-11-11): OFF. The idle face rig (sprite4 art) and
+// the master asleep pose are different drawings, and testers could see the swap.
+// While false she never nods off: no nod, no asleep pose, no Z's, in every
+// resting pose and with Reduce Motion. All the doze code and art below stay in
+// place; set true to bring the doze back once the master art is rigged.
+const HOME_DOZE_ENABLED: boolean = false;
 // Idle-screen doze: how long she waits, once still, before nodding off.
 const DOZE_DELAY_MS = 8000;
 // Matches the entrance greeting's own hideT (4900ms) + fade duration
@@ -352,6 +358,7 @@ export default function PollyHomePerch({ drop }: PollyHomePerchProps = {}) {
       resetDozeVisuals();
       return;
     }
+    if (!HOME_DOZE_ENABLED) return;
     if (reduceMotion === null) return;
 
     const includeGreetingBaseline = wasEntrance && !usedGreetingBaseline.current;

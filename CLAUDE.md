@@ -801,6 +801,13 @@ Pete, 2026-10-29: nothing below ~18 for copy.
 - Home's "back after an absence" look (watchful) relaxes after the first completed Hunt of the app
   session (`homeBeatForSession` with the in-memory `sessionStartRunsCompleted`; nothing saved). A
   Hunt quit from the pause menu is not recorded, so it does not count.
+- HOME DOZE IS SWITCHED OFF (Pete, 2026-11-11): `HOME_DOZE_ENABLED` is `false` in `PollyHomePerch.tsx`,
+  so she never nods off on Home in any resting pose (idle, smug, angry, embarrassed), with or without
+  Reduce Motion: no nod, no asleep pose, no Z's. Reason: the idle face rig (sprite4 art) and master
+  `asleep.png` are different drawings and testers could see the swap. The two bullets below describe
+  the doze as built; all of that code, `asleep.png` and the Z art stay in place, and setting the flag
+  to `true` restores it. Bring it back only once the idle and the sleeping pose are the same art (a
+  rig built from the master art). Type-check clean; NOT yet device-checked.
 - Home sleep: master `asleep` plus three looping Z's (`HOME_Z_*`, native driver), running only
   while fully asleep, Home focused and motion allowed; Reduce Motion shows one still medium Z. She
   wakes only when Home loses focus; touches on Home do not wake her (Pete accepted).

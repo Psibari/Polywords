@@ -147,10 +147,11 @@ Phone testing uses the dedicated `POLYWORDS DEV` development client against the 
 - Daily sound: Polly is silent on right answers and the win; short squawk on the first miss;
   laugh on the second miss (the loss).
 - Home: after a win she rests in master angry until the player loses a Hunt; her resting pose
-  updates after a Hunt without an app restart; sleeping Z's loop; she wakes only when Home loses
-  focus.
-- Polly sleeps only on Home (a doze timer from when Home gains focus; touches do not reset it,
-  Pete accepted), never during a Hunt or the Daily.
+  updates after a Hunt without an app restart. (Sleeping Z's and waking on blur are built but
+  switched off, see the next line.)
+- Polly does not sleep anywhere right now. The Home doze is switched off (Pete, 2026-11-11,
+  `HOME_DOZE_ENABLED` false in `PollyHomePerch.tsx`; see the 2026-11-11 entry at the end). She never
+  slept during a Hunt or the Daily.
 - Daily results card: Polly's pose only, no line (Pete).
 - Home: after a long absence she looks watchful until the first completed Hunt of the session,
   then relaxes (Pete).
@@ -740,7 +741,7 @@ sources). Both pushed by Pete (verified on origin 2026-11-07): `74db273` (blast-
 - **Open, in Pete's priority order:**
   - (a) Cut TestFlight build 19 with all of the above.
   - (b) The tester's missing Polybook crown: needs her MASTERY page screenshot, the "N CROWNS" count and the word. The "Cork" misspelling report: all five Cork cards in `assets/data/huntData.json` read correctly; ask which card. Her phone model, Display Zoom and Text Size are unknown.
-  - (c) Polly sleep seam on Home (the cut from the rig to the master asleep sprite is visible).
+  - (c) Polly sleep seam on Home (the cut from the rig to the master asleep sprite is visible). CLOSED 2026-11-11 by switching the Home doze off; see the 2026-11-11 entry.
   - (d) Whether the card grows past the 290 pt cap on wide phones (the art is already stretched).
   - (e) Trim `CLAUDE.md` as its own commit, MOVING long finished-feature detail into `docs/` with a pointer rather than deleting (retired ids, native rules and TEST VALUE labels stay).
   - (f) Optional `.gitattributes` (`* text=auto eol=lf`) as its own commit.
@@ -763,3 +764,12 @@ sources). Both pushed by Pete (verified on origin 2026-11-07): `74db273` (blast-
   - (e) Four older PNGs still carry `caBX` (`GoldenCrown`, `banishcrown`, `hauntcrown`, `Padlock`); an optional lossless strip as its own commit.
   - (f) Carry-over from the 2026-11-09 list, per Pete 2026-11-10: TestFlight builds 19 and 20 failed, build 21 went through and is on his phone only, testers are on build 18; Polly's visits are too quick to read her bubble (check whether the perch clock starts at flight start or at landing); Polly sleep seam on Home; 8 vs 10 rounds (hunts 1 to 3 are already 8; Pete does not want to give more lives; undecided); whether to bring in stranger testers (undecided); the tester's missing crown (the tally's MASTERED count now shows whether her mastery was saved; needs her screenshot); tall-phone ledge check; CLAUDE.md trim.
 - **Hazard, line endings:** `types.ts` was CRLF on disk and was converted to LF (the commit diff is 7 lines). CONTEXT.md and CLAUDE.md are LF on disk; `docs/POLYBOOK.md` is CRLF on disk (LF in the index). Compare `git diff --stat` with `git diff --stat --ignore-cr-at-eol` before committing.
+
+## 2026-11-11: Home doze switched off
+
+- **Done (on `play-screen-overhaul`, local, NOT committed, NOT device-checked):** Polly no longer falls asleep on Home. `HOME_DOZE_ENABLED` (`app/components/PollyHomePerch.tsx`) is `false` and the doze effect returns before it arms its timer, so there is no nod, no asleep pose and no Z's in any resting pose, Reduce Motion included. Seven added lines; `tsc --noEmit` is clean; `npm test` was not run (the sandbox cannot run `tsx`); no test names the doze.
+- **Why (Pete):** the idle face rig is sprite4 art and `asleep.png` is master art, so the swap between them shows, and a couple of testers pointed it out. Pete wants to keep the idle rig as it is ("it works good").
+- **Tried and rejected the same night:** (1) Higgsfield `/illustration-animation` for animating the master poses: it is a local After Effects workflow, not a cloud generator, and the Higgsfield account had 5.6 credits against 12 for the cheapest clip; nothing was generated. (2) Making the idle rig itself sleep with a drawn closed-eyelid layer: Pete rejected the mock-up (brow gone, head upright, still smiling; it does not read as asleep). (3) Moving the Home idle to master art: Pete does not want to replace the idle rig.
+- **Kept in place:** all doze code, `assets/images/polly/master/asleep.png` and the three Z images. Set the flag to `true` to restore the doze exactly as it was.
+- **Open:** Pete to check on his phone (sit on Home about 30 seconds; she should keep blinking and never nod off), then commit. Bringing sleep back waits for a new rig or a re-rig of the master art, so the idle and the sleeper are one drawing.
+- **Hazard, line endings:** `PollyHomePerch.tsx` is CRLF on disk and LF in the index; from the Linux sandbox `git diff --stat` shows the whole file. `git diff --stat --ignore-cr-at-eol` shows the real 7 lines.
