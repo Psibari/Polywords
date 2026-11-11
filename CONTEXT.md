@@ -1,6 +1,6 @@
 # POLYWORDS Current Context
 
-Updated 2026-11-07 evening (audio rebuild after a long absence for the build 17 freeze, DOWN trap reworded, fairness audit; see the last entry). Before that, 2026-11-06 (Hunt wrong-swipe and book-shut sounds, stronger Hunt haptics, pause button moved; see the 2026-11-06 entry at the end). Earlier, 2026-11-04: the Daily entry card teaches the mode once and gates every attempt; the graded castle gold hit is removed; the breach was built 2026-11-04/05. Build 15 accessibility/beta hardening, the Build 16 iOS audio watchdog fix, true Hunt pause/quit, and the dedicated POLYWORDS DEV phone-testing path are committed and pushed; device-validation status is recorded below. Current state + next work only. `CLAUDE.md` owns durable architecture;
+Updated 2026-11-10 (Polybook MASTERY tally, KING counter, KING plaque art; see the 2026-11-10 entry at the end). Updated 2026-11-07 evening (audio rebuild after a long absence for the build 17 freeze, DOWN trap reworded, fairness audit; see the last entry). Before that, 2026-11-06 (Hunt wrong-swipe and book-shut sounds, stronger Hunt haptics, pause button moved; see the 2026-11-06 entry at the end). Earlier, 2026-11-04: the Daily entry card teaches the mode once and gates every attempt; the graded castle gold hit is removed; the breach was built 2026-11-04/05. Build 15 accessibility/beta hardening, the Build 16 iOS audio watchdog fix, true Hunt pause/quit, and the dedicated POLYWORDS DEV phone-testing path are committed and pushed; device-validation status is recorded below. Current state + next work only. `CLAUDE.md` owns durable architecture;
 focused rules live in `docs/`; runtime code/data outrank docs.
 
 ## Branches
@@ -747,3 +747,18 @@ sources). Both pushed by Pete (verified on origin 2026-11-07): `74db273` (blast-
   - (g) Friends group tester count (cap 15).
   - (h) Tall-phone behaviour of the ledge anchoring.
 - **Hazard: line endings.** Windows git has `core.autocrlf=true` (system gitconfig); HEAD files are LF, but checkouts and scripts produce CRLF. Write every touched file LF and compare plain `git diff --stat` with `git diff --stat --ignore-cr-at-eol` before committing. About 113 untouched files are CRLF on disk.
+
+## 2026-11-10: Polybook tally, KING counter, KING plaque
+
+- **Done on `play-screen-overhaul`, pushed to origin 2026-11-10 (at `f683d47`, which also adds the session prompts file in `Claude outputs/`):** `54eb44e` KING plaque art + `kingWord.top` 56.5% (TEST VALUE); `ef44507` MASTERY four-crown tally + `kingcrown.png`; `40e1baa` KING counter (`kingWins`, `lastKingWinId`); `6bf7c4c` strip `caBX` from the two new PNGs; `da4ad05` DEV REMATCH button.
+- **Device-checked by Pete (POLYWORDS DEV, 2026-11-10):** the KING plaque with EXCHANGE and the tally at normal and at max Text Size + Bold with counts 0 and 123 both "look good"; he accepted the crowns shrinking at max text so everything fits.
+- **NOT device-proven:** the KING counter and the REMATCH button. Test: press DEV REMATCH, win it: KING 0 to 1 once, still 1 after closing and reopening the app; then lose a rematch in a new Hunt: KING stays, no Haunt created.
+- **Pete's decisions:** tally over the 9-slot grid; Haunted = active haunts only; KING crown is Polly green; the tally keeps `hauntcrown.png` (not the Results padlock); nothing in POLYWORDS is locked except the swipe and the premise.
+- **Open:**
+  - (a) Push the CLAUDE.md docs commit (`c097a94`) and this CONTEXT.md commit; both were made after the push.
+  - (b) BANISHED undercounts saves older than 2026-10-03 (detail in CLAUDE.md "Polybook"). Accept, or rebuild from the journal log for the 2026-09-04 to 2026-10-03 window? Pete has not decided.
+  - (c) Tally label can be 17.9 pt on a very short page (under the 18 floor); JOURNAL and MASTERY ribbon labels fill their ribbons edge to edge at max Text Size (old styles, untouched).
+  - (d) The design hook lists 31 colour findings in `PolybookSpread.tsx` (old styles; the tally adds no colour). Not silenced; silencing records a colour as approved, needs Pete's OK.
+  - (e) Four older PNGs still carry `caBX` (`GoldenCrown`, `banishcrown`, `hauntcrown`, `Padlock`); an optional lossless strip as its own commit.
+  - (f) Carry-over from the 2026-11-09 list, per Pete 2026-11-10: TestFlight builds 19 and 20 failed, build 21 went through and is on his phone only, testers are on build 18; Polly's visits are too quick to read her bubble (check whether the perch clock starts at flight start or at landing); Polly sleep seam on Home; 8 vs 10 rounds (hunts 1 to 3 are already 8; Pete does not want to give more lives; undecided); whether to bring in stranger testers (undecided); the tester's missing crown (the tally's MASTERED count now shows whether her mastery was saved; needs her screenshot); tall-phone ledge check; CLAUDE.md trim.
+- **Hazard, line endings:** `types.ts` was CRLF on disk and was converted to LF (the commit diff is 7 lines). CONTEXT.md and CLAUDE.md are LF on disk; `docs/POLYBOOK.md` is CRLF on disk (LF in the index). Compare `git diff --stat` with `git diff --stat --ignore-cr-at-eol` before committing.
