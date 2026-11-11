@@ -752,10 +752,11 @@ sources). Both pushed by Pete (verified on origin 2026-11-07): `74db273` (blast-
 
 - **Done on `play-screen-overhaul`, pushed to origin 2026-11-10 (at `f683d47`, which also adds the session prompts file in `Claude outputs/`):** `54eb44e` KING plaque art + `kingWord.top` 56.5% (TEST VALUE); `ef44507` MASTERY four-crown tally + `kingcrown.png`; `40e1baa` KING counter (`kingWins`, `lastKingWinId`); `6bf7c4c` strip `caBX` from the two new PNGs; `da4ad05` DEV REMATCH button.
 - **Device-checked by Pete (POLYWORDS DEV, 2026-11-10):** the KING plaque with EXCHANGE and the tally at normal and at max Text Size + Bold with counts 0 and 123 both "look good"; he accepted the crowns shrinking at max text so everything fits.
-- **NOT device-proven:** the KING counter and the REMATCH button. Test: press DEV REMATCH, win it: KING 0 to 1 once, still 1 after closing and reopening the app; then lose a rematch in a new Hunt: KING stays, no Haunt created.
+- **Device-proven (Pete, his phone, 2026-11-10):** the KING counter and the REMATCH button: a Master's Rematch win moved KING from 0 to 1 exactly once; KING stayed 1 after reopening the Polybook; a lost rematch left KING at 1, MASTERED unchanged, and created no Haunt (MASTERED showed 1 because Pete first beat a Boss with the BOSS button).
 - **Pete's decisions:** tally over the 9-slot grid; Haunted = active haunts only; KING crown is Polly green; the tally keeps `hauntcrown.png` (not the Results padlock); nothing in POLYWORDS is locked except the swipe and the premise.
+- **Parked, not open work: BUSTER lettering** (`2d8c6dd`): BU, STER, BUSTER and the word use `raisedGoldPlaque` (TEST VALUES). A magenta test proved it is wired in, but the look barely changed; Pete stopped there. Keep the gold; do not retune. Detail and untried options in CLAUDE.md "Result plaques".
 - **Open:**
-  - (a) Push the CLAUDE.md docs commit (`c097a94`) and this CONTEXT.md commit; both were made after the push.
+  - (a) Done: `c097a94`, `75ee5c5` and `058dbfc` are on origin (verified 2026-11-10).
   - (b) BANISHED undercounts saves older than 2026-10-03 (detail in CLAUDE.md "Polybook"). Accept, or rebuild from the journal log for the 2026-09-04 to 2026-10-03 window? Pete has not decided.
   - (c) Tally label can be 17.9 pt on a very short page (under the 18 floor); JOURNAL and MASTERY ribbon labels fill their ribbons edge to edge at max Text Size (old styles, untouched).
   - (d) The design hook lists 31 colour findings in `PolybookSpread.tsx` (old styles; the tally adds no colour). Not silenced; silencing records a colour as approved, needs Pete's OK.
