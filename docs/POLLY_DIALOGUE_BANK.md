@@ -57,6 +57,10 @@ that register.
 ## Surfaces
 
 - Hunt visits obey `usePollyVisits`; Home greets once and settles.
+- Home idle jabs (Pete, 2026-11-11): if the player just sits on Home she needles them a few times,
+  then goes quiet. Two pools in `app/game/pollyHomeIdleJabs.ts`: normal (idle and smug poses) and
+  sore loser (the angry pose, after the player beat her). The embarrassed pose has no lines yet.
+  Pete approved every line and wrote several; the exact copy is pinned by `pollyHomeIdleJabs.test.ts`.
 - First-ever Home: "Who are you?", "What do you want?", "You think you know words?", "You don’t
   look ready."
 - First Hunt: FINE challenge ("Think you know this word?", "Let’s see how sure you are.") and

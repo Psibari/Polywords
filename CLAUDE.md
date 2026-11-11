@@ -807,7 +807,22 @@ Pete, 2026-10-29: nothing below ~18 for copy.
   `asleep.png` are different drawings and testers could see the swap. The two bullets below describe
   the doze as built; all of that code, `asleep.png` and the Z art stay in place, and setting the flag
   to `true` restores it. Bring it back only once the idle and the sleeping pose are the same art (a
-  rig built from the master art). Type-check clean; NOT yet device-checked.
+  rig built from the master art). Device-checked by Pete on POLYWORDS DEV 2026-11-11 (she keeps
+  blinking and never nods off; commit `048b8aa`).
+- HOME IDLE JABS (Pete, 2026-11-11; the alternative to the doze). While the player just sits on Home
+  she needles them in her bubble: first jab `HOME_IDLE_JAB_FIRST_MS` 10 s after Home gains focus (after
+  the greeting bubble has gone, on the entrance visit), then one every `HOME_IDLE_JAB_GAP_MS` 20 s, each
+  up `HOME_IDLE_JAB_SHOW_MS` 4 s, `HOME_IDLE_JAB_MAX_PER_VISIT` 3 per focus, then quiet; the clock
+  restarts on every Home focus. All four are TEST VALUES (Claude's first guesses). Pools and the pure
+  picker live in `app/game/pollyHomeIdleJabs.ts` (pinned by `pollyHomeIdleJabs.test.ts`, exact copy
+  included); line text is `homeIdle*` / `homeSore*` in `pollyCharacter.ts`; the timers are one effect in
+  `PollyHomePerch.tsx`. Mood is read from her resting pose WHEN A JAB FIRES: idle and smug use the
+  normal pool, angry (the player beat her) uses the sore-loser pool, embarrassed says nothing (no
+  approved lines yet). No repeat within the last 5, kept in memory for the app session only: jabs do
+  NOT go through `rememberPollyLine`, because surface `home` advances the greeting rotation and the
+  shared recent-line list would lose Hunt lines. Silent. None on the first-ever Home visit (her four
+  intro lines own it). Leaving Home mid-jab hides the bubble at once. Copy is Pete's (several lines are
+  his own); change it only on his word. Type-check clean; NOT yet device-checked.
 - Home sleep: master `asleep` plus three looping Z's (`HOME_Z_*`, native driver), running only
   while fully asleep, Home focused and motion allowed; Reduce Motion shows one still medium Z. She
   wakes only when Home loses focus; touches on Home do not wake her (Pete accepted).
