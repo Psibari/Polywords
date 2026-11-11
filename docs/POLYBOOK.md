@@ -265,3 +265,10 @@ placement was the problem, not the drawing.
   artwork plus the ribbon-top mask.
 - The next Polybook product problem is mastery progression: what accumulating crowns reveal or
   unlock. Preserve the locked interior while designing it.
+
+## 2026-11-10 MASTERY becomes a tally
+
+- Pete changed MASTERY: the per-word crown pages are replaced by one crown per outcome with a count under it, 2x2: MASTERED, KING / BANISHED, HAUNTED. No paging. This supersedes the MASTERY part of the 2026-10-03 line "TODAY, JOURNAL, and MASTERY are device-approved and locked" (Pete 2026-11-10: only the swipe and the premise are permanently locked). TODAY and JOURNAL are untouched.
+- Counts: MASTERED = distinct mastered words; KING = Master's Rematch wins (`progress.kingWins`); BANISHED = banished words in Polly's word-rivalry memory; HAUNTED = active haunts only (a won Returning Haunt turns a haunt into a banish, so Haunted falls and Banished rises).
+- Art: the Master and Banished crowns as the Results panel uses them; Haunted uses `hauntcrown.png` (the Results panel shows a padlock for haunted; Pete kept the crown so all four read as crowns); KING is Polly green. Implementation, sizing and known gaps are in CLAUDE.md "Polybook".
+- Still open from 2026-10-03: what accumulating crowns reveal or unlock. The tally does not answer it.
