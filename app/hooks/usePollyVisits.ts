@@ -100,12 +100,12 @@ export function usePollyVisits(
     if (decision.action === 'wordEntry') {
       flags.heckleUsedThisWord = false;
       flags.wrongSeenThisWord = false;
-      // Word advanced while a heckle was on screen → fast fly-out.
-      // Guaranteed visits are never cut by a word change.
-      const cur = visitRef.current;
-      if (cur && cur.spec.kind === 'heckle' && !cur.fastExit) {
-        setVisitBoth({ ...cur, fastExit: true });
-      }
+      // A word change no longer cuts a heckle short (Pete, 2026-11-11): the
+      // board moves on about a second after the last swipe, so a heckle on a
+      // word's last card got about one second and could not be read. She now
+      // finishes her line and leaves on her own clock. While she is still up
+      // the policy drops any new heckle (busy), and a guaranteed visit
+      // (Polly's Word, a Returning Haunt) still cuts her, below.
       return;
     }
 

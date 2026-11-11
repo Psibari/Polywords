@@ -4,6 +4,7 @@
 import {
   resolveVisit, PollyBudgetState, VisitDecision, VisitSpec,
   pickReactionSfx, POLLY_ANGRY_SFX, POLLY_STARTLED_SFX, POLLY_REACTION_POOLS,
+  pollyLineReadMs, resolveVisitPerchMs, POLLY_READ_MAX_MS, POLLY_READ_NOTICE_MS,
 } from './pollyVisitPolicy';
 import { PollyLineId } from './pollyCharacter';
 
@@ -346,5 +347,32 @@ eq(
   undefined,
   'cleanSweep repeat.exitSfx',
 );
+
+// ── Reading time: a bubble stays at least as long as its line takes to read ──
+{
+  eq(pollyLineReadMs(null), 0, 'read.noLine');
+  eq(pollyLineReadMs(''), 0, 'read.emptyLine');
+  // 15 characters a second after the notice time.
+  eq(pollyLineReadMs('123456789012345'), POLLY_READ_NOTICE_MS + 1000, 'read.fifteenChars');
+  eq(pollyLineReadMs('x'.repeat(400)), POLLY_READ_MAX_MS, 'read.capped');
+
+  // A short line keeps the visit's own time; a long one extends it; never shorter.
+  eq(resolveVisitPerchMs({ line: 'Gotcha.', perchMs: 1800 }), 1800, 'perch.shortLineKeepsSnap');
+  eq(resolveVisitPerchMs({ line: null, perchMs: 2000 }), 2000, 'perch.noLine');
+  const long = 'You plucked yourself. I don\u2019t even need to be here.';
+  eq(resolveVisitPerchMs({ line: long, perchMs: 2000 }), pollyLineReadMs(long), 'perch.longLineExtends');
+  eq(resolveVisitPerchMs({ line: long, perchMs: 2000 }) > 3500, true, 'perch.longLineOverThreeAndAHalf');
+
+  // Every live visit gets at least its line's reading time.
+  const events = ['huntIntro', 'hauntIntro', 'bossEntry', 'gateMastered', 'wrong', 'streakX10', 'hesitation6s', 'oneHeartLeft'] as const;
+  for (const event of events) {
+    for (const lineRoll of [0, 0.3, 0.6, 0.99]) {
+      const d = resolveVisit(event, { ...idle, lineRoll });
+      if (d.action !== 'visit') continue;
+      eq(resolveVisitPerchMs(d.spec) >= pollyLineReadMs(d.spec.line), true, `perch.${event}.readable`);
+      eq(resolveVisitPerchMs(d.spec) >= d.spec.perchMs, true, `perch.${event}.neverShorter`);
+    }
+  }
+}
 
 console.log('OK — pollyVisitPolicy: all assertions passed');

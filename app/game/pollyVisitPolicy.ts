@@ -117,6 +117,30 @@ export function pickFreshLine<T extends string>(
   return pool[i];
 }
 
+// ── Reading time ────────────────────────────────────────────────────────────
+// Testers could not finish her bubbles (Pete, 2026-11-11): every visit held a
+// fixed time on the perch whatever the line's length, so long lines got about
+// half the time they need. A bubble now stays at least as long as its line takes
+// to read: POLLY_READ_NOTICE_MS to notice it, then POLLY_READ_CHARS_PER_SEC (a
+// common subtitle pace). Both are TEST VALUES. A spec's own perchMs is the
+// MINIMUM, so short lines keep their snap and nothing gets shorter.
+export const POLLY_READ_NOTICE_MS = 500;
+export const POLLY_READ_CHARS_PER_SEC = 15;
+// No line may hold her longer than this, however long it is.
+export const POLLY_READ_MAX_MS = 5000;
+
+/** How long a line needs on screen to be read, in ms. 0 for no line. */
+export function pollyLineReadMs(line: string | null | undefined): number {
+  if (!line) return 0;
+  const ms = POLLY_READ_NOTICE_MS + Math.round((line.length * 1000) / POLLY_READ_CHARS_PER_SEC);
+  return Math.min(POLLY_READ_MAX_MS, ms);
+}
+
+/** How long she stays perched for a visit: its perchMs, or longer if the line needs it. */
+export function resolveVisitPerchMs(spec: { line: string | null; perchMs: number }): number {
+  return Math.max(spec.perchMs, pollyLineReadMs(spec.line));
+}
+
 const NONE: VisitDecision = { action: 'none' };
 
 const HUNT_INTRO: VisitSpec = {

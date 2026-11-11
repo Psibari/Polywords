@@ -4,6 +4,7 @@ import { playSfx } from '../audio/sfx';
 import { playPollyReaction } from '../audio/pollyReactionSfx';
 import { PollyHuntPoseName, pollyHuntPoseArt } from '../ui/pollyHuntPoses';
 import type { ActiveVisit } from '../hooks/usePollyVisits';
+import { resolveVisitPerchMs } from '../game/pollyVisitPolicy';
 import { usePollyAmbientMotion } from '../hooks/usePollyAmbientMotion';
 import { PollySpeechBubble } from './PollySpeechBubble';
 
@@ -260,7 +261,8 @@ export function PollyHuntVisit({ visit, onDone }: Props) {
         ]).start();
       }
       if (!visit.spec.holdPerch) {
-        later(() => runExit(FLY_OUT_MS), visit.spec.perchMs);
+        // At least the spec's perchMs, longer when the line needs it to be read.
+        later(() => runExit(FLY_OUT_MS), resolveVisitPerchMs(visit.spec));
       }
       // holdPerch: stay until fastExit or unmount (terminal beats).
     }, reduceMotion ? 0 : FLY_IN_MS);
