@@ -716,6 +716,12 @@ Pete, 2026-10-29: nothing below ~18 for copy.
   Results and the onboarding/HUD-lesson overlays fire no haptics of their own.
 - Android (expo-haptics 57.0.3): Light = Soft = selection and Medium = Rigid, so impacts collapse
   to three strengths there.
+- Hunt bubble reading time (2026-11-11): a visit stays perched for `resolveVisitPerchMs(spec)`
+  (`pollyVisitPolicy.ts`): the spec's `perchMs` or, if longer, the line's reading time
+  (`POLLY_READ_NOTICE_MS` 500 ms + 15 characters a second, capped at 5000 ms; TEST VALUES). `perchMs` is
+  now a MINIMUM. This runs in `PollyHuntVisit.tsx`, so the onboarding and HUD-lesson visits get it too.
+  A word change no longer fast-exits a heckle (`usePollyVisits.ts`); only a guaranteed visit cuts one.
+  The Daily perch still holds every bubble a fixed 2.5 s. NOT yet device-checked.
 - Polly's short wrong-swipe squawk fires always when a real chain FELL OFF, otherwise on every
   third other wrong swipe. The count lives in `GameScreen` for the whole Hunt (reset per run),
   not in the board, which remounts per word.
