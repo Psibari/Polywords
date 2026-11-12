@@ -5680,18 +5680,13 @@
         "isReal": true
       },
       {
-        "id": "die_t01",
-        "phrase": "AN ENGINE THAT QUITS AT THE LIGHT",
-        "isReal": false
-      },
-      {
         "id": "die_t02",
         "phrase": "THE LAST THING A CANDLE LEAVES BEHIND",
         "isReal": false
       },
       {
-        "id": "die_t03",
-        "phrase": "ZERO LIVES LEFT ON THE SCREEN",
+        "id": "die_t05",
+        "phrase": "WHAT AN OPOSSUM DOES WHEN IT FEELS THREATENED",
         "isReal": false
       },
       {
