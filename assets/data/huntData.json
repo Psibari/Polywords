@@ -7496,11 +7496,6 @@
         "isReal": false
       },
       {
-        "id": "field_t01",
-        "phrase": "WHAT EUROPEANS PLAY FÚTBOL ON",
-        "isReal": false
-      },
-      {
         "id": "field_t02",
         "phrase": "WHERE SCIENTISTS GO TO TEST THE SAMPLES THEY COLLECT",
         "isReal": false
@@ -7508,11 +7503,6 @@
       {
         "id": "field_t03",
         "phrase": "WHERE THE FARMER GOES TO MILK THE COWS",
-        "isReal": false
-      },
-      {
-        "id": "field_t04",
-        "phrase": "WHERE GUERRILLA WARFARE FIGHTS ARE FOUGHT",
         "isReal": false
       }
     ],
