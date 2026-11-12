@@ -1677,8 +1677,8 @@
         "isReal": true
       },
       {
-        "id": "bound_r3",
-        "phrase": "I'M ON MY WAY NOW",
+        "id": "bound_r6",
+        "phrase": "THE CITY ON THE FRONT OF THE BUS",
         "isReal": true
       },
       {
@@ -1692,18 +1692,18 @@
         "isReal": true
       },
       {
-        "id": "bound_t0",
-        "phrase": "BASKETBALL RICOCHETS OFF THE RIM",
+        "id": "bound_t5",
+        "phrase": "LIVING THE BACHELOR LIFE, NO BALL AND CHAIN",
         "isReal": false
       },
       {
-        "id": "bound_t1",
-        "phrase": "PIRATE SHIP HUNTS FOR TREASURE",
+        "id": "bound_t6",
+        "phrase": "SOMETHING YOU STILL COULDN'T DO WITH ALL THE TIME IN THE WORLD",
         "isReal": false
       },
       {
-        "id": "bound_t2",
-        "phrase": "TWO ROPES TURN WHILE SHE JUMPS IN",
+        "id": "bound_t7",
+        "phrase": "PAGES FALLING OUT OF GRANDMA'S OLD COOKBOOK",
         "isReal": false
       }
     ],
