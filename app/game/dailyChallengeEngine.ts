@@ -22,7 +22,12 @@ export const DAILY_TIER_CURVE: readonly DailyTier[] = [1, 1, 2, 2, 3];
 export const DAILY_CLUE_2_DELAY_MS = 4000;
 export const DAILY_CLUE_3_DELAY_MS = 8000;
 
-const APPROVED_DAILY_POOL: readonly (DailyWord | DailySourceWord)[] = [
+/**
+ * Every puzzle the Daily can serve: the legacy pool plus the six-card
+ * expansion. Exported so content gates (the clue-fit test, the clue checker)
+ * check exactly what the game plays, including any list added here later.
+ */
+export const APPROVED_DAILY_POOL: readonly (DailyWord | DailySourceWord)[] = [
   ...DAILY_POOL,
   ...DAILY_POOL_EXPANSION,
 ];
@@ -134,6 +139,23 @@ function buildRoundWord(word: ApprovedDailyWord, seed: number): DailyRoundWord {
     clues: word.meanings,
     candidates,
   };
+}
+
+/**
+ * DEV only (the Daily puzzle picker): today's session with round 1 swapped
+ * for `answer`, built by the same `buildRoundWord` the real rotation uses.
+ * Rounds 2-5 stay today's, except a round that already holds `answer`, which
+ * is left alone so the word is never served twice. Returns the session
+ * unchanged when `answer` is not in the approved pool.
+ */
+export function applyDevDailyFirstWord(session: DailySession, answer: string): DailySession {
+  const source = APPROVED_DAILY_POOL.find(word => word.word === answer);
+  if (!source) return session;
+  const word = buildRoundWord(assertDailyWord(source), getDailySeed(session.date));
+  const rounds = session.rounds.map((round, index) =>
+    index === 0 ? { ...round, word, candidates: word.candidates } : round,
+  );
+  return { ...session, rounds };
 }
 
 export function buildDailySession(dateString = getTodayDateString()): DailySession {

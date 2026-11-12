@@ -148,6 +148,9 @@ import { resolveGameplayFeedbackAccessibility } from '../game/gameplayFeedbackAc
 const DailyCastleTuningPanel = __DEV__
   ? require('../dev/DailyCastleTuningPanel').default
   : null;
+const DailyPuzzlePicker = __DEV__
+  ? require('../dev/DailyPuzzlePicker').default
+  : null;
 
 
 // Maps store claim result reaction -> PollyDailyPerch prop
@@ -554,6 +557,7 @@ export default function DailyChallengeScreen({ navigation }: Props) {
 
   // DEV: castle tuning panel
   const [castleTuningVisible, setCastleTuningVisible] = useState(false);
+  const [puzzlePickerVisible, setPuzzlePickerVisible] = useState(false);
 
   function setLocked(val: boolean) {
     inputLockedRef.current = val;
@@ -1951,6 +1955,27 @@ export default function DailyChallengeScreen({ navigation }: Props) {
 
       {__DEV__ && DailyCastleTuningPanel && (
         <DailyCastleTuningPanel visible={castleTuningVisible} />
+      )}
+
+      {__DEV__ && (
+        <Pressable
+          onPress={() => setPuzzlePickerVisible((visible) => !visible)}
+          style={[styles.devResetBtn, { right: 14, bottom: 70 }]}
+        >
+          <Text allowFontScaling={false} style={styles.devResetText}>PICK PUZZLE</Text>
+        </Pressable>
+      )}
+
+      {__DEV__ && DailyPuzzlePicker && (
+        <DailyPuzzlePicker
+          visible={puzzlePickerVisible}
+          onClose={() => setPuzzlePickerVisible(false)}
+          onPick={async (answer: string) => {
+            setPuzzlePickerVisible(false);
+            await resetDailyForDev();
+            await startDailyChallenge(undefined, answer);
+          }}
+        />
       )}
 
       </SafeAreaView>

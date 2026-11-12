@@ -525,6 +525,15 @@ Architecture only:
 - Derived castle/door/wall/tunnel/coin art comes from `tools/art/`; rerun scripts, never hand-edit
   generated output.
 - Text fitting uses measured widths, not browser-dependent auto-fit behavior.
+- Clue length gate (Pete, 2026-11-12): every clue in `APPROVED_DAILY_POOL` (exported from
+  `dailyChallengeEngine.ts`, so new pools are covered) must fit the plank in two lines
+  (`dailyClueFitReport` in `dailyCastleScene.ts`); `dailyCastleScene.test.ts` lists every clue that
+  does not. Writing cap `DAILY_CLUE_CHAR_CAP` 46 characters; `npm run daily:fit` checks a clue, a
+  text file or a Daily workbook (`--xlsx`, header row `Word` plus `Clue ...` columns). Three-line
+  clues were rejected (too cluttered); a clue that does not fit is shortened. `DailyGate.tsx` no
+  longer uses `adjustsFontSizeToFit`: iOS shrank an overflowing clue (BOLT, Daily #154) to
+  unreadable text. DEV `PICK PUZZLE` (`app/dev/DailyPuzzlePicker.tsx`, `applyDevDailyFirstWord`)
+  plays any approved puzzle as round 1 today; LONG marks puzzles with a clue that does not fit.
 - Correct claim, gold hit and gold-coin finale are separate progress systems. Input stays locked
   until the gate settles; Results waits for the finale.
 - Polly perch (`PollyDailyPerch.tsx`): she sits at the wall, in front of it, the whole time.

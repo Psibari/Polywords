@@ -192,6 +192,10 @@ export default function DailyGate({
               },
             ]}
           >
+            {/* No adjustsFontSizeToFit (2026-11-12): the measured fitter is the
+                only sizing. iOS's own shrink drew a clue that did not fit as tiny
+                unreadable text (BOLT, Daily #154); the content gate in
+                dailyCastleScene.test.ts now refuses any clue that does not fit. */}
             <Text
               allowFontScaling={false}
               style={[
@@ -204,8 +208,6 @@ export default function DailyGate({
                 !isLatest && styles.clueTextEarlier,
               ]}
               numberOfLines={DAILY_CLUE_FONT.maxLines}
-              adjustsFontSizeToFit
-              minimumFontScale={0.9}
             >
               {balanceDailyClue(clue, fontSizes[index], rect.width / scale)}
             </Text>

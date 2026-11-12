@@ -6,6 +6,7 @@
     "typecheck": "tsc --noEmit",
     "postinstall": "patch-package",
     "state": "node tools/state.mjs",
+    "daily:fit": "tsx tools/content/dailyClueFit.ts",
     "audit:content": "npx -y tsx scripts/auditContent.ts",
     "content:preflight": "node tools/content/validate-runtime-hunt.mjs",
     "content:quality": "node tools/content/validate-runtime-hunt.mjs --input assets/data/huntData.json --structural-only --allow-known-live-debt",

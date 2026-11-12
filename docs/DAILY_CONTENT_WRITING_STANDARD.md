@@ -60,6 +60,20 @@ For a new Daily target:
   merely explain what the cards can make the player work out.
 - Do not make Daily clues artificially obscure merely to imitate Hunt disguise.
 
+## Clue Length Cap (Pete, 2026-11-12)
+
+- A clue must fit the gate's plank in two lines. Keep every clue to **46 characters or fewer,
+  spaces included**. Every live clue that short fits.
+- From 47 to about 53 characters it depends on the letters (W, M and O are wide; I and T are
+  narrow), so any clue over 46 must be checked: `npm run daily:fit -- "THE CLUE"`, or
+  `npm run daily:fit -- --xlsx <workbook>` for a whole Daily workbook (header row `Word` plus
+  `Clue ...` columns).
+- Three-line clues were tried and rejected (Pete, 2026-11-12: too cluttered). The fix for a
+  clue that does not fit is always to shorten it.
+- Why: a clue that did not fit was drawn as tiny, unreadable text on a tester's phone (BOLT,
+  Daily #154). `app/ui/dailyCastleScene.test.ts` now refuses any clue in any Daily pool that
+  does not fit, so `npm test` fails until it is shortened.
+
 ## Universal No-Leakage Rule
 
 - No answer-card word may appear in any clue for that puzzle. This applies to the target and all
@@ -110,7 +124,8 @@ Verify:
 
 1. Exactly three distinct meanings.
 2. All three are recognizable enough for Daily.
-3. Each clue sounds human and is no more elaborate than necessary.
+3. Each clue sounds human and is no more elaborate than necessary, and fits the plank
+   (46 characters or fewer, or passes `npm run daily:fit`).
 4. Each clue represents a different meaning.
 5. There is no target/headword leakage.
 6. No distractor word appears in any clue.

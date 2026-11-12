@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { DAILY_POOL } from '../game/dailyPool';
+import { APPROVED_DAILY_POOL } from '../game/dailyChallengeEngine';
 import {
   balanceDailyClue,
   DAILY_ANSWER_MORTAR_PX,
@@ -26,6 +27,8 @@ import {
   DAILY_ANSWER_PANELS,
   fitDailyAnswerFontSize,
   dailyClueFits,
+  dailyClueFitReport,
+  DAILY_CLUE_CHAR_CAP,
   DAILY_CLUE_FONT,
   DAILY_GATE_CLUE_WIDTH,
   fitDailyClueFontSize,
@@ -229,7 +232,34 @@ assert.ok(h.y + halfH < openingBottom && h.y - halfH > opening.y + 70, 'handoff 
 assert.ok(DAILY_CASTLE_FLIGHT.end.y > opening.y && DAILY_CASTLE_FLIGHT.end.y < h.y, 'plaque goes up and in');
 assert.ok(DAILY_CASTLE_FLIGHT_HANDOFF > 0 && DAILY_CASTLE_FLIGHT_HANDOFF < 1);
 
-// Every clue in the live Daily pool fits its plank at the size the fitter
+// CONTENT GATE (Pete, 2026-11-12). Every clue the Daily can serve, from every
+// pool the engine combines (APPROVED_DAILY_POOL, so a pool added later is
+// covered too), fits its plank in at most two lines. A clue that does not fit
+// was drawn as tiny unreadable text on a tester's phone (BOLT, Daily #154).
+// All failures are listed at once, with the fix: shorten the clue. The
+// writing cap is DAILY_CLUE_CHAR_CAP characters; `npm run daily:fit` checks a
+// draft before it goes in.
+{
+  const failures = APPROVED_DAILY_POOL.flatMap((word) =>
+    word.meanings
+      .map((clue) => ({ word: word.word, clue, report: dailyClueFitReport(clue) }))
+      .filter(({ report }) => !report.fits),
+  );
+  assert.equal(
+    failures.length,
+    0,
+    `${failures.length} Daily clue(s) do not fit the plank in two lines. Shorten them ` +
+      `(cap ${DAILY_CLUE_CHAR_CAP} characters; check with npm run daily:fit):\n` +
+      failures
+        .map(
+          ({ word, clue, report }) =>
+            `  ${word}: "${clue}" (${report.chars} chars, ${report.overPercent.toFixed(1)}% over)`,
+        )
+        .join('\n'),
+  );
+}
+
+// Every clue in the legacy Daily pool fits its plank at the size the fitter
 // gives it, in at most two lines, with 8 pt of plank around them.
 {
   const pool = DAILY_POOL.flatMap((word) => word.meanings);

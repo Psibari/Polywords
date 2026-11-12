@@ -892,6 +892,52 @@ export function fitDailyClueFontSize(text: string, width: number): number {
 }
 
 /**
+ * The 46-character writing cap for Daily clues (Pete, 2026-11-12). Every live
+ * clue at or under it fits; between 47 and about 53 it depends on the letters
+ * (a W is far wider than an I), so anything over it must pass
+ * `dailyClueFitReport`. Guidance for writers, not the gate: the gate is the
+ * measured fit below.
+ */
+export const DAILY_CLUE_CHAR_CAP = 46;
+
+export type DailyClueFitReport = {
+  /** True when the clue fits the plank in at most two lines. */
+  fits: boolean;
+  /** Font size the gate would draw it at (canvas points). */
+  size: number;
+  /** The lines as drawn. */
+  lines: string[];
+  /** Characters, spaces included. */
+  chars: number;
+  /** How far the widest line runs past the usable width, in percent (0 when it fits). */
+  overPercent: number;
+};
+
+/**
+ * Whether a clue fits its plank, measured exactly as the gate draws it. A clue
+ * that does not fit at the floor size would make iOS shrink it to unreadable
+ * text, so the content gate fails on `fits: false`.
+ */
+export function dailyClueFitReport(
+  text: string,
+  width: number = DAILY_GATE_CLUE_WIDTH,
+): DailyClueFitReport {
+  const upper = text.toUpperCase();
+  const size = fitDailyClueFontSize(upper, width);
+  const lines = balanceDailyClue(upper, size, width).split('\n');
+  const usable = width * DAILY_CLUE_FONT.safety;
+  const widest = Math.max(...lines.map((line) => textWidth(line, size)));
+  const fits = lines.length <= DAILY_CLUE_FONT.maxLines && widest <= usable;
+  return {
+    fits,
+    size,
+    lines,
+    chars: text.length,
+    overPercent: fits ? 0 : Math.max(0, (widest / usable - 1) * 100),
+  };
+}
+
+/**
  * The clue as it is drawn: one line when it fits on one at `size`, otherwise
  * two lines split at the word break that makes them closest in width, so no
  * clue ends on a lone word ("HOW YOU MAKE / A BUTTON WORK", not "HOW YOU MAKE

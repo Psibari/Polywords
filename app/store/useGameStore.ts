@@ -46,6 +46,7 @@ import {
 } from '../game/kingWins';
 import { generateHunt } from '../game/huntGenerator';
 import {
+  applyDevDailyFirstWord,
   buildDailySession,
   claimDailyWord,
   createDailyResult,
@@ -379,7 +380,8 @@ type GameStore = {
   dailyExpiredNotice: number | null;
   streakMilestoneReward: number | null;
   loadDailyResult: (date?: string) => Promise<void>;
-  startDailyChallenge: (date?: string) => Promise<boolean>;
+  /** `devFirstWord`: DEV puzzle picker only; plays that puzzle as round 1. */
+  startDailyChallenge: (date?: string, devFirstWord?: string) => Promise<boolean>;
   claimDailyAnswer: (answer: string) => void;
   revealDailyClues: (elapsedMs: number) => void;
   pauseDailyChallenge: (elapsedMs: number) => void;
@@ -1497,7 +1499,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     }
   },
 
-  startDailyChallenge: async (date = getTodayDateString()) => {
+  startDailyChallenge: async (date = getTodayDateString(), devFirstWord?: string) => {
     if (get().dailyAttemptDate === date) return false;
 
     const attemptKey = DAILY_ATTEMPT_KEY_PREFIX + date;
@@ -1508,7 +1510,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
         return false;
       }
 
-      const dailySession = buildDailySession(date);
+      const builtSession = buildDailySession(date);
+      const dailySession = devFirstWord
+        ? applyDevDailyFirstWord(builtSession, devFirstWord)
+        : builtSession;
       await enqueueDailyPersistence(() =>
         AsyncStorage.multiSet([
           [attemptKey, date],
