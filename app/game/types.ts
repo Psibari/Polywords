@@ -229,6 +229,10 @@ export type PlayerProgress = {
   /** Id (runSeed:round:WORD) of the last counted rematch win, saved with
    *  kingWins so a restored Hunt that replays the same win cannot count it twice. */
   lastKingWinId?: string;
+  /** The Boss word pinned until the player reaches it (Pete, 2026-11-12). Set
+   *  when a Hunt starts; ignored by the generator once the word is mastered or
+   *  a Haunt. Optional: older saves have none. See app/game/pinnedBoss.ts. */
+  pinnedBossWord?: string;
 };
 
 /** A single day in Polly's Polybook work log.

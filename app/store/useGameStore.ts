@@ -44,6 +44,7 @@ import {
   hydrateKingWins,
   kingWinId,
 } from '../game/kingWins';
+import { pinnedBossForHunt, sanitizePinnedBossWord } from '../game/pinnedBoss';
 import { generateHunt } from '../game/huntGenerator';
 import {
   applyDevDailyFirstWord,
@@ -499,7 +500,19 @@ export const useGameStore = create<GameStore>((set, get) => ({
         : {}),
       seed: runSeed,
       firstRunOnboarding: onboardingMode !== null,
+      pinnedBossWord: get().progress.pinnedBossWord,
     });
+    // Pinned Boss: this Hunt's Boss stays the Boss until the player reaches it.
+    // Saved now, at the start, so quitting or closing the app keeps the pin.
+    const nextPinnedBoss = pinnedBossForHunt(steps);
+    if (nextPinnedBoss !== get().progress.pinnedBossWord) {
+      const { pinnedBossWord: _oldPin, ...restProgress } = get().progress;
+      const pinnedProgress: PlayerProgress = nextPinnedBoss
+        ? { ...restProgress, pinnedBossWord: nextPinnedBoss }
+        : restProgress;
+      set({ progress: pinnedProgress });
+      AsyncStorage.setItem(PROGRESS_KEY, JSON.stringify(pinnedProgress)).catch(() => {});
+    }
     activeGamePersistence.arm();
     const game = createGame(
       steps,
@@ -1032,7 +1045,13 @@ export const useGameStore = create<GameStore>((set, get) => ({
         const parsed = JSON.parse(raw);
         const merged: PlayerProgress = { ...DEFAULT_PROGRESS, ...parsed };
         // kingWins: older saves lack it (loads as 0); a bad value becomes 0.
-        const backfilled = hydrateKingWins(backfillHiddenPairIdsFound(merged));
+        const kingHydrated = hydrateKingWins(backfillHiddenPairIdsFound(merged));
+        // pinnedBossWord: a bad or empty saved value is dropped.
+        const cleanPin = sanitizePinnedBossWord(kingHydrated.pinnedBossWord);
+        const { pinnedBossWord: _savedPin, ...unpinned } = kingHydrated;
+        const backfilled: PlayerProgress = cleanPin
+          ? (cleanPin === kingHydrated.pinnedBossWord ? kingHydrated : { ...unpinned, pinnedBossWord: cleanPin })
+          : (kingHydrated.pinnedBossWord === undefined ? kingHydrated : unpinned);
         // Generated once, ever, right here. Date.now() is fine — it is a
         // seed, not a secret. Never regenerate an existing one: that would
         // rewrite what she wrote on every past day.
