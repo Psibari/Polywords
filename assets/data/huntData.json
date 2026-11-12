@@ -5763,8 +5763,8 @@
         "isReal": true
       },
       {
-        "id": "direct_r02",
-        "phrase": "ROAD WORK AHEAD, MUST TURN HERE",
+        "id": "direct_r04",
+        "phrase": "WHAT THE COP DOES WITH TRAFFIC AT THE LIGHT",
         "isReal": true
       },
       {
@@ -5773,18 +5773,13 @@
         "isReal": true
       },
       {
-        "id": "direct_t00",
-        "phrase": "A ROAD WITH NO TURNS",
-        "isReal": false
-      },
-      {
         "id": "direct_t01",
         "phrase": "THE WAY HOME WHEN YOU TAKE A SHORTCUT",
         "isReal": false
       },
       {
-        "id": "direct_t02",
-        "phrase": "THE PERSON CALLING THE SHOTS",
+        "id": "direct_t04",
+        "phrase": "THE PERSON WHO TELLS YOU WHAT TO DO AND PAYS YOU",
         "isReal": false
       },
       {

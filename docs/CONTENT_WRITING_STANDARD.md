@@ -67,8 +67,9 @@ A trap is tempting but legally wrong.
 - Build one independent pool for the whole headword, not one mirror per REAL.
 - Every trap must tempt the exact headword while having one clear true-owner word.
 - Explain why it tempts and why it loses. If defensible as a real meaning, promote, hold or remove.
-- Avoid random, ridiculous, mechanically opposite or sound-alike bait unless the confusion is
-  familiar and fair.
+- Counterpart words make good traps (a FALL card on SPRING: same family, different word). Do not
+  build a trap by flipping a REAL's scene. Avoid random or ridiculous bait, and sound-alike bait
+  unless it is genuinely clever (Pete, 2026-11-12).
 - A strong trap may be removed without replacement when the remaining pool is sufficient. Do not
   keep weak bait merely to satisfy symmetry.
 
