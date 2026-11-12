@@ -7688,18 +7688,8 @@
         "isReal": false
       },
       {
-        "id": "fine_t02",
-        "phrase": "THE WORD FOR SOMETHING THAT PASSES INSPECTION",
-        "isReal": false
-      },
-      {
         "id": "fine_t03",
         "phrase": "THE FINAL TOUCH THAT MAKES SOMETHING LOOK COMPLETE",
-        "isReal": false
-      },
-      {
-        "id": "fine_t04",
-        "phrase": "THE RESULT WHEN AN INSPECTION FINDS NO PROBLEMS",
         "isReal": false
       }
     ],
