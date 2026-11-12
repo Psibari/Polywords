@@ -6231,23 +6231,8 @@
         "isReal": false
       },
       {
-        "id": "draft_t01",
-        "phrase": "WHAT THE ARCHITECT SPREADS ACROSS THE TABLE",
-        "isReal": false
-      },
-      {
         "id": "draft_t02",
         "phrase": "HOW THE HIGH SCHOOL STAR GOT COLLEGE RECRUITERS’ ATTENTION",
-        "isReal": false
-      },
-      {
-        "id": "draft_t03",
-        "phrase": "WHAT THE EDITOR LEAVES FOR THE WRITER TO FIX",
-        "isReal": false
-      },
-      {
-        "id": "draft_t04",
-        "phrase": "WHAT HITS YOU STANDING UNDER THE AC VENT",
         "isReal": false
       },
       {
@@ -6258,11 +6243,6 @@
       {
         "id": "draft_t06",
         "phrase": "WHEN A MINOR LEAGUER GETS THE CALL TO THE MAJORS",
-        "isReal": false
-      },
-      {
-        "id": "draft_t07",
-        "phrase": "WHAT OPENS IN THE FIREPLACE TO LET THE SMOKE ESCAPE",
         "isReal": false
       }
     ],
