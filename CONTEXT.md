@@ -64,6 +64,10 @@ Phone testing uses the dedicated `POLYWORDS DEV` development client against the 
   puzzle: exactly three clues plus six cards total (target + five traps), with the clue difficulty
   coming primarily from the trap cards rather than Hunt-style masking. The universal leak rule is
   locked: no answer-card word may appear in any clue, including obvious inflections/derivatives.
+  CLUE LENGTH CAP (Pete, 2026-11-12): every Daily clue must fit the gate plank in two lines. Write
+  clues at 46 characters or fewer (spaces included); anything longer must pass
+  `npm run daily:fit -- "THE CLUE"` (or `--xlsx <workbook>`). `npm test` refuses any clue in any
+  Daily pool that does not fit. Three-line clues were rejected (too cluttered): a long clue is shortened.
   `dailyChallengeEngine.ts` combines the legacy pool with `dailyPoolExpansion.ts` and accepts six
   or nine source candidates while always presenting six cards. `dailyPoolExpansion.test.ts`
   verifies the new batch's structure, uniqueness, target-once rule, no card-word leakage, tier
@@ -819,3 +823,11 @@ sources). Both pushed by Pete (verified on origin 2026-11-07): `74db273` (blast-
 - DIE (Pete, 2026-11-12): cut `die_t01`; `die_t03` replaced by `die_t05` (opossum plays dead). 6 REALs + 3 traps. Checks: 0 blockers, runtime tests pass, 20,000 hunts dealt all 2,511 cards, no retired id. Workbook updated, id for id.
 - BOUND (Pete, 2026-11-12): all three traps replaced with counterpart traps built from Pete's angles (bachelor life / ball and chain; impossible even with all the time in the world; loose cookbook pages); REAL `bound_r3` replaced by the bus card `bound_r6`. Pete knowingly accepted `bound_t6` as the flip of `bound_r2`'s meaning. 6 REALs + 3 traps. Checks: 0 blockers, runtime tests pass, 20,000 hunts dealt all 2,511 cards, no retired id. Workbook updated, id for id.
 - NEXT: CLIP `clip_t0`, CHEST `chest_t4`, FORGE `forge_t2`; boss pairs WAKE, STRIKE, STOCK; then sections 4-7, newer words only.
+
+## 2026-11-12 (afternoon): Daily clue length cap
+
+- Tester bug (build 18, Daily #154): BOLT's lightning clue and BLOCK's city clue were drawn as tiny unreadable text. Cause: 13 clues in the 50 expansion puzzles did not fit the plank in two lines even at the 16 pt floor, and iOS's own auto-shrink squeezed them. The old fit test only covered the legacy pool. BLOCK's city clue fits on paper; on the tester's phone it most likely overflowed from her system text settings on build 18 (before `7580264`). Not yet proven for Bold Text.
+- Fixed (`92913b6`, `fd39236`, not pushed at time of writing): Pete approved trims of all 13 clues (BRIDGE got two new clues: grandma card club; cars crossing over a river or highway); the fit test covers `APPROVED_DAILY_POOL`; `npm run daily:fit` checker; the 46-character cap (`DAILY_CLUE_CHAR_CAP`) in `docs/DAILY_CONTENT_WRITING_STANDARD.md`; `DailyGate.tsx` no longer uses `adjustsFontSizeToFit`; DEV `PICK PUZZLE` plays any puzzle as round 1. Full `npm test` passed.
+- Daily workbook (`POLYWORDS_Daily_Challenge_118_LOCKED_2026-10-25.xlsx`) left with the old wording of the 13 clues (Pete, 2026-11-12: the game is the source; no workbook update needed).
+- TO CHECK on POLYWORDS DEV: PICK PUZZLE > BLOCK with Bold Text and max Text Size; BOLT and BRIDGE to see the new clues on the plank.
+- Do not send build 21 to new testers: it predates this fix. Next TestFlight build carries it.
