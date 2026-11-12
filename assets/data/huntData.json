@@ -12026,33 +12026,8 @@
         "isReal": false
       },
       {
-        "id": "drive_t1",
-        "phrase": "WHAT MAKES A DOG CHASE THE BALL BEFORE YOU EVEN THROW IT",
-        "isReal": false
-      },
-      {
-        "id": "drive_t2",
-        "phrase": "THE URGE THAT MAKES YOU CHECK YOUR PHONE AGAIN FIVE SECONDS LATER",
-        "isReal": false
-      },
-      {
-        "id": "drive_t3",
-        "phrase": "WHAT KEEPS YOU GOING AFTER EVERYONE ELSE HAS QUIT",
-        "isReal": false
-      },
-      {
         "id": "drive_t4",
         "phrase": "HOW A BIKER GANG GETS AROUND ON THEIR MOTORCYCLES",
-        "isReal": false
-      },
-      {
-        "id": "drive_t5",
-        "phrase": "THE NEED THAT MAKES SOMEONE HAVE TO WIN AT EVERYTHING",
-        "isReal": false
-      },
-      {
-        "id": "drive_t6",
-        "phrase": "WHAT PUSHES A STUDENT TO STUDY ALL NIGHT BEFORE THE FINAL",
         "isReal": false
       },
       {
@@ -12068,6 +12043,26 @@
       {
         "id": "drive_t9",
         "phrase": "WHAT A SHIP DOES TO PASS UNDER A BRIDGE",
+        "isReal": false
+      },
+      {
+        "id": "drive_t10",
+        "phrase": "WHAT YOU DO TO A CANOE TO GET ACROSS THE LAKE",
+        "isReal": false
+      },
+      {
+        "id": "drive_t11",
+        "phrase": "HOW THE MINIVAN GETS TO THE SHOP AFTER IT DIES ON THE HIGHWAY",
+        "isReal": false
+      },
+      {
+        "id": "drive_t12",
+        "phrase": "WHAT YOU HAVE TO DO FOR THREE WEEKS TO WIN THE TOUR DE FRANCE",
+        "isReal": false
+      },
+      {
+        "id": "drive_t13",
+        "phrase": "THE LITTLE VOICE THAT SAYS DON’T DO IT",
         "isReal": false
       }
     ],
