@@ -3031,11 +3031,6 @@
         "id": "chest_t3",
         "phrase": "WHAT THE BABY GETS BURPED AGAINST",
         "isReal": false
-      },
-      {
-        "id": "chest_t4",
-        "phrase": "WHAT THE SEATBELT DIGS INTO",
-        "isReal": false
       }
     ],
     "gpsTag": "tension",
@@ -3586,11 +3581,6 @@
         "id": "clip_r4",
         "phrase": "THE TYPE OF EARRINGS YOU CAN WEAR WITHOUT BEING PIERCED",
         "isReal": true
-      },
-      {
-        "id": "clip_t0",
-        "phrase": "WHAT HOLDS A NECKTIE IN PLACE",
-        "isReal": false
       },
       {
         "id": "clip_t1",
@@ -8462,8 +8452,8 @@
         "isReal": false
       },
       {
-        "id": "forge_t2",
-        "phrase": "WHAT A FAKE HUNDRED-DOLLAR BILL REALLY IS",
+        "id": "forge_t5",
+        "phrase": "WHAT A NOTARY DOES WHILE YOU SIGN",
         "isReal": false
       },
       {
