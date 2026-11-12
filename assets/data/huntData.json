@@ -11361,18 +11361,18 @@
         "isReal": true
       },
       {
-        "id": "train_t0",
-        "phrase": "SUBWAY DOORS CLOSE IN YOUR FACE",
+        "id": "train_t6",
+        "phrase": "WHAT THE GROOM LIFTS BEFORE HE KISSES THE BRIDE",
         "isReal": false
       },
       {
-        "id": "train_t1",
-        "phrase": "COACH BLOWS THE WHISTLE TO START DRILLS",
+        "id": "train_t7",
+        "phrase": "THE YELLOW RIDE THAT PICKS KIDS UP AND DROPS THEM OFF FOR SCHOOL",
         "isReal": false
       },
       {
-        "id": "train_t2",
-        "phrase": "LACE HEM DRAGGING DOWN THE AISLE",
+        "id": "train_t8",
+        "phrase": "WHAT THE OLD SAYING TELLS YOU TO DO TO MAKE THINGS PERFECT",
         "isReal": false
       }
     ],
