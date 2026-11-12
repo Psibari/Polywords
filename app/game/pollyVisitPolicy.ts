@@ -145,7 +145,8 @@ const NONE: VisitDecision = { action: 'none' };
 
 const HUNT_INTRO: VisitSpec = {
   kind: 'guaranteed', flyPose: 'fly', perchPose: 'point',
-  lineId: 'huntIntro', line: POLLY_LINES.huntIntro, sfx: 'pollySqwawkShort',
+  // Line is replaced per Hunt from HUNT_START_LINES (see resolveVisit).
+  lineId: 'huntStartCrown', line: POLLY_LINES.huntStartCrown, sfx: 'pollySqwawkShort',
   holdPerch: false, perchMs: 2500,
 };
 
@@ -158,7 +159,37 @@ const HAUNT_INTRO: VisitSpec = {
 const BOSS_ENTRY_LINES: PollyLineId[] = [
   'bossCage', 'bossForYou',
   'bossWaiting', 'bossFavorite', 'bossPutWork',
+  // Pete, 2026-11-12
+  'bossTookLong', 'bossHidCrown', 'bossWorthy',
 ];
+
+// Start-of-Hunt dare (Pete, 2026-11-12): one of these every Hunt except the
+// first-run / replayed FINE tutorial Hunt (see shouldFireHuntStartDare).
+const HUNT_START_LINES: PollyLineId[] = [
+  'huntStartCrown', 'huntStartBoss', 'huntStartWall',
+];
+
+/** Delay after round 1 appears before the start-of-Hunt dare, so it lands
+ *  after the board's entrance. TEST VALUE. */
+export const HUNT_START_DARE_DELAY_MS = 900;
+
+/** Whether Polly's start-of-Hunt dare fires: round 1 of a live Hunt, not in
+ *  the FINE tutorial (first-run or replay), not while a HUD lesson owns the
+ *  moment, and only once per Hunt (a resumed Hunt never replays it). */
+export function shouldFireHuntStartDare(input: {
+  stepIndex: number;
+  status: string;
+  onboardingMode: 'first-run' | 'replay' | undefined;
+  hudLessonDue: boolean;
+  runSeed: string | number;
+  lastDareRunSeed: string | number | null;
+}): boolean {
+  return input.stepIndex === 0
+    && input.status === 'playing'
+    && input.onboardingMode === undefined
+    && !input.hudLessonDue
+    && input.runSeed !== input.lastDareRunSeed;
+}
 
 const BOSS_ENTRY: VisitSpec = {
   kind: 'guaranteed', flyPose: 'fly', perchPose: 'point',
@@ -310,7 +341,10 @@ export function resolveVisit(event: PollyEvent, state: PollyBudgetState): VisitD
   if (event === 'wordEntry') return { action: 'wordEntry' };
 
   // Guaranteed beats ignore heckle budgets.
-  if (event === 'huntIntro') return { action: 'visit', spec: HUNT_INTRO };
+  if (event === 'huntIntro') {
+    const lineId = pickFreshLine(HUNT_START_LINES, state.recentLineIds, state.lineRoll);
+    return { action: 'visit', spec: { ...HUNT_INTRO, lineId, line: POLLY_LINES[lineId] } };
+  }
   if (event === 'hauntIntro') return { action: 'visit', spec: HAUNT_INTRO };
   if (event === 'bossEntry') {
     const lineId = pickFreshLine(BOSS_ENTRY_LINES, state.recentLineIds, state.lineRoll);

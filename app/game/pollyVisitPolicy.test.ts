@@ -5,6 +5,7 @@ import {
   resolveVisit, PollyBudgetState, VisitDecision, VisitSpec,
   pickReactionSfx, POLLY_ANGRY_SFX, POLLY_STARTLED_SFX, POLLY_REACTION_POOLS,
   pollyLineReadMs, resolveVisitPerchMs, POLLY_READ_MAX_MS, POLLY_READ_NOTICE_MS,
+  shouldFireHuntStartDare,
 } from './pollyVisitPolicy';
 import { PollyLineId } from './pollyCharacter';
 
@@ -373,6 +374,45 @@ eq(
       eq(resolveVisitPerchMs(d.spec) >= d.spec.perchMs, true, `perch.${event}.neverShorter`);
     }
   }
+}
+
+// Start-of-Hunt dare (Pete, 2026-11-12): huntIntro draws from three crown dares.
+{
+  const dares = ['Last round’s for the crown.', 'Final round’s for the boss. And I’m the boss.', 'Got a surprise hidden in the wall for you. Last round.'];
+  const s = visitSpec(resolveVisit('huntIntro', idle), 'huntIntro');
+  eq(s.lineId, 'huntStartCrown', 'huntIntro.firstLine');
+  eq(s.line, dares[0], 'huntIntro.firstLine.text');
+  eq(s.kind, 'guaranteed', 'huntIntro.kind');
+  const seen = new Set<string>();
+  for (let i = 0; i < 30; i += 1) {
+    const d = visitSpec(resolveVisit('huntIntro', { ...idle, lineRoll: i / 30 }), 'huntIntro.pool');
+    seen.add(String(d.line));
+  }
+  eq(seen.size, 3, 'huntIntro.poolSize');
+  for (const line of dares) eq(seen.has(line), true, `huntIntro.pool.${line}`);
+  const avoid = visitSpec(resolveVisit('huntIntro', { ...idle, recentLineIds: ['huntStartCrown'] }), 'huntIntro.avoid');
+  if (avoid.lineId === 'huntStartCrown') throw new Error('huntIntro avoids recent: repeated a recent line');
+}
+// Round 10: the three crown lines join the Boss entry pool.
+{
+  const seen = new Set<string>();
+  for (let i = 0; i < 80; i += 1) seen.add(String(visitSpec(resolveVisit('bossEntry', { ...idle, lineRoll: i / 80 }), 'boss.pool').lineId));
+  for (const id of ['bossCage', 'bossForYou', 'bossWaiting', 'bossFavorite', 'bossPutWork', 'bossTookLong', 'bossHidCrown', 'bossWorthy']) {
+    eq(seen.has(id), true, `bossEntry.pool.${id}`);
+  }
+  eq(seen.size, 8, 'bossEntry.poolSize');
+}
+// When the dare fires.
+{
+  const base = { stepIndex: 0, status: 'playing', onboardingMode: undefined, hudLessonDue: false, runSeed: 7, lastDareRunSeed: null } as const;
+  eq(shouldFireHuntStartDare(base), true, 'dare.round1');
+  eq(shouldFireHuntStartDare({ ...base, stepIndex: 1 }), false, 'dare.notRound2');
+  eq(shouldFireHuntStartDare({ ...base, status: 'gameOver' }), false, 'dare.notOver');
+  eq(shouldFireHuntStartDare({ ...base, onboardingMode: 'first-run' }), false, 'dare.notTutorial');
+  eq(shouldFireHuntStartDare({ ...base, onboardingMode: 'replay' }), false, 'dare.notReplay');
+  eq(shouldFireHuntStartDare({ ...base, hudLessonDue: true }), false, 'dare.notDuringLesson');
+  eq(shouldFireHuntStartDare({ ...base, lastDareRunSeed: 7 }), false, 'dare.oncePerHunt');
+  eq(shouldFireHuntStartDare({ ...base, lastDareRunSeed: 6 }), true, 'dare.newHunt');
 }
 
 console.log('OK — pollyVisitPolicy: all assertions passed');

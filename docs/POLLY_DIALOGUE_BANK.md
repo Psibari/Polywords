@@ -57,6 +57,7 @@ that register.
 ## Surfaces
 
 - Hunt visits obey `usePollyVisits`; Home greets once and settles.
+- Start-of-Hunt dare (Pete, 2026-11-12): every Hunt except the FINE tutorial, Polly flies in about 0.9 s after round 1 appears with one of three crown dares (`HUNT_START_LINES`: "Last round’s for the crown.", "Final round’s for the boss. And I’m the boss.", "Got a surprise hidden in the wall for you. Last round."). They never say the Boss is the same as last time: the pinned Boss is Polly's secret. Round 10's Boss entry pool gained "Took you long enough.", "I hid the crown in here somewhere." and "The crown is only for the worthy." (eight lines total). Nothing plays at the gauntlet start, by design.
 - Home idle jabs (Pete, 2026-11-11): if the player just sits on Home she needles them a few times,
   then goes quiet. Three pools in `app/game/pollyHomeIdleJabs.ts`: normal (idle and smug poses),
   sore loser (the angry pose, after the player beat her) and flustered (the embarrassed pose, a

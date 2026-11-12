@@ -231,6 +231,15 @@ export const POLLY_LINES = {
   bossWaiting: 'I’ve been waiting to use this.',
   bossFavorite: 'Here we go. My favorite.',
   bossPutWork: 'I put work into this one.',
+  // Pete, 2026-11-12: crown lines for round 10 (Boss entry pool).
+  bossTookLong: 'Took you long enough.',
+  bossHidCrown: 'I hid the crown in here somewhere.',
+  bossWorthy: 'The crown is only for the worthy.',
+  // Pete, 2026-11-12: start-of-Hunt dares (HUNT_START_LINES). The pinned Boss stays
+  // Polly's secret: these never say the word is the same as last time.
+  huntStartCrown: 'Last round’s for the crown.',
+  huntStartBoss: 'Final round’s for the boss. And I’m the boss.',
+  huntStartWall: 'Got a surprise hidden in the wall for you. Last round.',
   huntLaugh: 'BBBLAAAAHHAHAHA!',
   huntHauntChant: 'Trap. Trap. Trap.',
   huntCleanSweep: "Bet you can't do that again.",

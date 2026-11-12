@@ -88,6 +88,7 @@ import {
   type ScreenFlashEvent,
 } from '../game/huntFeedbackPolicy';
 import { playPollyReaction } from '../audio/pollyReactionSfx';
+import { HUNT_START_DARE_DELAY_MS, shouldFireHuntStartDare } from '../game/pollyVisitPolicy';
 import { resolveGameplayFeedbackAccessibility } from '../game/gameplayFeedbackAccessibility';
 import {
   createBossReadinessState,
@@ -261,6 +262,8 @@ function ArmorWord({
 // The run that already had its RAZOR SHARP startle. Module level so a TopBar
 // remount mid-run does not replay it.
 let lastRazorStartleRunSeed: string | number | null = null;
+// Start-of-Hunt dare (Pete, 2026-11-12): once per Hunt, never on a resume.
+let lastHuntStartDareRunSeed: string | number | null = null;
 
 function TopBar({
   navigation,
@@ -2391,6 +2394,25 @@ function GameContent({
     firePollyEvent('hauntIntro');
     onHauntIntroVisitFired();
   }, [fireHauntIntroVisit, firePollyEvent, onHauntIntroVisitFired]);
+
+  // Start-of-Hunt dare (Pete, 2026-11-12): "Last round's for the crown." etc.
+  // Fires a beat after round 1 appears; leaving the board first cancels it.
+  useEffect(() => {
+    if (!shouldFireHuntStartDare({
+      stepIndex: game.stepIndex,
+      status: game.status,
+      onboardingMode: game.onboardingMode,
+      hudLessonDue,
+      runSeed: game.runSeed,
+      lastDareRunSeed: lastHuntStartDareRunSeed,
+    })) return;
+    const runSeed = game.runSeed;
+    const timer = setTimeout(() => {
+      lastHuntStartDareRunSeed = runSeed;
+      firePollyEvent('huntIntro');
+    }, HUNT_START_DARE_DELAY_MS);
+    return () => clearTimeout(timer);
+  }, [game.stepIndex, game.status, game.onboardingMode, game.runSeed, hudLessonDue, firePollyEvent]);
 
   if (step.kind === 'word') {
     // Same predicate GameDirector uses for isBossRound, so routing here and
