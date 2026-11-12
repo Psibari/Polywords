@@ -7565,11 +7565,6 @@
         "isReal": false
       },
       {
-        "id": "figure_t01",
-        "phrase": "YOUR BEST GUESS WITHOUT DOING THE MATH",
-        "isReal": false
-      },
-      {
         "id": "figure_t02",
         "phrase": "CRIME-SCENE CHALK AROUND THE BODY",
         "isReal": false
@@ -7580,18 +7575,8 @@
         "isReal": false
       },
       {
-        "id": "figure_t04",
-        "phrase": "THE RESULT AFTER PRESSING EQUALS",
-        "isReal": false
-      },
-      {
         "id": "figure_t05",
         "phrase": "NUMBERS A GRAPH RUNS ALONG",
-        "isReal": false
-      },
-      {
-        "id": "figure_t06",
-        "phrase": "DECIMAL DIGITS ON A PRICE TAG",
         "isReal": false
       },
       {
