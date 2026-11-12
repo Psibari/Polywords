@@ -7210,23 +7210,18 @@
         "isReal": true
       },
       {
-        "id": "face_t00",
-        "phrase": "A BUILDING’S PUBLIC FRONT",
-        "isReal": false
-      },
-      {
-        "id": "face_t01",
-        "phrase": "THE VISIBLE SIDE OF THE MOON",
-        "isReal": false
-      },
-      {
         "id": "face_t02",
         "phrase": "WHERE A RECEDING HAIRLINE STARTS SHOWING",
         "isReal": false
       },
       {
-        "id": "face_t03",
-        "phrase": "THE SIDE TURNED TOWARD THE SUNSET",
+        "id": "face_t04",
+        "phrase": "WHAT YOU PUT ON TO HIDE WHO YOU ARE AT A COSTUME PARTY",
+        "isReal": false
+      },
+      {
+        "id": "face_t05",
+        "phrase": "WHAT GRANDMA PINCHES EVERY TIME SHE SEES YOU",
         "isReal": false
       }
     ],
