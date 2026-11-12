@@ -700,7 +700,7 @@
         "id": "battery_h01"
       },
       {
-        "real": "THE NEIGHBORHOOD WHERE THE CHARGING BULL LIVES",
+        "real": "THE PARK AT THE VERY BOTTOM TIP OF MANHATTAN",
         "trap": "THE FREE RIDE FOR A VIEW OF THE STATUE OF LIBERTY",
         "id": "battery_h02"
       }
@@ -1070,8 +1070,8 @@
         "isReal": false
       },
       {
-        "id": "bill_t2",
-        "phrase": "GAVEL SIGNS IT INTO LAW",
+        "id": "bill_t6",
+        "phrase": "WHAT THE COP RECITES WHILE THE CUFFS GO ON",
         "isReal": false
       },
       {
@@ -1756,8 +1756,8 @@
         "isReal": false
       },
       {
-        "id": "bow_t3",
-        "phrase": "WHERE YOU CAN READ THE NAME OF A SHIP",
+        "id": "bow_t4",
+        "phrase": "WHERE THE OUTBOARD MOTOR HANGS OFF A BOAT",
         "isReal": false
       }
     ],
@@ -1898,8 +1898,8 @@
         "isReal": true
       },
       {
-        "id": "bridge_r3",
-        "phrase": "THE RAPPER’S PART OF A DANCE SONG",
+        "id": "bridge_r5",
+        "phrase": "WHEN THE SONG SWITCHES IT UP BEFORE THE LAST CHORUS",
         "isReal": true
       },
       {
@@ -2912,7 +2912,7 @@
         "id": "check_h00"
       },
       {
-        "real": "SEEN ON GYM SHORTS BUT NOT ON A SUIT JACKET",
+        "real": "WHAT GOES IN THE YES OR NO BOX ON A NOTE PASSED IN CLASS",
         "trap": "THE SOUND A CLOCK’S LONG HAND MAKES",
         "id": "check_h01"
       },
@@ -3170,8 +3170,8 @@
         "isReal": false
       },
       {
-        "id": "circuit_t2",
-        "phrase": "THE ONLY DIRECTION NASCAR DRIVERS TURN",
+        "id": "circuit_t95",
+        "phrase": "WHAT YOU TURN ON FOR BACKUP POWER WHEN THE POWER GOES OUT",
         "isReal": false
       },
       {
@@ -4256,8 +4256,8 @@
         "isReal": true
       },
       {
-        "id": "contest_r03",
-        "phrase": "WHAT A BASEBALL GAME WASN’T AFTER A SHUTOUT",
+        "id": "contest_r04",
+        "phrase": "WHAT THE GAME WASN’T WHEN IT WAS 42-0 AT HALFTIME",
         "isReal": true
       },
       {
@@ -8831,8 +8831,8 @@
         "isReal": true
       },
       {
-        "id": "horn_r2",
-        "phrase": "YOU CAN'T PLAY THE BLUES WITHOUT IT",
+        "id": "horn_r4",
+        "phrase": "THE FRENCH ONE IS COILED INTO A CIRCLE",
         "isReal": true
       },
       {
@@ -10363,8 +10363,8 @@
         "isReal": true
       },
       {
-        "id": "rank_t0",
-        "phrase": "PURPLE HEART, EARNED FOR BRAVERY IN COMBAT",
+        "id": "rank_t5",
+        "phrase": "THE PURPLE HEART PINNED ON A WOUNDED SOLDIER",
         "isReal": false
       },
       {
