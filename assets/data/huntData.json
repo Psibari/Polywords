@@ -4133,11 +4133,6 @@
         "isReal": true
       },
       {
-        "id": "conduct_r5",
-        "phrase": "WHAT A POLICE OFFICER DOES TO TRAFFIC",
-        "isReal": true
-      },
-      {
         "id": "conduct_t92",
         "phrase": "WHAT THE FLIGHT ATTENDANT DOES BEFORE TAKEOFF",
         "isReal": false
@@ -4159,7 +4154,7 @@
       }
     ],
     "gpsTag": "tension",
-    "wordType": "Sextuple"
+    "wordType": "Quintuple"
   },
   "CONTENT": {
     "difficulty": "medium",
@@ -4679,8 +4674,8 @@
         "isReal": true
       },
       {
-        "id": "counter_r03",
-        "phrase": "WHAT TURNS OFF WHEN THE TAXI RIDE IS OVER",
+        "id": "counter_r04",
+        "phrase": "HOW YOU BUY MEDICINE THAT DOESN’T NEED A PRESCRIPTION",
         "isReal": true
       },
       {
@@ -4706,6 +4701,11 @@
       {
         "id": "counter_t05",
         "phrase": "WHAT THE CASHIER YELLS TO CALL THE NEXT CUSTOMER",
+        "isReal": false
+      },
+      {
+        "id": "counter_t06",
+        "phrase": "WHAT YOU TELL THE CAB DRIVER TO LEAVE RUNNING WHEN YOU SAY YOU’LL BE RIGHT BACK",
         "isReal": false
       }
     ],
@@ -8035,11 +8035,6 @@
         "isReal": true
       },
       {
-        "id": "foam_r9",
-        "phrase": "HAIR PRODUCT THAT SOUNDS LIKE IT'S NAMED AFTER A MOOSE",
-        "isReal": true
-      },
-      {
         "id": "foam_t0",
         "phrase": "USED TO DRY THE DISHES AFTER DINNER",
         "isReal": false
@@ -8056,7 +8051,7 @@
       }
     ],
     "gpsTag": "boss",
-    "wordType": "10-MEANING"
+    "wordType": "9-MEANING"
   },
   "FOCUS": {
     "difficulty": "hard",
