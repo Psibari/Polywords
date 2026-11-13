@@ -138,7 +138,7 @@ assert.deepEqual(
     LIGHT: 'Septuple',
     PALM: 'Sextuple',
     FAST: '8-MEANING',
-    FOOT: '11-MEANING',
+    FOOT: '10-MEANING',
   },
 );
 

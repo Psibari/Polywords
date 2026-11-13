@@ -8158,11 +8158,6 @@
         "isReal": true
       },
       {
-        "id": "foil_r5",
-        "phrase": "HOW A FOX USES ITS SMARTS TO MAKE A GETAWAY",
-        "isReal": true
-      },
-      {
         "id": "foil_t0",
         "phrase": "WHAT A PHOTOGRAPHER USES TO DIRECT LIGHT ON THE SUBJECT",
         "isReal": false
@@ -8184,7 +8179,7 @@
       }
     ],
     "gpsTag": "tension",
-    "wordType": "Sextuple"
+    "wordType": "Quintuple"
   },
   "FOLD": {
     "difficulty": "medium",
@@ -8338,11 +8333,6 @@
         "isReal": true
       },
       {
-        "id": "foot_r9",
-        "phrase": "WHAT THE BOOKKEEPER DOES TO THE COLUMN BEFORE CLOSING THE LEDGER",
-        "isReal": true
-      },
-      {
         "id": "foot_r10",
         "phrase": "WHAT YOU STICK OUT FROM UNDER THE BLANKET WHEN YOU GET TOO HOT",
         "isReal": true
@@ -8374,7 +8364,7 @@
       }
     ],
     "gpsTag": "panic",
-    "wordType": "11-MEANING"
+    "wordType": "10-MEANING"
   },
   "FORGE": {
     "difficulty": "medium",
@@ -9482,11 +9472,6 @@
         "isReal": true
       },
       {
-        "id": "pen_r5",
-        "phrase": "BLUE TO THE SKY, ORANGE TO THE THIGH",
-        "isReal": true
-      },
-      {
         "id": "pen_t0",
         "phrase": "THE YELLOW ONE HAS NUMBER TWO ON IT",
         "isReal": false
@@ -9513,7 +9498,7 @@
       }
     ],
     "gpsTag": "tension",
-    "wordType": "Sextuple"
+    "wordType": "Quintuple"
   },
   "PITCH": {
     "difficulty": "medium",
