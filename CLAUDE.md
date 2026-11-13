@@ -199,6 +199,14 @@ glow. Do not re-add any of them. `TorchGlow.tsx` stays (Settings uses it).
 - PINNED BOSS (Pete, 2026-11-12): the Boss stays the same Hunt after Hunt until the player REACHES it. `startGame` passes `progress.pinnedBossWord` to `generateHunt`, which uses it as the Boss only while it is still eligible (in the bank, has Boss content, not mastered, not a Haunt, not already in the Hunt); otherwise the normal pick runs. The store then saves the new Hunt's Boss as the pin right at Hunt start (`pinnedBossForHunt`, `app/game/pinnedBoss.ts`), so dying early, quitting from the pause menu or closing the app keeps it. Reaching the Boss settles it either way with no extra code: a win masters it, a loss makes it a Haunt (it returns at round 5 as now), and both make it ineligible, so the next Hunt pins a new Boss. A Master's Rematch pins nothing. `loadProgress` drops bad saved values; Reset Progress clears it. With no pin the generator output is unchanged. Pete also ruled: the ordinary word the player died on does NOT come back (normal recent-word rotation). Tests: `app/game/pinnedBoss.test.ts`.
 - GPS arc: Confidence → Flow → Tension → Panic → Boss. `docs/GOLDEN_PACING_SYSTEM.md` owns the
   product rhythm; `huntGenerator.ts` owns executable pools/fallbacks.
+- ORDINARY WORDS PICK BY DIFFICULTY, NOT gpsTag (Pete, 2026-11-13). The phase still sets each round's role,
+  haptics and Polly beats, but the word comes from difficulty: Confidence (rounds 1-2) easy; Flow (3-4) easy +
+  medium; Tension (5-7) medium + hard + mastered returns; Panic (8-9) hard + mastered returns. Pools in
+  `generateHunt`: `easyPool`, `earlyPool`, `latePool`, `hardPool`; only `boss` still matters as a tag. Reason:
+  gpsTag locked words to late rounds (9 easy Panic words only in rounds 8-9), so early-dying players never met
+  them. Unchanged: Boss, pin, Haunt slot, FINE, mastered returns (still rounds 5-9 only). Simulation (20 Hunts,
+  200 players each): words never seen by round-5 players 70 -> 0, round-7 61 -> 0; round-3 players meet every
+  easy and medium word, no hard ones (by design). `app/game/huntReachability.test.ts` pins it.
 - Runtime Hunt entries are validated before selection. Invalid difficulty/gpsTag, malformed or
   duplicate mask IDs, non-Boolean REAL/trap flags, missing swipe-direction coverage, or Boss
   entries without hidden content must fail loudly rather than silently disappear from pools.
