@@ -8,7 +8,10 @@ Governs Hunt placement and emotional rhythm. Tile writing belongs to
 - Approve meanings, REALS and traps before assigning phase.
 - Every runtime word needs a valid `gpsTag`: `confidence`, `flow`, `tension`, `panic`, or `boss`.
   Missing/invalid tags are structural failures, never permission to silently bypass content.
-- Every runtime word also needs valid `easy | medium | hard` difficulty for adaptive ordering.
+  Since 2026-11-13 only `boss` affects selection; the other four tags are kept as editorial
+  metadata and no longer decide which round a word plays in (see "Which words fill which rounds").
+- Every runtime word also needs valid `easy | medium | hard` difficulty. Difficulty decides which
+  rounds an ordinary word can fill, and still drives adaptive ordering.
 - Difficulty rises through semantic distance and trap sharpness, not arbitrary word count.
 - Preserve Hidden Truth: placement metadata never leaks truth or importance before a swipe.
 - Rotate settings, trap families and context shifts. One strong pivot beats several weak ones.
@@ -24,6 +27,22 @@ Polly's Word is always final. A Returning Haunt uses round 5 standard / round 4 
 forced to adrenaline/heavy feedback, and is followed by a Flow beat when possible so two peaks do
 not stack. It never receives Boss presentation.
 
+## Which words fill which rounds (Pete, 2026-11-13)
+
+The round's phase still sets its role, haptics and Polly beats. The WORD comes from difficulty,
+not gpsTag, so a player who keeps dying early can still meet every easy and medium word:
+
+| Phase (rounds, standard) | Ordinary words drawn from |
+| --- | --- |
+| Confidence (1-2) | easy |
+| Flow (3-4) | easy + medium |
+| Tension (5-7) | medium + hard, plus mastered returns |
+| Panic (8-9) | hard, plus mastered returns |
+
+Boss words (gpsTag `boss`) never fill ordinary rounds. Before this, gpsTag locked Tension and Panic
+words to rounds 5-9 even when easy, and a round-3 player saw 44 of the bank's words in 20 Hunts.
+`app/game/huntReachability.test.ts` fails if any ordinary word becomes unreachable.
+
 ## Selection Priority
 
 1. semantic legality and fairness;
@@ -37,7 +56,7 @@ this prevents uneven editorial pool sizes or heavy mastery from crashing a Hunt.
 soften phase purity but must not make properly tagged content unreachable.
 
 Boss-hidden content must be rare-but-fair and sourced. Returning Haunts take their reserved slot;
-mastered words remain eligible only for ordinary tension/panic revisits, never Boss or Returning
+mastered words remain eligible only for ordinary tension/panic revisits (rounds 5-9), never Boss or Returning
 Haunt placement. The generator marks those revisits so presentation can acknowledge them without
 leaking their status before commitment.
 
