@@ -7039,7 +7039,7 @@
         "id": "extract_h01"
       },
       {
-        "real": "THE CERTIFIED COPY PULLED FROM THE PUBLIC RECORD",
+        "real": "WHAT THEY SEND THE RESCUE CHOPPER IN TO DO WITH THE SOLDIERS STUCK BEHIND ENEMY LINES",
         "trap": "WHEN SECRET GOVERNMENT RECORDS BECOME PUBLIC",
         "id": "extract_h02"
       }
@@ -8655,7 +8655,7 @@
       },
       {
         "id": "horn_h02",
-        "real": "THE SHARP TIPPY-TOP OF A MOUNTAIN",
+        "real": "WHAT YOU GET ON WHEN YOU NEED TO CALL SOMEBODY RIGHT NOW",
         "trap": "WHAT THE SHOT HAS TO BEAT WHEN IT GOES UP WITH ONE SECOND LEFT"
       }
     ],
@@ -12397,11 +12397,6 @@
         "isReal": true
       },
       {
-        "id": "hamper_r2",
-        "phrase": "THE BASKET FULL OF TREATS SOMEONE SENDS AS A GIFT",
-        "isReal": true
-      },
-      {
         "id": "hamper_t0",
         "phrase": "THE MACHINE THAT DRIES YOUR CLOTHES",
         "isReal": false
@@ -12418,7 +12413,7 @@
       }
     ],
     "gpsTag": "confidence",
-    "wordType": "Triple"
+    "wordType": "Double"
   },
   "HANDLE": {
     "difficulty": "hard",
