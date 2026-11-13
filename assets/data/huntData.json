@@ -2043,11 +2043,6 @@
         "isReal": false
       },
       {
-        "id": "bright_t2",
-        "phrase": "THE PERSON WHO ALWAYS GETS STRAIGHT A’S",
-        "isReal": false
-      },
-      {
         "id": "bright_t3",
         "phrase": "HOW YOU FEEL AFTER A FULL NIGHT’S SLEEP",
         "isReal": false
@@ -9517,11 +9512,6 @@
         "isReal": false
       },
       {
-        "id": "pen_t3",
-        "phrase": "WHERE YOU SLEPT IT OFF AFTER GETTING ARRESTED",
-        "isReal": false
-      },
-      {
         "id": "pen_t4",
         "phrase": "TWO PUFFS WHEN YOU CAN'T CATCH YOUR BREATH",
         "isReal": false
@@ -14968,11 +14958,6 @@
       {
         "id": "line_t5",
         "phrase": "WHAT A TAILOR USES TO CUT THE SAME SHAPE AGAIN",
-        "isReal": false
-      },
-      {
-        "id": "line_t6",
-        "phrase": "WHAT CONNECTS TWO CITIES ON A ROAD MAP",
         "isReal": false
       }
     ],
