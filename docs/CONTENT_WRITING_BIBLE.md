@@ -600,6 +600,12 @@ This exception can apply to:
 -   Repeated situations, objects, subjects, imagery, phrases, or
     cultural references.
 
+### Phrases and idioms (Pete, 2026-11-13)
+
+Do not turn an ordinary phrase or collocation into a fake separate meaning.
+But a phrase or idiom may become a REAL when it is pop-culture, funny or
+clever enough to earn its place ("up in arms" on ARMS did not qualify).
+
 ### What the exception does not permit
 
 It does not permit:

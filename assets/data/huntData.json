@@ -192,16 +192,6 @@
         "isReal": true
       },
       {
-        "id": "arms_r3",
-        "phrase": "THE CHARITABLE SIDE OF A BIG COMPANY",
-        "isReal": true
-      },
-      {
-        "id": "arms_r4",
-        "phrase": "WHAT BASEBALL SCOUTS JUDGE IN A PITCHER",
-        "isReal": true
-      },
-      {
         "id": "arms_r5",
         "phrase": "WHAT TONY STARK’S COMPANY USED TO MAKE",
         "isReal": true
@@ -209,6 +199,16 @@
       {
         "id": "arms_r6",
         "phrase": "WHAT A COUNTRY DOES TO MAKE SOLDIERS BATTLE-READY",
+        "isReal": true
+      },
+      {
+        "id": "arms_r7",
+        "phrase": "WHAT THE FAMILY CREST ON THE OLD SHIELD IS A COAT OF",
+        "isReal": true
+      },
+      {
+        "id": "arms_r8",
+        "phrase": "WHAT A QUARTERBACK AND A PITCHER BOTH GET PAID FOR",
         "isReal": true
       },
       {
@@ -222,18 +222,8 @@
         "isReal": false
       },
       {
-        "id": "arms_t2",
-        "phrase": "WHAT FORMS ON THEM WHEN YOU’RE SCARED",
-        "isReal": false
-      },
-      {
-        "id": "arms_t3",
-        "phrase": "WHAT YOU STRETCH BEFORE DOING THE SPLITS",
-        "isReal": false
-      },
-      {
-        "id": "arms_t4",
-        "phrase": "WHERE SOLDIERS FACE THE ENEMY FIRST",
+        "id": "arms_t6",
+        "phrase": "WHAT A BIRD FLAPS TO GET OFF THE GROUND",
         "isReal": false
       }
     ],
@@ -246,13 +236,23 @@
     "hiddenTrap": null,
     "masks": [
       {
-        "id": "arrow_r0",
-        "phrase": "PIERCES THE TARGET IF AIM IS TRUE",
+        "id": "arrow_r1",
+        "phrase": "POINTS ONLY ONE WAY",
         "isReal": true
       },
       {
-        "id": "arrow_r1",
-        "phrase": "POINTS ONLY ONE WAY",
+        "id": "arrow_r2",
+        "phrase": "WHAT ROBIN HOOD SPLITS DOWN THE MIDDLE WITH HIS NEXT SHOT",
+        "isReal": true
+      },
+      {
+        "id": "arrow_r3",
+        "phrase": "WHAT CUPID USES TO MAKE PEOPLE FALL IN LOVE",
+        "isReal": true
+      },
+      {
+        "id": "arrow_r4",
+        "phrase": "WHAT’S PRINTED ON THE FOUR KEYS NEXT TO THE NUMBER PAD",
         "isReal": true
       },
       {
@@ -261,18 +261,18 @@
         "isReal": false
       },
       {
-        "id": "arrow_t1",
-        "phrase": "STRAIGHT LINE ON THE COMPASS FACE",
+        "id": "arrow_t4",
+        "phrase": "WHAT AN OLYMPIAN HURLS DOWN THE FIELD BY HAND",
         "isReal": false
       },
       {
-        "id": "arrow_t2",
-        "phrase": "GPS VOICE SAYS TURN LEFT",
+        "id": "arrow_t5",
+        "phrase": "WHAT THE NINJA FLINGS FROM ACROSS THE ROOM",
         "isReal": false
       }
     ],
     "gpsTag": "flow",
-    "wordType": "Double"
+    "wordType": "Quadruple"
   },
   "ARTICULATE": {
     "difficulty": "easy",
@@ -280,33 +280,43 @@
     "hiddenTrap": null,
     "masks": [
       {
-        "id": "articulate_r0",
-        "phrase": "CLEARLY EXPLAINS THE PLAN",
-        "isReal": true
-      },
-      {
         "id": "articulate_r1",
         "phrase": "BENDY BUS IN TRAFFIC",
         "isReal": true
       },
       {
-        "id": "articulate_t0",
-        "phrase": "STUMBLES OVER EVERY OTHER WORD",
+        "id": "articulate_r3",
+        "phrase": "HOW YOU’D DESCRIBE THE KID WHO NEVER SAYS “UM” DURING THE BOOK REPORT",
+        "isReal": true
+      },
+      {
+        "id": "articulate_r4",
+        "phrase": "WHAT YOU STRUGGLE TO DO WITH A FEELING YOU CAN’T QUITE DESCRIBE",
+        "isReal": true
+      },
+      {
+        "id": "articulate_t6",
+        "phrase": "HOW THE EMAIL READS WHEN IT TAKES FIVE PARAGRAPHS TO SAY “NO”",
         "isReal": false
       },
       {
-        "id": "articulate_t1",
-        "phrase": "FIXED STEEL BEAM WITH NO GIVE",
+        "id": "articulate_t7",
+        "phrase": "WHAT YOU CALL SOMEONE WHO SPEAKS SPANISH AND ENGLISH",
         "isReal": false
       },
       {
-        "id": "articulate_t2",
-        "phrase": "CUE CARDS HIDDEN OFF CAMERA",
+        "id": "articulate_t8",
+        "phrase": "HOW YOU TALK WHEN THE GUY IN THE BACK ROW CAN’T HEAR YOU",
+        "isReal": false
+      },
+      {
+        "id": "articulate_t9",
+        "phrase": "HOW YOU HAVE TO BE TO TOUCH YOUR TOES WITHOUT BENDING YOUR KNEES",
         "isReal": false
       }
     ],
     "gpsTag": "confidence",
-    "wordType": "Double"
+    "wordType": "Triple"
   },
   "BACK": {
     "difficulty": "medium",
