@@ -3902,11 +3902,6 @@
         "isReal": true
       },
       {
-        "id": "commission_r3",
-        "phrase": "LUCKY LUCIANO’S GROUP OF MAFIA BOSSES",
-        "isReal": true
-      },
-      {
         "id": "commission_r4",
         "phrase": "WHAT RETIRED WARSHIPS ARE NO LONGER IN",
         "isReal": true
@@ -3933,7 +3928,7 @@
       }
     ],
     "gpsTag": "panic",
-    "wordType": "Quintuple"
+    "wordType": "Quadruple"
   },
   "COMPANY": {
     "difficulty": "medium",
@@ -8089,11 +8084,6 @@
         "isReal": true
       },
       {
-        "id": "focus_r6",
-        "phrase": "WHAT PATIENT ZERO CAN BECOME IN A GLOBAL PANDEMIC",
-        "isReal": true
-      },
-      {
         "id": "focus_t0",
         "phrase": "THE FIRST THING DONE ON A TO-DO LIST",
         "isReal": false
@@ -8125,7 +8115,7 @@
       }
     ],
     "gpsTag": "panic",
-    "wordType": "Septuple"
+    "wordType": "Sextuple"
   },
   "FOIL": {
     "difficulty": "medium",
@@ -8483,11 +8473,6 @@
         "isReal": true
       },
       {
-        "id": "fork_r8",
-        "phrase": "DIFFERENT VERSIONS WRITTEN FROM THE SAME PIECE OF CODE",
-        "isReal": true
-      },
-      {
         "id": "fork_t1",
         "phrase": "THE TWO METAL PIECES YOU PLUG INTO THE WALL",
         "isReal": false
@@ -8509,7 +8494,7 @@
       }
     ],
     "gpsTag": "boss",
-    "wordType": "9-MEANING"
+    "wordType": "8-MEANING"
   },
   "FOSTER": {
     "difficulty": "easy",
