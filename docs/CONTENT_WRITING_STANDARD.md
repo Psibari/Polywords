@@ -1,7 +1,9 @@
 # POLYWORDS Content Writing Standard
 
-Sole in-repo authority for Hunt meaning research, REALS, traps, hidden content and editorial
-approval. `docs/CONTENT_PHILOSOPHY.md` states the intended feeling.
+In-repo authority for the Hunt data boundary, workflow and approval gate.
+`docs/CONTENT_WRITING_BIBLE.md` is Pete's master writing document (REALs, traps, Boss words,
+exceptions, Pete's binding trap rules); where the two disagree, the Bible wins (Pete, 2026-11-13).
+`docs/CONTENT_PHILOSOPHY.md` states the intended feeling.
 
 ## Data Boundary
 

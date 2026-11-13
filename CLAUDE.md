@@ -11,7 +11,8 @@ Focused product rules live in `docs/`. Runtime code/data outrank every doc.
 | --- | --- |
 | Hunt rules, scoring, onboarding | `docs/GAME_REFERENCE.md` |
 | Hunt pacing | `docs/GOLDEN_PACING_SYSTEM.md` |
-| Hunt editorial law | `docs/CONTENT_WRITING_STANDARD.md` |
+| Hunt writing (master, Pete) | `docs/CONTENT_WRITING_BIBLE.md` (wins where documents disagree) |
+| Hunt editorial law, data boundary | `docs/CONTENT_WRITING_STANDARD.md` |
 | Daily gameplay/castle | `docs/DAILY_CHALLENGE_SPEC.md` |
 | Daily editorial law | `docs/DAILY_CONTENT_WRITING_STANDARD.md` |
 | Polly voice | `docs/POLLY_DIALOGUE_BANK.md` |
