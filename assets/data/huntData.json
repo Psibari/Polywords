@@ -1633,13 +1633,8 @@
         "isReal": true
       },
       {
-        "id": "bottom_t0",
-        "phrase": "WHO CAME IN LAST IN THE RACE",
-        "isReal": false
-      },
-      {
-        "id": "bottom_t1",
-        "phrase": "THE PART OF YOUR FOOT THAT NEVER TOUCHES THE GROUND",
+        "id": "bottom_t6",
+        "phrase": "WHAT YOU CALL THE RUNNER OF A RACE WHO CROSSED THE FINISH LINE AFTER EVERYONE ELSE",
         "isReal": false
       },
       {
@@ -1650,6 +1645,11 @@
       {
         "id": "bottom_t3",
         "phrase": "THE LONGEST SIDE OF A RIGHT TRIANGLE",
+        "isReal": false
+      },
+      {
+        "id": "bottom_t7",
+        "phrase": "WHERE THE SCUBA DIVER HEADS WHEN THE AIR TANK RUNS LOW",
         "isReal": false
       }
     ],
@@ -6964,11 +6964,6 @@
         "id": "exploit_r03",
         "phrase": "THE STORIES YOU TELL WHEN WRITING YOUR LIFE’S MEMOIR",
         "isReal": true
-      },
-      {
-        "id": "exploit_t00",
-        "phrase": "A LOOPHOLE IN THE RULES",
-        "isReal": false
       },
       {
         "id": "exploit_t01",
