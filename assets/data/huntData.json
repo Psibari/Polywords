@@ -13887,11 +13887,6 @@
         "id": "jack_t5",
         "phrase": "WHAT YOU PICK OUT AT THE PATCH BEFORE IT GETS A FACE CARVED INTO IT",
         "isReal": false
-      },
-      {
-        "id": "jack_t6",
-        "phrase": "THE POCKET KNIFE WITH SCISSORS, A CORKSCREW, AND HALF A TOOLBOX FOLDED INSIDE",
-        "isReal": false
       }
     ],
     "gpsTag": "flow",
@@ -14027,11 +14022,6 @@
         "isReal": true
       },
       {
-        "id": "kind_r3",
-        "phrase": "WHAT YOU’RE DOING WHEN YOU GIVE SOMEONE A TASTE OF THEIR OWN MEDICINE",
-        "isReal": true
-      },
-      {
         "id": "kind_r4",
         "phrase": "WHAT YOU SAY ABOUT SOMETHING YOU WANT TO LIKE BUT REALLY DON’T",
         "isReal": true
@@ -14073,7 +14063,7 @@
       }
     ],
     "gpsTag": "confidence",
-    "wordType": "Sextuple"
+    "wordType": "Quintuple"
   },
   "LAP": {
     "difficulty": "medium",
