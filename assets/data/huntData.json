@@ -6937,16 +6937,6 @@
         "isReal": true
       },
       {
-        "id": "exhaust_t00",
-        "phrase": "WHAT HAPPENS WHEN YOU LOSE ALL PATIENCE",
-        "isReal": false
-      },
-      {
-        "id": "exhaust_t01",
-        "phrase": "A MAXED-OUT CREDIT CARD",
-        "isReal": false
-      },
-      {
         "id": "exhaust_t02",
         "phrase": "WHEN YOUR SECOND WIND KICKS IN",
         "isReal": false
@@ -6954,6 +6944,11 @@
       {
         "id": "exhaust_t03",
         "phrase": "THE CRISIS OF A MENTAL BREAKDOWN",
+        "isReal": false
+      },
+      {
+        "id": "exhaust_t04",
+        "phrase": "THE PART OF THE ENGINE WHERE THE AIR COMES IN",
         "isReal": false
       }
     ],
@@ -7796,11 +7791,6 @@
         "isReal": false
       },
       {
-        "id": "flat_t3",
-        "phrase": "HOW A ROAD FEELS AFTER ALL THE POTHOLES ARE FILLED",
-        "isReal": false
-      },
-      {
         "id": "flat_t4",
         "phrase": "A HEART MONITOR WHEN THE BEATS COME TOO FAR APART",
         "isReal": false
@@ -8213,11 +8203,6 @@
         "isReal": false
       },
       {
-        "id": "foil_t3",
-        "phrase": "WHAT YOU LINE A BAKING PAN WITH SO NOTHING STICKS",
-        "isReal": false
-      },
-      {
         "id": "foil_t4",
         "phrase": "WHAT THEY STRETCH ACROSS A CRIME SCENE TO KEEP PEOPLE OUT",
         "isReal": false
@@ -8538,11 +8523,6 @@
         "isReal": true
       },
       {
-        "id": "fork_t0",
-        "phrase": "THE PLASTIC UTENSIL YOU GET WITH SCHOOL CAFETERIA LUNCH",
-        "isReal": false
-      },
-      {
         "id": "fork_t1",
         "phrase": "THE TWO METAL PIECES YOU PLUG INTO THE WALL",
         "isReal": false
@@ -8592,8 +8572,8 @@
         "isReal": false
       },
       {
-        "id": "foster_t1",
-        "phrase": "A HOME THAT TAKES IN STRAY ANIMALS",
+        "id": "foster_t4",
+        "phrase": "THE PLACE YOU GET A DOG, THEN TELL EVERYONE YOU RESCUED IT",
         "isReal": false
       },
       {
@@ -8648,11 +8628,6 @@
       {
         "id": "foul_t0",
         "phrase": "A WORD YOU WISH YOU COULD TAKE BACK",
-        "isReal": false
-      },
-      {
-        "id": "foul_t1",
-        "phrase": "WHAT WAKING UP ON THE WRONG SIDE OF THE BED DOES",
         "isReal": false
       },
       {
@@ -13793,11 +13768,6 @@
       {
         "id": "floor_t4",
         "phrase": "WHAT YOU STAND ON WHILE WAITING FOR THE TRAIN TO ARRIVE",
-        "isReal": false
-      },
-      {
-        "id": "floor_t5",
-        "phrase": "WHAT YOU STEP ONTO WHEN YOU REACH THE TOP OF A FLIGHT OF STAIRS",
         "isReal": false
       },
       {
