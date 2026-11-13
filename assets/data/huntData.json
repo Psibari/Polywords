@@ -3189,11 +3189,6 @@
         "isReal": true
       },
       {
-        "id": "clap_r3",
-        "phrase": "OLD SLANG FOR GONORRHEA",
-        "isReal": true
-      },
-      {
         "id": "clap_r4",
         "phrase": "WHAT BREAKS THE SILENCE AFTER A HOLE-IN-ONE",
         "isReal": true
@@ -3220,7 +3215,7 @@
       }
     ],
     "gpsTag": "tension",
-    "wordType": "Quintuple"
+    "wordType": "Quadruple"
   },
   "CLAW": {
     "difficulty": "easy",
@@ -4244,11 +4239,6 @@
         "id": "contest_t03",
         "phrase": "THE PANEL OF EXPERTS WHO DECIDE THE WINNER",
         "isReal": false
-      },
-      {
-        "id": "contest_t04",
-        "phrase": "WHEN A KAREN ASKS TO SPEAK TO THE MANAGER",
-        "isReal": false
       }
     ],
     "gpsTag": "tension",
@@ -5021,8 +5011,8 @@
     "hiddenTrap": null,
     "masks": [
       {
-        "id": "crown_r00",
-        "phrase": "DENTAL INSTALLMENT TO FIX A HILLBILLY SMILE",
+        "id": "crown_r06",
+        "phrase": "DENTAL WORK THAT FIXES YOUR BROKEN SMILE",
         "isReal": true
       },
       {
@@ -5350,8 +5340,8 @@
         "isReal": true
       },
       {
-        "id": "deal_r04",
-        "phrase": "WHAT YOU GET THE SHIT END OF",
+        "id": "deal_r05",
+        "phrase": "OVERREACTING MEANS MAKING A BIG ___ OUT OF NOTHING",
         "isReal": true
       },
       {
@@ -12652,11 +12642,6 @@
         "id": "head_t7",
         "phrase": "WHAT A BOXER IS TOLD TO KEEP TUCKED DURING A FIGHT",
         "isReal": false
-      },
-      {
-        "id": "head_t8",
-        "phrase": "WHAT’S SUPPOSED TO BE RED ON A REDNECK",
-        "isReal": false
       }
     ],
     "gpsTag": "panic",
@@ -13759,8 +13744,8 @@
         "isReal": true
       },
       {
-        "id": "jack_r4",
-        "phrase": "WHAT A MALE DONKEY IS CALLED BEFORE “ASS” TURNS IT INTO AN INSULT",
+        "id": "jack_r10",
+        "phrase": "WHAT A MALE DONKEY IS CALLED",
         "isReal": true
       },
       {
@@ -13863,8 +13848,8 @@
         "isReal": true
       },
       {
-        "id": "kick_r7",
-        "phrase": "WHAT YOU THREATEN TO DO TO SOMEONE’S ASS RIGHT BEFORE A FIGHT",
+        "id": "kick_r13",
+        "phrase": "WHAT YOU FINALLY DO TO A BAD HABIT LIKE SMOKING",
         "isReal": true
       },
       {
