@@ -4374,13 +4374,13 @@
         "isReal": true
       },
       {
-        "id": "copy_t00",
-        "phrase": "THE NEWEST REVISION OF A FILE",
-        "isReal": false
+        "id": "copy_r07",
+        "phrase": "YOUR REAL-LIFE DOPPELGÄNGER",
+        "isReal": true
       },
       {
-        "id": "copy_t01",
-        "phrase": "YOUR REAL-LIFE DOPPELGÄNGER",
+        "id": "copy_t00",
+        "phrase": "THE NEWEST REVISION OF A FILE",
         "isReal": false
       },
       {
@@ -4394,13 +4394,13 @@
         "isReal": false
       },
       {
-        "id": "copy_t04",
-        "phrase": "WHAT SCIENTISTS CALL A GENETIC LOOK-ALIKE",
+        "id": "copy_t05",
+        "phrase": "WHAT THE MUSEUM HANGS ON THE WALL WHILE THE GIFT SHOP SELLS THE PRINTS",
         "isReal": false
       }
     ],
     "gpsTag": "flow",
-    "wordType": "Septuple"
+    "wordType": "8-MEANING"
   },
   "CORD": {
     "difficulty": "easy",
@@ -5184,11 +5184,6 @@
         "isReal": false
       },
       {
-        "id": "cue_t01",
-        "phrase": "WHAT YOU MUST START AT THE BACK OF WHEN YOU GET IN IT",
-        "isReal": false
-      },
-      {
         "id": "cue_t02",
         "phrase": "WHAT THE CATCHER SHOWS THE PITCHER SO HE KNOWS WHAT TO THROW NEXT",
         "isReal": false
@@ -5196,11 +5191,6 @@
       {
         "id": "cue_t03",
         "phrase": "POOL HALL GAME PIECE THROWN AT A BULLSEYE",
-        "isReal": false
-      },
-      {
-        "id": "cue_t04",
-        "phrase": "WHAT AN ACTOR READS THEIR LINES FROM",
         "isReal": false
       },
       {
