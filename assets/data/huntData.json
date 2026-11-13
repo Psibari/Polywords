@@ -5,24 +5,19 @@
     "hiddenTrap": null,
     "masks": [
       {
-        "id": "abstract_r0",
-        "phrase": "A THOUGHT YOU CAN'T HOLD IN YOUR HAND",
-        "isReal": true
-      },
-      {
-        "id": "abstract_r1",
-        "phrase": "RESEARCH PAPER SUMMARY",
-        "isReal": true
-      },
-      {
         "id": "abstract_r2",
         "phrase": "COLORS SPLASHED ON CANVAS",
         "isReal": true
       },
       {
-        "id": "abstract_t0",
-        "phrase": "SOMETHING SOLID YOU CAN TOUCH",
-        "isReal": false
+        "id": "abstract_r3",
+        "phrase": "THE KIND OF NOUN YOU CAN'T DRAW A PICTURE OF",
+        "isReal": true
+      },
+      {
+        "id": "abstract_r4",
+        "phrase": "THE CLIFFSNOTES AT THE TOP OF A RESEARCH PAPER",
+        "isReal": true
       },
       {
         "id": "abstract_t1",
@@ -32,6 +27,11 @@
       {
         "id": "abstract_t2",
         "phrase": "A PORTRAIT PAINTED TRUE TO LIFE",
+        "isReal": false
+      },
+      {
+        "id": "abstract_t5",
+        "phrase": "THE ART STYLE WITH SOUP CANS HANGING IN A GALLERY",
         "isReal": false
       }
     ],
@@ -44,38 +44,73 @@
     "hiddenTrap": null,
     "masks": [
       {
-        "id": "address_r0",
-        "phrase": "GPS DESTINATION",
+        "id": "address_r3",
+        "phrase": "WHAT THE PIZZA PLACE ASKS FOR BEFORE YOU HANG UP",
         "isReal": true
       },
       {
-        "id": "address_r1",
-        "phrase": "PRESIDENTIAL SPEECH TO THE NATION",
+        "id": "address_r4",
+        "phrase": "WHAT YOU FILL IN TWICE WHEN SHIPPING AND BILLING DON'T MATCH",
         "isReal": true
       },
       {
-        "id": "address_r2",
-        "phrase": "ISSUE FINALLY GETS HANDLED",
+        "id": "address_r5",
+        "phrase": "WHAT HAS THE @ SITTING BETWEEN YOUR NAME AND YOUR PROVIDER",
         "isReal": true
       },
       {
-        "id": "address_t0",
-        "phrase": "ZIP CODE STAMPED ON THE ENVELOPE",
+        "id": "address_r6",
+        "phrase": "WHAT THE PRESIDENT IS DOING WHEN SPEAKING TO THE WHOLE NATION",
+        "isReal": true
+      },
+      {
+        "id": "address_r7",
+        "phrase": "WHAT LINCOLN GAVE AT GETTYSBURG",
+        "isReal": true
+      },
+      {
+        "id": "address_r8",
+        "phrase": "WHAT YOUR BOSS PROMISES TO DO WITH YOUR COMPLAINT “AT THE NEXT MEETING”",
+        "isReal": true
+      },
+      {
+        "id": "address_r9",
+        "phrase": "WHAT THE CELEBRITY FINALLY DOES TO THE SCANDAL WITH CROCODILE TEARS ON CAMERA",
+        "isReal": true
+      },
+      {
+        "id": "address_t7",
+        "phrase": "WHAT A POLITICIAN DOES TO A QUESTION HE DOESN'T WANT TO ANSWER",
         "isReal": false
       },
       {
-        "id": "address_t1",
-        "phrase": "PODIUM MICROPHONE SQUEALS WITH FEEDBACK",
+        "id": "address_t8",
+        "phrase": "WHAT YOU GAVE THAT GUY AT THE BAR, AND NOW HE WON'T STOP TEXTING",
         "isReal": false
       },
       {
-        "id": "address_t2",
-        "phrase": "SWEPT UNDER THE RUG INSTEAD",
+        "id": "address_t9",
+        "phrase": "WHAT FOLLOWERS TYPE TO TAG YOU IN A POST",
+        "isReal": false
+      },
+      {
+        "id": "address_t10",
+        "phrase": "WHAT YOU SHARE WITH A FRIEND SO THEY CAN FIND YOU AT THE CONCERT",
+        "isReal": false
+      },
+      {
+        "id": "address_t11",
+        "phrase": "WHAT YOU DO WITH A PROBLEM BY DUMPING IT ON A COWORKER",
+        "isReal": false
+      },
+      {
+        "id": "address_t12",
+        "phrase": "WHAT YOU GIVE THE COAST GUARD WHEN YOU PUT OUT A MAYDAY CALL",
         "isReal": false
       }
     ],
     "gpsTag": "tension",
-    "wordType": "Triple"
+    "wordType": "Septuple"
   },
   "ANCHOR": {
     "difficulty": "medium",
@@ -85,16 +120,6 @@
       {
         "id": "anchor_r0",
         "phrase": "POPEYE’S FOREARM TATTOOS",
-        "isReal": true
-      },
-      {
-        "id": "anchor_r1",
-        "phrase": "STRONGEST POINT OF A CLIMBER’S RIG",
-        "isReal": true
-      },
-      {
-        "id": "anchor_r2",
-        "phrase": "SPONSOR’S ROLE TO KEEP SOMEONE SOBER",
         "isReal": true
       },
       {
@@ -108,33 +133,43 @@
         "isReal": true
       },
       {
-        "id": "anchor_r5",
-        "phrase": "300 SPARTANS’ HOLD-THE-LINE POSITION",
+        "id": "anchor_r6",
+        "phrase": "WHAT YOU DROP OVERBOARD WHEN YOU FINALLY FIND YOUR FAVORITE FISHING SPOT",
         "isReal": true
       },
       {
-        "id": "anchor_t0",
-        "phrase": "SAILOR’S BOWLINE AROUND THE DOCK POST",
+        "id": "anchor_r7",
+        "phrase": "THE ONE PERSON HOLDING THE WHOLE FAMILY TOGETHER",
+        "isReal": true
+      },
+      {
+        "id": "anchor_t4",
+        "phrase": "THE PERSON POINTING AT THE STORM MAP ON THE EVENING NEWS",
         "isReal": false
       },
       {
-        "id": "anchor_t1",
-        "phrase": "METAL CLIPS USED FOR CLIMBING SAFETY",
+        "id": "anchor_t5",
+        "phrase": "WHAT YOU TOSS TO THE GUY ON THE DOCK WHEN YOU PULL IN",
         "isReal": false
       },
       {
-        "id": "anchor_t2",
-        "phrase": "LAST PLACE IN THE HUNDRED-YARD DASH",
+        "id": "anchor_t6",
+        "phrase": "THE GUY IN HIS GARAGE TALKING INTO A MIC FOR THREE HOURS EVERY WEEK",
         "isReal": false
       },
       {
-        "id": "anchor_t3",
-        "phrase": "SOMEONE WHO HOSTS A PODCAST",
+        "id": "anchor_t7",
+        "phrase": "WHAT KEEPS YOUR PAPERS FROM BLOWING AWAY BY THE OPEN WINDOW",
+        "isReal": false
+      },
+      {
+        "id": "anchor_t8",
+        "phrase": "WHAT THE MOB PUTS ON YOUR FEET BEFORE THE RIVER",
         "isReal": false
       }
     ],
     "gpsTag": "panic",
-    "wordType": "Sextuple"
+    "wordType": "Quintuple"
   },
   "ARMS": {
     "difficulty": "medium",
