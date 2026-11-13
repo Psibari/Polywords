@@ -962,11 +962,6 @@
         "isReal": true
       },
       {
-        "id": "bench_r3",
-        "phrase": "WHERE THINGS THAT WEREN’T BROKEN GOT FIXED ANYWAY",
-        "isReal": true
-      },
-      {
         "id": "bench_r4",
         "phrase": "THE GYM PRESS YOU NEED A SPOTTER FOR",
         "isReal": true
@@ -993,7 +988,7 @@
       }
     ],
     "gpsTag": "panic",
-    "wordType": "Quintuple"
+    "wordType": "Quadruple"
   },
   "BERRY": {
     "difficulty": "easy",
@@ -2185,8 +2180,8 @@
         "isReal": true
       },
       {
-        "id": "butt_r4",
-        "phrase": "AN A-B CONVERSATION, SO C YOUR WAY OUT OF IT",
+        "id": "butt_r5",
+        "phrase": "WHAT YOUR MAMA GAVE YOU TO SHAKE ON THE DANCE FLOOR",
         "isReal": true
       },
       {
@@ -12713,11 +12708,6 @@
         "isReal": true
       },
       {
-        "id": "hedge_r3",
-        "phrase": "WHAT HAPPENS WHEN YOU’RE LEFT WITH ALMOST NO OPTIONS",
-        "isReal": true
-      },
-      {
         "id": "hedge_t0",
         "phrase": "WHAT A RICH KID’S PARENTS MIGHT SET UP FOR THEM",
         "isReal": false
@@ -12739,7 +12729,7 @@
       }
     ],
     "gpsTag": "tension",
-    "wordType": "Quadruple"
+    "wordType": "Triple"
   },
   "HIDE": {
     "difficulty": "hard",
