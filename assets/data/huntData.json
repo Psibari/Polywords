@@ -6682,13 +6682,13 @@
         "isReal": false
       },
       {
-        "id": "dump_t02",
-        "phrase": "THE BIG BIN BEHIND A RESTAURANT",
+        "id": "dump_t05",
+        "phrase": "WHAT YOU DO WITH EMPTY CANS AND BOTTLES TO GET A NICKEL BACK FOR EACH",
         "isReal": false
       },
       {
-        "id": "dump_t03",
-        "phrase": "YOUR DATE GOES TO THE BATHROOM AND NEVER COMES BACK",
+        "id": "dump_t04",
+        "phrase": "WHAT HAPPENS WHEN YOUR BLIND DATE NEVER SHOWS UP",
         "isReal": false
       }
     ],
@@ -9013,8 +9013,8 @@
         "isReal": true
       },
       {
-        "id": "light_t91",
-        "phrase": "WHAT A CAMERA USES TO TAKE A PICTURE AT NIGHT",
+        "id": "light_t96",
+        "phrase": "WHAT KEEPS THE CAMERA STILL FOR A NIGHT PHOTO",
         "isReal": false
       },
       {
@@ -9023,18 +9023,13 @@
         "isReal": false
       },
       {
-        "id": "light_t93",
-        "phrase": "WHAT MAKES YOU REACH FOR THE VISOR WHILE DRIVING",
-        "isReal": false
-      },
-      {
         "id": "light_t94",
         "phrase": "WHAT YOU SHUT IN A ROOM WHEN YOU WANT PRIVACY",
         "isReal": false
       },
       {
-        "id": "light_t95",
-        "phrase": "WHAT YOU TURN ON WHEN YOU LEAVE HOME AND OFF WHEN YOU COME BACK",
+        "id": "light_t97",
+        "phrase": "HOW YOU TAKE YOUR COFFEE WHEN YOU SKIP THE CREAM",
         "isReal": false
       }
     ],
@@ -11802,11 +11797,6 @@
       {
         "id": "cut_t5",
         "phrase": "WHAT A SURGEON DOES TO CLOSE THE OPENING AFTER AN OPERATION",
-        "isReal": false
-      },
-      {
-        "id": "cut_t6",
-        "phrase": "WHAT YOU DO TO YOUR KNEE WHEN YOU FALL ON CONCRETE",
         "isReal": false
       },
       {
