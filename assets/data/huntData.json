@@ -344,11 +344,6 @@
         "isReal": true
       },
       {
-        "id": "back_r4",
-        "phrase": "RETURNING FOR A SECOND VISIT",
-        "isReal": true
-      },
-      {
         "id": "back_r5",
         "phrase": "WHY YOU LEAVE A VOICEMAIL AFTER THE BEEP",
         "isReal": true
@@ -369,18 +364,18 @@
         "isReal": true
       },
       {
+        "id": "back_r9",
+        "phrase": "WHAT THE TERMINATOR PROMISED HE’D BE",
+        "isReal": true
+      },
+      {
+        "id": "back_r10",
+        "phrase": "WHAT YOU PROMISE TO DO WITH THE TWENTY BUCKS YOUR BUDDY SPOTS YOU",
+        "isReal": true
+      },
+      {
         "id": "back_t0",
         "phrase": "SIDE CALLED BEFORE A COIN TOSS",
-        "isReal": false
-      },
-      {
-        "id": "back_t1",
-        "phrase": "ATTACK LAUNCHED FROM A FLANKING POSITION",
-        "isReal": false
-      },
-      {
-        "id": "back_t2",
-        "phrase": "YOU LAY ON YOUR STOMACH FOR A MASSAGE",
         "isReal": false
       },
       {
@@ -392,21 +387,21 @@
         "id": "back_t4",
         "phrase": "SITTING SHOTGUN IN THE CAR",
         "isReal": false
+      },
+      {
+        "id": "back_t6",
+        "phrase": "THE ROW AT THE MOVIES NOBODY WANTS, WHERE YOU’RE STARING STRAIGHT UP AT THE SCREEN",
+        "isReal": false
       }
     ],
     "gpsTag": "panic",
-    "wordType": "9-MEANING"
+    "wordType": "10-MEANING"
   },
   "BALANCE": {
     "difficulty": "medium",
     "hiddenMeaning": null,
     "hiddenTrap": null,
     "masks": [
-      {
-        "id": "balance_r0",
-        "phrase": "CHECKING ACCOUNT TOTAL",
-        "isReal": true
-      },
       {
         "id": "balance_r1",
         "phrase": "SCALES OF JUSTICE",
@@ -418,23 +413,43 @@
         "isReal": true
       },
       {
-        "id": "balance_t0",
-        "phrase": "INTEREST PILING UP EACH MONTH",
+        "id": "balance_r4",
+        "phrase": "WHAT’S STILL SITTING ON YOUR CREDIT CARD AFTER YOU PAY THE MINIMUM",
+        "isReal": true
+      },
+      {
+        "id": "balance_r5",
+        "phrase": "WHAT YOU’RE SUPPOSED TO DO WITH YOUR CHECKBOOK EVERY MONTH",
+        "isReal": true
+      },
+      {
+        "id": "balance_r6",
+        "phrase": "WHAT WORK AND LIFE ARE SUPPOSED TO HAVE, BUT NEVER DO",
+        "isReal": true
+      },
+      {
+        "id": "balance_r7",
+        "phrase": "WHAT YOU DON’T HAVE WHEN YOU GET OFF THE RIDE THAT SPINS IN CIRCLES",
+        "isReal": true
+      },
+      {
+        "id": "balance_t7",
+        "phrase": "THE LITTLE SLIP THE ATM SPITS OUT WITH YOUR CASH",
         "isReal": false
       },
       {
-        "id": "balance_t1",
-        "phrase": "DIZZY AFTER THE TEACUP RIDE",
+        "id": "balance_t8",
+        "phrase": "WHAT YOU AND YOUR BUDDY ARE ONCE HE PAYS YOU BACK",
         "isReal": false
       },
       {
-        "id": "balance_t2",
-        "phrase": "GAVEL THAT ENDS THE TRIAL",
+        "id": "balance_t9",
+        "phrase": "THE FEE THE BANK HITS YOU WITH WHEN YOU GO BELOW ZERO",
         "isReal": false
       }
     ],
     "gpsTag": "tension",
-    "wordType": "Triple"
+    "wordType": "Sextuple"
   },
   "BALL": {
     "difficulty": "easy",
@@ -506,8 +521,13 @@
         "isReal": true
       },
       {
-        "id": "band_r2",
-        "phrase": "WHERE YOU FIND YOUR FAVORITE STATION",
+        "id": "band_r3",
+        "phrase": "WHAT YOU SLIDE ON EACH OTHER’S FINGER RIGHT AFTER “I DO”",
+        "isReal": true
+      },
+      {
+        "id": "band_r4",
+        "phrase": "THE “___ OF BROTHERS” WAR SERIES TOM HANKS PRODUCED",
         "isReal": true
       },
       {
@@ -521,13 +541,13 @@
         "isReal": false
       },
       {
-        "id": "band_t2",
-        "phrase": "STREAMING PLAYLIST ON YOUR PHONE",
+        "id": "band_t3",
+        "phrase": "WHAT YOU CALL A GROUP THAT SINGS WITH NO INSTRUMENTS AT ALL",
         "isReal": false
       }
     ],
     "gpsTag": "tension",
-    "wordType": "Triple"
+    "wordType": "Quadruple"
   },
   "BANK": {
     "difficulty": "hard",
