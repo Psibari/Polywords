@@ -3062,11 +3062,6 @@
         "isReal": false
       },
       {
-        "id": "chill_t1",
-        "phrase": "WHAT FORMS ON YOUR ARMS WHEN YOU’RE SCARED",
-        "isReal": false
-      },
-      {
         "id": "chill_t2",
         "phrase": "WHAT YOU WRAP AROUND YOURSELF BY THE FIRE",
         "isReal": false
@@ -9246,8 +9241,8 @@
         "isReal": false
       },
       {
-        "id": "mouse_t1",
-        "phrase": "FINGER TAPPING THE PHONE SCREEN",
+        "id": "mouse_t3",
+        "phrase": "WHAT YOU HOLD TO PLAY VIDEO GAMES ON A CONSOLE INSTEAD OF A PC",
         "isReal": false
       },
       {
