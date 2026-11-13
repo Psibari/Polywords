@@ -5111,7 +5111,7 @@
       },
       {
         "id": "crust_r04",
-        "phrase": "IT’S IN THE CORNER OF YOUR EYE WHEN YOU WAKE UP — ILL",
+        "phrase": "IT’S IN THE CORNER OF YOUR EYE WHEN YOU WAKE UP",
         "isReal": true
       },
       {
@@ -9303,11 +9303,6 @@
         "id": "nail_t3",
         "phrase": "WHAT STICKS OUT OF A PINCUSHION",
         "isReal": false
-      },
-      {
-        "id": "nail_t4",
-        "phrase": "WHAT YOU TURN WITH A SCREWDRIVER",
-        "isReal": false
       }
     ],
     "gpsTag": "flow",
@@ -9550,11 +9545,6 @@
         "isReal": true
       },
       {
-        "id": "plane_t0",
-        "phrase": "WHERE THE BUFFALO ROAM",
-        "isReal": false
-      },
-      {
         "id": "plane_t1",
         "phrase": "THE SHORTEST DISTANCE BETWEEN TWO POINTS",
         "isReal": false
@@ -9567,11 +9557,6 @@
       {
         "id": "plane_t3",
         "phrase": "ONE SLICE, JUST CHEESE—NO TOPPINGS",
-        "isReal": false
-      },
-      {
-        "id": "plane_t4",
-        "phrase": "JUST THE STANDARD VERSION—NO BELLS OR WHISTLES",
         "isReal": false
       },
       {
