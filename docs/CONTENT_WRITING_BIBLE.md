@@ -501,6 +501,13 @@ These are standing rulings. They apply to every ordinary and Boss trap.
 16. **Before rewriting a word, show every card it already has** (REALs
     and traps, with ids), marked keep / remove / new, so nothing
     duplicates an existing handle.
+17. **A trap can't be the opposite of a REAL, and it can't be a near
+    copy of a REAL** (Pete, 2026-11-13). Build traps from the bare
+    headword, not from the REAL list. Exceptions Pete approved card by
+    card: BANK's plane-climb and waterfall traps.
+18. **Show the final list before applying** (Pete, 2026-11-13). Before
+    anything goes into the game, show every card for the batch (kept,
+    new, cut, out) and apply only after Pete approves it.
 
 ------------------------------------------------------------------------
 

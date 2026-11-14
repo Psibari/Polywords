@@ -143,6 +143,11 @@
         "isReal": true
       },
       {
+        "id": "anchor_r8",
+        "phrase": "THE PLASTIC PLUG YOU SCREW INTO DRYWALL SO THE SHELF DOESN’T FALL",
+        "isReal": true
+      },
+      {
         "id": "anchor_t4",
         "phrase": "THE PERSON POINTING AT THE STORM MAP ON THE EVENING NEWS",
         "isReal": false
@@ -169,7 +174,7 @@
       }
     ],
     "gpsTag": "panic",
-    "wordType": "Quintuple"
+    "wordType": "Sextuple"
   },
   "ARMS": {
     "difficulty": "medium",
@@ -295,6 +300,11 @@
         "isReal": true
       },
       {
+        "id": "articulate_r5",
+        "phrase": "WHAT THE SPEECH THERAPIST HAS YOU DO WITH EVERY SYLLABLE",
+        "isReal": true
+      },
+      {
         "id": "articulate_t6",
         "phrase": "HOW THE EMAIL READS WHEN IT TAKES FIVE PARAGRAPHS TO SAY “NO”",
         "isReal": false
@@ -316,7 +326,7 @@
       }
     ],
     "gpsTag": "confidence",
-    "wordType": "Triple"
+    "wordType": "Quadruple"
   },
   "BACK": {
     "difficulty": "medium",
@@ -575,28 +585,48 @@
         "isReal": true
       },
       {
-        "id": "bank_t0",
-        "phrase": "WHO COUNTS YOUR CASH BEHIND GLASS",
+        "id": "bank_r6",
+        "phrase": "THE PIG YOU SMASH OPEN TO COUNT YOUR COINS",
+        "isReal": true
+      },
+      {
+        "id": "bank_r7",
+        "phrase": "THE POOL SHOT OFF THE RAIL INTO THE POCKET ACROSS THE TABLE",
+        "isReal": true
+      },
+      {
+        "id": "bank_r8",
+        "phrase": "WHAT YOU CAN DO ON IT WHEN IT'S A SURE THING",
+        "isReal": true
+      },
+      {
+        "id": "bank_t10",
+        "phrase": "WHERE YOU CASH YOUR PAYCHECK FOR A FEE WITHOUT HAVING AN ACCOUNT",
         "isReal": false
       },
       {
-        "id": "bank_t1",
-        "phrase": "HEAVY DOOR SEALING THE GOLD INSIDE",
+        "id": "bank_t11",
+        "phrase": "WHERE YOU HOCK YOUR WATCH FOR QUICK CASH",
         "isReal": false
       },
       {
-        "id": "bank_t2",
-        "phrase": "THIRTY YEARS TO PAY OFF THE HOUSE",
+        "id": "bank_t12",
+        "phrase": "WHAT YOU KEEP YOUR CRYPTO IN",
         "isReal": false
       },
       {
-        "id": "bank_t3",
-        "phrase": "WHAT YOU TUCK AWAY FOR EMERGENCIES",
+        "id": "bank_t13",
+        "phrase": "WHAT A PLANE DOES TO GAIN ALTITUDE AFTER TAKEOFF",
+        "isReal": false
+      },
+      {
+        "id": "bank_t14",
+        "phrase": "THE MOST BEAUTIFUL AND MOST DANGEROUS PART OF A RIVER",
         "isReal": false
       }
     ],
     "gpsTag": "panic",
-    "wordType": "Quadruple"
+    "wordType": "Septuple"
   },
   "BARK": {
     "difficulty": "medium",
@@ -619,6 +649,11 @@
         "isReal": true
       },
       {
+        "id": "bark_r4",
+        "phrase": "THE OLD THREE-MASTED SAILING SHIP, ALSO SPELLED WITH A Q",
+        "isReal": true
+      },
+      {
         "id": "bark_t0",
         "phrase": "LOW RUMBLE BEFORE THE SNAP",
         "isReal": false
@@ -632,10 +667,15 @@
         "id": "bark_t2",
         "phrase": "SOFT MURMUR YOU CAN BARELY HEAR",
         "isReal": false
+      },
+      {
+        "id": "bark_t9",
+        "phrase": "WHAT YOU COUNT TO TELL HOW OLD A TREE IS",
+        "isReal": false
       }
     ],
     "gpsTag": "flow",
-    "wordType": "Triple"
+    "wordType": "Quadruple"
   },
   "BASS": {
     "difficulty": "medium",
@@ -653,23 +693,28 @@
         "isReal": true
       },
       {
-        "id": "bass_r2",
-        "phrase": "WALKS A STEADY LINE ALL NIGHT",
+        "id": "bass_r3",
+        "phrase": "THE FOUR-STRING INSTRUMENT IN THE BAND THAT NEVER GETS A SOLO",
         "isReal": true
       },
       {
-        "id": "bass_t0",
-        "phrase": "WHISKERED BOTTOM-FEEDER IN THE MUD",
+        "id": "bass_t6",
+        "phrase": "THE FISH WITH WHISKERS YOU CAN CATCH WITH YOUR BARE HANDS",
         "isReal": false
       },
       {
-        "id": "bass_t1",
-        "phrase": "HIGH SQUEAL FROM THE LEAD GUITAR",
+        "id": "bass_t7",
+        "phrase": "WHAT YOUR ONLINE DATE DID IF THEY LOOK NOTHING LIKE THEIR PICTURES",
         "isReal": false
       },
       {
-        "id": "bass_t2",
-        "phrase": "BOWED STRINGS BETWEEN THE KNEES",
+        "id": "bass_t8",
+        "phrase": "WHAT YOU ADJUST WHEN THE MUSIC ONLY COMES OUT OF ONE SPEAKER",
+        "isReal": false
+      },
+      {
+        "id": "bass_t9",
+        "phrase": "THE CHOIR SOPRANO, AND WE’RE NOT TALKING ABOUT TONY",
         "isReal": false
       }
     ],
@@ -9335,6 +9380,16 @@
         "isReal": true
       },
       {
+        "id": "nail_r5",
+        "phrase": "WHAT YOU HAMMERED TO HANG THE PICTURE",
+        "isReal": true
+      },
+      {
+        "id": "nail_r6",
+        "phrase": "TEN PAINTED TIPS",
+        "isReal": true
+      },
+      {
         "id": "nail_t0",
         "phrase": "SPIRALS DEEP WITH EVERY TURN",
         "isReal": false
@@ -9356,7 +9411,7 @@
       }
     ],
     "gpsTag": "flow",
-    "wordType": "Quadruple"
+    "wordType": "Sextuple"
   },
   "PALM": {
     "difficulty": "medium",
@@ -14918,6 +14973,11 @@
       {
         "id": "line_t5",
         "phrase": "WHAT A TAILOR USES TO CUT THE SAME SHAPE AGAIN",
+        "isReal": false
+      },
+      {
+        "id": "line_t8",
+        "phrase": "WHAT A TRAIN RUNS ON",
         "isReal": false
       }
     ],
