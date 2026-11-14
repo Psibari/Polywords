@@ -728,7 +728,7 @@
     "masks": [
       {
         "id": "bat_r0",
-        "phrase": "HANGS UPSIDE DOWN ALL DAY",
+        "phrase": "WHAT SLEEPS HANGING UPSIDE DOWN ALL DAY AND FLIES ALL NIGHT",
         "isReal": true
       },
       {
@@ -738,17 +738,22 @@
       },
       {
         "id": "bat_r2",
-        "phrase": "FLIRTING WITH YOUR EYES",
+        "phrase": "WHAT SHE DOES WITH HER EYES TO FLIRT WITHOUT SAYING A WORD",
+        "isReal": true
+      },
+      {
+        "id": "bat_r7",
+        "phrase": "WHERE YOU’RE AT WHEN YOU STEP TO HOME PLATE",
         "isReal": true
       },
       {
         "id": "bat_t0",
-        "phrase": "TINY BLOODSUCKER WHINING IN YOUR EAR",
+        "phrase": "THE BLOODSUCKER THAT BUZZES IN YOUR EAR",
         "isReal": false
       },
       {
         "id": "bat_t1",
-        "phrase": "STRUNG FRAME THAT SMACKS THE BALL",
+        "phrase": "WHAT A PLAYER SWINGS TO SERVE AN ACE",
         "isReal": false
       },
       {
@@ -758,7 +763,7 @@
       }
     ],
     "gpsTag": "tension",
-    "wordType": "Triple"
+    "wordType": "Quadruple"
   },
   "BATTER": {
     "difficulty": "easy",
@@ -867,37 +872,37 @@
     "masks": [
       {
         "id": "beam_r0",
-        "phrase": "CONSTRUCTION CREW EATS LUNCH UP HERE",
+        "phrase": "WHAT THOSE CONSTRUCTION GUYS ARE EATING LUNCH ON IN THAT FAMOUS SKYSCRAPER PHOTO",
         "isReal": true
       },
       {
         "id": "beam_r1",
-        "phrase": "FLASHLIGHT CUTS A CONE IN THE DARK",
+        "phrase": "WHAT THE JEWEL THIEF HAS TO LIMBO UNDER IN EVERY HEIST MOVIE",
         "isReal": true
       },
       {
         "id": "beam_r2",
-        "phrase": "GYMNAST FLIPS ACROSS A NARROW PLANK",
+        "phrase": "WHAT A GYMNAST DOES HER ROUTINE ON THAT’S ONLY FOUR INCHES WIDE",
         "isReal": true
       },
       {
-        "id": "beam_r3",
-        "phrase": "THE SMILE YOU JUST CAN'T FAKE",
+        "id": "beam_r5",
+        "phrase": "WHAT KIRK NEEDS SCOTTY TO DO TO GET BACK UP TO THE SHIP",
         "isReal": true
       },
       {
-        "id": "beam_t0",
-        "phrase": "VERTICAL POST HOLDING UP THE ROOF",
+        "id": "beam_t7",
+        "phrase": "WHAT YOU KNOCK ON THE WALL TO FIND SO YOU KNOW WHERE TO MOUNT THE TV",
         "isReal": false
       },
       {
-        "id": "beam_t1",
-        "phrase": "TUMBLING PASS ACROSS THE PADDED FLOOR",
+        "id": "beam_t8",
+        "phrase": "WHERE THE TEAM HANGS ITS RETIRED JERSEYS FROM",
         "isReal": false
       },
       {
-        "id": "beam_t2",
-        "phrase": "SMIRK THAT SAYS I TOLD YOU SO",
+        "id": "beam_t9",
+        "phrase": "WHAT A PIRATE CAPTAIN MAKES YOU WALK",
         "isReal": false
       }
     ],
@@ -911,42 +916,52 @@
     "masks": [
       {
         "id": "bear_r0",
-        "phrase": "SLEEPS ALL WINTER",
+        "phrase": "THE HONEY LOVER THAT SLEEPS ALL WINTER",
         "isReal": true
       },
       {
         "id": "bear_r1",
-        "phrase": "THE WHOLE WORLD ON YOUR SHOULDERS",
-        "isReal": true
-      },
-      {
-        "id": "bear_r2",
-        "phrase": "APPLE TREE GROWS ITS VERY FIRST FRUIT",
+        "phrase": "WHAT YOU MUST DO WITH YOUR OWN BURDENS",
         "isReal": true
       },
       {
         "id": "bear_r3",
-        "phrase": "THE STOCK MARKET PAST ITS PRIME",
+        "phrase": "THE TYPE OF ANIMAL WALL STREET NAMES A FALLING MARKET AFTER",
         "isReal": true
       },
       {
-        "id": "bear_t0",
-        "phrase": "STRIPED CAT PROWLING THE JUNGLE",
+        "id": "bear_r5",
+        "phrase": "NUMBER 2 ON THE LIST, WHAT THE U.S. GIVES YOU THE RIGHT TO DO WITH ARMS",
+        "isReal": true
+      },
+      {
+        "id": "bear_r6",
+        "phrase": "WHAT YOU TELL EVERYBODY TO DO WITH YOU WHEN YOU NEED A MOMENT TO GET IT TOGETHER",
+        "isReal": true
+      },
+      {
+        "id": "bear_r7",
+        "phrase": "WHAT THE DIRECTIONS TELL YOU TO DO LEFT AT THE FORK IN THE ROAD",
+        "isReal": true
+      },
+      {
+        "id": "bear_t8",
+        "phrase": "WHAT HUFFED AND PUFFED AND BLEW DOWN TWO OF THE THREE LITTLE PIGS’ HOUSES",
         "isReal": false
       },
       {
-        "id": "bear_t1",
-        "phrase": "SHARES ROARING TO NEW HIGHS",
+        "id": "bear_t9",
+        "phrase": "THE MASKED BANDIT THAT TIPS OVER YOUR TRASH CANS AT NIGHT",
         "isReal": false
       },
       {
-        "id": "bear_t2",
-        "phrase": "SEEDS SPROUTING INTO GREEN SHOOTS",
+        "id": "bear_t10",
+        "phrase": "THE BIG HAIRY THING IN THE BLURRY WOODS VIDEO THAT PEOPLE STILL ARGUE ABOUT",
         "isReal": false
       }
     ],
     "gpsTag": "flow",
-    "wordType": "Quadruple"
+    "wordType": "Sextuple"
   },
   "BED": {
     "difficulty": "medium",
