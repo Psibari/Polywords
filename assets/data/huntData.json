@@ -4592,18 +4592,23 @@
         "isReal": true
       },
       {
+        "id": "cork_r2",
+        "phrase": "WHAT YOU DO TO THE WINE BOTTLE WHEN YOU’RE SAVING THE REST FOR TOMORROW",
+        "isReal": true
+      },
+      {
         "id": "cork_t0",
         "phrase": "MOST PEOPLE CAN OPEN IT WITH THEIR KEYCHAIN",
         "isReal": false
       },
       {
-        "id": "cork_t1",
-        "phrase": "WHAT YOU RAISE BEFORE THE WEDDING SPEECH",
+        "id": "cork_t3",
+        "phrase": "WHAT YOU PUT IN THE BATHTUB DRAIN BEFORE FILLING IT UP",
         "isReal": false
       },
       {
-        "id": "cork_t2",
-        "phrase": "TILT THE GLASS OR YOU'LL GET ALL FOAM",
+        "id": "cork_t4",
+        "phrase": "WHAT YOU STICK YOUR SEWING PIN INTO WHEN YOU’RE DONE USING IT",
         "isReal": false
       }
     ],
@@ -4915,7 +4920,7 @@
       },
       {
         "id": "court_r3",
-        "phrase": "A QUIET DEAD-END STREET IN THE SUBURBS",
+        "phrase": "WHAT “CT.” MEANS AT THE END OF YOUR ADDRESS",
         "isReal": true
       },
       {
@@ -4934,8 +4939,8 @@
         "isReal": false
       },
       {
-        "id": "court_t2",
-        "phrase": "AMERICANS CALL IT A FIELD, EVERYONE ELSE DISAGREES",
+        "id": "court_t3",
+        "phrase": "WHERE THE FANS WITH THE CHEAP TICKETS SIT AT A BASKETBALL GAME",
         "isReal": false
       }
     ],
@@ -5005,12 +5010,12 @@
     "masks": [
       {
         "id": "crane_r0",
-        "phrase": "SWINGS THE WRECKING BALL",
+        "phrase": "THE YELLOW MACHINE THAT SWINGS THE WRECKING BALL",
         "isReal": true
       },
       {
         "id": "crane_r1",
-        "phrase": "ORIGAMI BIRD ON A STRING",
+        "phrase": "THE BIRD YOU LEARN TO MAKE IN ORIGAMI",
         "isReal": true
       },
       {
@@ -5019,18 +5024,18 @@
         "isReal": true
       },
       {
-        "id": "crane_t0",
-        "phrase": "BULLDOZER CLEARS THE LOT FLAT",
+        "id": "crane_t3",
+        "phrase": "WHAT THEY HOOK YOUR CAR TO WHEN IT GETS REPOED",
         "isReal": false
       },
       {
-        "id": "crane_t1",
-        "phrase": "LONG-LEGGED WADER STALKING THE SHALLOWS",
+        "id": "crane_t4",
+        "phrase": "THE BIRD IN THE STORY YOU TELL KIDS WHEN THEY ASK WHERE BABIES COME FROM",
         "isReal": false
       },
       {
-        "id": "crane_t2",
-        "phrase": "SWEEPING KICK THAT KNOCKS HIM DOWN",
+        "id": "crane_t5",
+        "phrase": "WHAT YOU CONTROL IN THE ARCADE GAME THAT ALWAYS DROPS THE PRIZE",
         "isReal": false
       }
     ],
@@ -5388,7 +5393,7 @@
       },
       {
         "id": "current_r1",
-        "phrase": "PULLS YOU OUT TO SEA",
+        "phrase": "WHAT'S STRONG ENOUGH TO PULL YOU OUT TO SEA",
         "isReal": true
       },
       {
@@ -5397,18 +5402,28 @@
         "isReal": true
       },
       {
-        "id": "current_t0",
-        "phrase": "MEASURED IN VOLTS, NOT AMPS",
+        "id": "current_t3",
+        "phrase": "WHAT MAKES THE LAST GENERATION OF TECHNOLOGY OBSOLETE",
         "isReal": false
       },
       {
-        "id": "current_t1",
-        "phrase": "CRASHING WHITE FOAM ONTO THE SHORE",
+        "id": "current_t4",
+        "phrase": "WHAT YOUR BROWSER NEEDS WHEN THE PAGE IS STILL SHOWING OLD INFORMATION",
         "isReal": false
       },
       {
-        "id": "current_t2",
-        "phrase": "YESTERDAY'S NEWS, ALREADY OLD",
+        "id": "current_t5",
+        "phrase": "WHAT WASHES ALL THAT OCEAN GARBAGE UP ON THE BEACH",
+        "isReal": false
+      },
+      {
+        "id": "current_t6",
+        "phrase": "WHAT A NEWS STORY BECOMES WHEN IT'S HAPPENING RIGHT NOW",
+        "isReal": false
+      },
+      {
+        "id": "current_t7",
+        "phrase": "WHAT EVERYONE STARTS WEARING AFTER A CELEBRITY MAKES IT COOL",
         "isReal": false
       }
     ],
