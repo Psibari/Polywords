@@ -1,5 +1,8 @@
 # POLYWORDS | Hunt Content Recovery | 2026-11-16
 
+> **HISTORICAL SNAPSHOT, SUPERSEDED:** Both open editorial decisions in this report were resolved by Pete on November 16, 2026. CAPITAL `capital_r3` was restored as a REAL; CONCENTRATION `concentration_t3` was restored as a TRAP. Live Hunt data commit: `920635020794180663cd8546bf026525a7792f5c`. The authoritative final report is `docs/HUNT_CONTENT_RECOVERY_FINAL_2026-11-16.md`; do not treat the two pending decisions or 2,503-card count below as current.
+
+
 **Source of playable truth:** `Psibari/Polywords`, branch `play-screen-overhaul`, `assets/data/huntData.json`.  
 **Candidate editorial baseline:** `POLYWORDS_CANONICAL_2026-11-15_CHARACTER_CHIP_DUCK_LOCKED.xlsx`.  
 **Corrected editorial master:** `POLYWORDS_CANONICAL_FULL_RECOVERY_2026-11-16.xlsx` (delivered with this report).  
