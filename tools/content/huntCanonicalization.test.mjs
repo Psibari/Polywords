@@ -134,7 +134,7 @@ assert.deepEqual(
     FOOT: huntData.FOOT.wordType,
   },
   {
-    CAPITAL: 'Triple',
+    CAPITAL: 'Quadruple',
     LIGHT: 'Septuple',
     PALM: 'Sextuple',
     FAST: '8-MEANING',
