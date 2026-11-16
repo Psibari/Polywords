@@ -2574,6 +2574,11 @@
         "isReal": true
       },
       {
+        "id": "capital_r3",
+        "phrase": "HIGHEST FORM OF PUNISHMENT",
+        "isReal": true
+      },
+      {
         "id": "capital_t1",
         "phrase": "MAYOR'S OFFICE DOWNTOWN",
         "isReal": false
@@ -4186,6 +4191,11 @@
       {
         "id": "concentration_t1",
         "phrase": "UNDECIDED, STILL PICKING A MAJOR",
+        "isReal": false
+      },
+      {
+        "id": "concentration_t3",
+        "phrase": "STRAIGHT FROM THE ORANGE, NOTHING ADDED",
         "isReal": false
       },
       {
