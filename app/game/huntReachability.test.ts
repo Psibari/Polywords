@@ -11,6 +11,16 @@ import db from '../../assets/data/huntData.json';
 type Entry = { gpsTag: string; difficulty: string };
 const bank = db as unknown as Record<string, Entry>;
 const ordinary = Object.keys(bank).filter(w => bank[w].gpsTag !== 'boss');
+
+// Prevent spreadsheet fill-down/row-shift errors from putting a COMPANY card under JAM.
+// Every saved visible card ID must identify the same headword as its runtime owner.
+for (const [word, entry] of Object.entries(db as Record<string, { masks: { id: string }[] }>)) {
+  const prefix = word.toLowerCase().replace(/[^a-z0-9]+/g, '_') + '_';
+  for (const mask of entry.masks) {
+    assert.ok(mask.id.toLowerCase().startsWith(prefix),
+      `${word}: card ${mask.id} belongs to a different headword`);
+  }
+}
 type Step = ReturnType<typeof generateHunt>[number];
 const wordOf = (s: Step): string => (s as { word: string }).word;
 const RECENT_WORDS_CAP = 30; // mirrors useGameStore recordRunComplete
