@@ -1249,47 +1249,47 @@
     "masks": [
       {
         "id": "blade_r0",
-        "phrase": "SHARPENED RIGHT BEFORE THANKSGIVING DINNER",
+        "phrase": "WHAT YOU SHARPEN BEFORE CARVING THE THANKSGIVING TURKEY",
         "isReal": true
       },
       {
         "id": "blade_r1",
-        "phrase": "BENDS UNDER ONE DROP OF DEW",
+        "phrase": "WHAT YOUR FRONT LAWN HAS MILLIONS OF",
         "isReal": true
       },
       {
         "id": "blade_r2",
-        "phrase": "WIDE FLAT END THAT GRIPS THE WATER",
+        "phrase": "WHAT A SAMURAI'S SWORD IS FAMOUS FOR HAVING AN INCREDIBLY SHARP ONE",
         "isReal": true
       },
       {
         "id": "blade_r3",
-        "phrase": "THE BONE A BACKPACK DIGS INTO",
+        "phrase": "THE BONE ON YOUR BACK THAT'S NAMED AFTER YOUR SHOULDER",
         "isReal": true
       },
       {
         "id": "blade_r4",
-        "phrase": "CARVES A CIRCLE INTO THE ICE",
+        "phrase": "WHAT YOUR ICE SKATES HAVE THAT YOUR ROLLER SKATES DON'T",
         "isReal": true
       },
       {
         "id": "blade_r5",
-        "phrase": "WHIRS OVERHEAD TO KEEP THE COPTER FLYING",
+        "phrase": "WHAT KEEPS A HELICOPTER FLYING AND GIVES IT THE NICKNAME CHOPPER",
         "isReal": true
       },
       {
         "id": "blade_t0",
-        "phrase": "SERRATED EDGE ON THE BREAD KNIFE",
+        "phrase": "WHAT THEY USE AT THE SALON WHEN YOU JUST WANT A TRIM",
         "isReal": false
       },
       {
         "id": "blade_t1",
-        "phrase": "MOWED FLAT EVERY SATURDAY MORNING",
+        "phrase": "WHAT MOST FOOTBALL FIELDS ARE MADE OF ARTIFICIALLY",
         "isReal": false
       },
       {
         "id": "blade_t2",
-        "phrase": "SHARK FIN SLICES THROUGH THE WAVES",
+        "phrase": "WHAT YOU SEE STICKING OUT OF THE WATER BEFORE YOU YELL SHARK?",
         "isReal": false
       }
     ],
@@ -1352,7 +1352,7 @@
     "masks": [
       {
         "id": "block_r0",
-        "phrase": "CAREFULLY STACKED JUST TO KNOCK DOWN",
+        "phrase": "WHAT A TODDLER LOVES STACKING ALMOST AS MUCH AS KNOCKING DOWN",
         "isReal": true
       },
       {
@@ -1362,22 +1362,22 @@
       },
       {
         "id": "block_r2",
-        "phrase": "DEFENDER STOPS THE SHOT",
+        "phrase": "WHAT THE DEFENSE DOES TO STOP THE FIELD GOAL",
         "isReal": true
       },
       {
         "id": "block_r3",
-        "phrase": "WRITER STARES AT BLANK PAGE",
+        "phrase": "WHAT A WRITER HAS WHEN THEY'RE STARING AT THE SAME BLANK PAGE FOR THREE DAYS",
         "isReal": true
       },
       {
         "id": "block_r4",
-        "phrase": "NEXT ITEM UP FOR BID",
+        "phrase": "WHAT THE FALLEN TREE DID TO THE ROAD AFTER THE STORM",
         "isReal": true
       },
       {
         "id": "block_r5",
-        "phrase": "WHERE THE BUTCHER CHOPS THE ROAST",
+        "phrase": "WHAT YOU DO TO SOMEONE'S NUMBER WHEN THEY JUST WON'T GET THE HINT",
         "isReal": true
       },
       {
@@ -1387,22 +1387,22 @@
       },
       {
         "id": "block_t0",
-        "phrase": "PLASTIC BRICKS THAT SNAP TOGETHER",
+        "phrase": "WHAT THE THREE LITTLE PIGS BUILT THEIR STRONGEST HOUSE OUT OF",
         "isReal": false
       },
       {
         "id": "block_t1",
-        "phrase": "TACKLING THE RUNNER BEHIND THE LINE",
+        "phrase": "THE SHAPE OF A RUBIK'S PUZZLE",
         "isReal": false
       },
       {
         "id": "block_t2",
-        "phrase": "GOING ONCE, GOING TWICE, SOLD",
+        "phrase": "WHAT YOU CALL A STREET WITH NO WAY THROUGH",
         "isReal": false
       },
       {
         "id": "block_t3",
-        "phrase": "HIDDEN FROM YOUR FEED FOR GOOD",
+        "phrase": "WHAT PEOPLE USED TO PRESS *69 TO DO?",
         "isReal": false
       }
     ],
@@ -1460,32 +1460,32 @@
     "masks": [
       {
         "id": "blow_r0",
-        "phrase": "BIRTHDAY CANDLES BEFORE THE WISH",
+        "phrase": "THE ONE AND ONLY WAY TO PUT OUT CANDLES ON YOUR BIRTHDAY",
         "isReal": true
       },
       {
         "id": "blow_r1",
-        "phrase": "ONE HEAVY PUNCH ENDS THE FIGHT",
+        "phrase": "WHAT YOU CALL A FIGHT-ENDING PUNCH",
         "isReal": true
       },
       {
         "id": "blow_r2",
-        "phrase": "HOW THE REF CALLS A FOUL",
+        "phrase": "WHAT A REFEREE DOES TO THE WHISTLE WHEN THERE'S A FOUL",
         "isReal": true
       },
       {
         "id": "blow_t0",
-        "phrase": "SUDDEN ACHOO INTO A TISSUE",
+        "phrase": "WHAT YOU JUST DID WHEN SOMEONE SAYS “GOD BLESS YOU”",
         "isReal": false
       },
       {
         "id": "blow_t1",
-        "phrase": "PUCKERED LIPS CARRYING A TUNE",
+        "phrase": "A WAY TO GET YOUR DOG'S ATTENTION WITHOUT SAYING ITS NAME",
         "isReal": false
       },
       {
         "id": "blow_t2",
-        "phrase": "TACKLE THAT DRIVES HIM TO THE MAT",
+        "phrase": "WHAT YOU USE TO GATHER ALL THE FALLEN LEAVES INTO A PILE",
         "isReal": false
       }
     ],
@@ -1587,17 +1587,17 @@
       },
       {
         "id": "bolt_r1",
-        "phrase": "POWER OF ZEUS",
+        "phrase": "WHAT ZEUS THROWS DOWN FROM THE SKY WHEN HE'S ANGRY",
         "isReal": true
       },
       {
         "id": "bolt_r2",
-        "phrase": "SPOOKED HORSE ON THE RUN",
+        "phrase": "WHAT A HORSE DOES AFTER IT GETS SPOOKED",
         "isReal": true
       },
       {
         "id": "bolt_r3",
-        "phrase": "HOTEL DOOR'S EXTRA CLICK",
+        "phrase": "WHAT YOU SLIDE INTO PLACE ON THE TOP LOCK OF YOUR FRONT DOOR",
         "isReal": true
       },
       {
@@ -1612,12 +1612,12 @@
       },
       {
         "id": "bolt_t2",
-        "phrase": "TAKES OFF THE SECOND THE GUN FIRES",
+        "phrase": "WHAT A TRUCK DRIVER DOES TO KEEP THE LOAD HE'S HAULING FROM FALLING OFF THE BACK",
         "isReal": false
       },
       {
         "id": "bolt_t3",
-        "phrase": "SLIDING CHAIN ABOVE THE PEEPHOLE",
+        "phrase": "WHAT YOU DO TO KEEP A PITCHED TENT IN PLACE",
         "isReal": false
       }
     ],
@@ -1783,12 +1783,12 @@
     "masks": [
       {
         "id": "bound_r0",
-        "phrase": "HANDS BEHIND YOUR BACK, YOU'RE UNDER ARREST",
+        "phrase": "WHAT THE INTRUDER DID TO THE HOSTAGES' HANDS AND FEET TO KEEP THEM FROM MOVING",
         "isReal": true
       },
       {
         "id": "bound_r1",
-        "phrase": "SIGNING ON THE DOTTED LINE",
+        "phrase": "WHAT YOU ARE TO A CONTRACT AFTER SIGNING ON THE DOTTED LINE",
         "isReal": true
       },
       {
@@ -1798,17 +1798,12 @@
       },
       {
         "id": "bound_r6",
-        "phrase": "THE CITY ON THE FRONT OF THE BUS",
+        "phrase": "WHAT A BUS IS TO THE CITY LISTED AS ITS DESTINATION",
         "isReal": true
       },
       {
         "id": "bound_r4",
-        "phrase": "SUPERMAN CLEARS TALL BUILDINGS IN ONE",
-        "isReal": true
-      },
-      {
-        "id": "bound_r5",
-        "phrase": "REF BLOWS THE WHISTLE, BALL'S OUT",
+        "phrase": "HOW SUPERMAN CLEARED TALL BUILDINGS IN ONE",
         "isReal": true
       },
       {
@@ -1818,7 +1813,7 @@
       },
       {
         "id": "bound_t6",
-        "phrase": "SOMETHING YOU STILL COULDN'T DO WITH ALL THE TIME IN THE WORLD",
+        "phrase": "WHAT YOU DO TO YOUR SHOELACES BEFORE HEADING OUT THE DOOR",
         "isReal": false
       },
       {
@@ -1896,12 +1891,12 @@
       },
       {
         "id": "bowl_r1",
-        "phrase": "YOUR FAVORITE PLACE TO GO SIT AND THINK",
+        "phrase": "THE SEAT YOU TAKE WHEN NATURE CALLS",
         "isReal": true
       },
       {
         "id": "bowl_r2",
-        "phrase": "UCLA SPENDS SATURDAYS IN PASADENA",
+        "phrase": "WHAT YOU CALL THE CHAMPIONSHIP GAME IN FOOTBALL",
         "isReal": true
       },
       {
@@ -1916,7 +1911,7 @@
       },
       {
         "id": "bowl_t0",
-        "phrase": "USED FOR MEASUREMENTS IN A RECIPE",
+        "phrase": "WHAT THE RECIPE TELLS YOU TO ADD TWO OF",
         "isReal": false
       },
       {
@@ -1931,13 +1926,18 @@
       },
       {
         "id": "bowl_t3",
-        "phrase": "YOU JIGGLE THIS WHEN IT WON'T STOP RUNNING",
+        "phrase": "WHAT YOU JIGGLE WHEN THE TOILET WON'T STOP RUNNING",
         "isReal": false
       },
       {
         "id": "bowl_t4",
-        "phrase": "CHAMPIONS CUT DOWN THE NET AFTERWARD",
+        "phrase": "WHAT YOU USE TO DRAIN THE WATER FROM YOUR PASTA",
         "isReal": false
+      },
+      {
+        "id": "bowl_r5",
+        "phrase": "WHAT YOU EAT YOUR SUGAR-LOADED BREAKFAST CEREAL OUT OF",
+        "isReal": true
       }
     ],
     "gpsTag": "panic",
@@ -2075,17 +2075,17 @@
     "masks": [
       {
         "id": "brief_r0",
-        "phrase": "I WON'T BE LONG, IN AND OUT",
+        "phrase": "A CONVERSATION THAT'S PRACTICALLY HELLO AND GOODBYE",
         "isReal": true
       },
       {
         "id": "brief_r1",
-        "phrase": "PAPERWORK FOR THE LEGAL CASE",
+        "phrase": "HOW A LAWYER MAKES THEIR ARGUMENT TO A JUDGE WITHOUT SAYING A WORD",
         "isReal": true
       },
       {
         "id": "brief_r2",
-        "phrase": "SOLDIERS' NEED-TO-KNOW BEFORE THE MISSION",
+        "phrase": "WHAT THEY DO TO SOLDIERS BEFORE SENDING THEM ON A MISSION",
         "isReal": true
       },
       {
@@ -2095,7 +2095,7 @@
       },
       {
         "id": "brief_t0",
-        "phrase": "MEETING RUNS LATE, NOBODY LEAVES ON TIME",
+        "phrase": "WHAT A VISIT TO THE DMV IS NOT",
         "isReal": false
       },
       {
@@ -2110,12 +2110,12 @@
       },
       {
         "id": "brief_t4",
-        "phrase": "WRITING A FULL-LENGTH NOVEL, CHAPTER BY CHAPTER",
+        "phrase": "WHAT YOU WATCH TO DECIDE IF A MOVIE'S WORTH SEEING",
         "isReal": false
       },
       {
         "id": "brief_t5",
-        "phrase": "KEPT IN THE DARK, NOT TOLD A THING",
+        "phrase": "WHAT THEY HAND YOU ON YOUR WAY INTO A BROADWAY SHOW",
         "isReal": false
       }
     ],
@@ -2477,32 +2477,37 @@
     "masks": [
       {
         "id": "can_r0",
-        "phrase": "BEANS NEED A SPECIAL OPENER",
+        "phrase": "WHAT HOLDS THOSE BEANS YOU'LL NEVER EAT BUT DONATE ANYWAY",
         "isReal": true
       },
       {
         "id": "can_r1",
-        "phrase": "THEY SAID YOU'D NEVER DO IT",
+        "phrase": "WHAT YOU FINALLY GET TO SAY AFTER DOING SOMETHING YOU NEVER COULD BEFORE",
         "isReal": true
       },
       {
         "id": "can_r2",
-        "phrase": "BOSS SAYS CLEAR YOUR DESK",
+        "phrase": "WHAT GRANDMA DOES WITH HER TOMATOES EVERY YEAR",
         "isReal": true
       },
       {
         "id": "can_t0",
-        "phrase": "GLASS LID YOU TWIST AND POP",
+        "phrase": "WHAT YOU USE TO PICKLE A PICKLE",
         "isReal": false
       },
       {
         "id": "can_t1",
-        "phrase": "NO WAY YOU'LL PULL THAT OFF",
+        "phrase": "WHAT YOU HAVE TO POP THE CAP OFF BEFORE DRINKING YOUR SODA",
         "isReal": false
       },
       {
         "id": "can_t2",
-        "phrase": "PLASTIC JUG THAT HOLDS THE MILK",
+        "phrase": "WHAT YOU USE TO SERVE HOMEMADE LEMONADE",
+        "isReal": false
+      },
+      {
+        "id": "can_t3",
+        "phrase": "WHAT STARTS WITH “I DARE YOU TO…”",
         "isReal": false
       }
     ],
@@ -2905,37 +2910,37 @@
     "masks": [
       {
         "id": "character_r0",
-        "phrase": "BUILT THROUGH MISTAKES AND FLAWS",
+        "phrase": "WHAT YOUR SCARS AND IMPERFECTIONS GIVE YOU THAT NOBODY ELSE HAS",
         "isReal": true
       },
       {
         "id": "character_r1",
-        "phrase": "THE WILD ONE EVERYONE TELLS STORIES ABOUT",
+        "phrase": "EVERY KID HAD A FAVORITE CARTOON ONE. WHO WAS YOURS?",
         "isReal": true
       },
       {
         "id": "character_r2",
-        "phrase": "WHO THE ACTOR DISAPPEARS INTO ON SCREEN",
+        "phrase": "WHAT SOME ACTORS STAY IN EVEN WHEN THE CAMERAS AREN'T ROLLING",
         "isReal": true
       },
       {
         "id": "character_r3",
-        "phrase": "A SINGLE KEY TAPPED ON THE KEYBOARD",
+        "phrase": "WHAT YOUR PASSWORD NEEDS AT LEAST EIGHT OF",
         "isReal": true
       },
       {
         "id": "character_t0",
-        "phrase": "THE VIBE THAT MAKES YOU YOU",
+        "phrase": "WHAT YOU PUT ON TO BECOME SOMEONE ELSE FOR HALLOWEEN",
         "isReal": false
       },
       {
         "id": "character_t1",
-        "phrase": "FALSE NOSE AND A PAINTED FACE",
+        "phrase": "WHAT YOU GET A WHOLE NEW ONE OF WHEN YOU ENTER WITNESS PROTECTION",
         "isReal": false
       },
       {
         "id": "character_t2",
-        "phrase": "PICK TIMES NEW ROMAN OR ARIAL",
+        "phrase": "WHAT YOU CHANGE WHEN YOU CLICK BOLD, ITALIC, OR UNDERLINE",
         "isReal": false
       }
     ],
@@ -3212,32 +3217,32 @@
     "masks": [
       {
         "id": "chip_r0",
-        "phrase": "TOOTH MISSING A SMALL CORNER",
+        "phrase": "WHAT HAPPENED TO YOUR TOOTH WHEN YOU TRIPPED AND FELL FLAT ON YOUR FACE",
         "isReal": true
       },
       {
         "id": "chip_r1",
-        "phrase": "ADDICTIVE LITTLE POTATO SLICE",
+        "phrase": "WHAT YOU CAN EAT A WHOLE BAG OF BY YOURSELF WITHOUT A PROBLEM",
         "isReal": true
       },
       {
         "id": "chip_r2",
-        "phrase": "MICROSCOPIC BRAIN ON THE CIRCUIT BOARD",
+        "phrase": "WHAT'S INSIDE YOUR SMARTPHONE THAT MAKES IT SMART",
         "isReal": true
       },
       {
         "id": "chip_t0",
-        "phrase": "CRACK SPREADING ACROSS THE WINDSHIELD",
+        "phrase": "WHAT HAPPENED TO YOUR CAR WHEN A SHOPPING CART HIT IT IN THE PARKING LOT",
         "isReal": false
       },
       {
         "id": "chip_t1",
-        "phrase": "STACK OF QUARTERS ON THE TABLE",
+        "phrase": "WHAT YOU KEEP FEEDING INTO THE PARKING METER",
         "isReal": false
       },
       {
         "id": "chip_t2",
-        "phrase": "CRUMBS SCATTERED ACROSS THE COUNTER",
+        "phrase": "WHAT YOU GET IN A BIG BUTTERY BUCKET AT THE MOVIES",
         "isReal": false
       }
     ],
@@ -5407,32 +5412,32 @@
     "masks": [
       {
         "id": "date_r0",
-        "phrase": "BLIND ONES ARE THE WORST",
+        "phrase": "BEING SET UP ON ONE OF THESE IS ALWAYS THE WORST",
         "isReal": true
       },
       {
         "id": "date_r1",
-        "phrase": "CIRCLED ON THE CALENDAR",
+        "phrase": "WHAT SOMEONE'S ASKING FOR WHEN THEY WANT THE DAY, MONTH, AND YEAR",
         "isReal": true
       },
       {
         "id": "date_r2",
-        "phrase": "LIKE A RAISIN, BUT BIGGER",
+        "phrase": "THE FRUIT SOME PEOPLE SWEAR TASTES LIKE A RAISIN, ONLY WORSE",
         "isReal": true
       },
       {
         "id": "date_t0",
-        "phrase": "PENCILED IN FOR THREE O'CLOCK",
+        "phrase": "WHAT YOU HAVE AT FOUR O'CLOCK AT THE DOCTOR'S OFFICE",
         "isReal": false
       },
       {
         "id": "date_t1",
-        "phrase": "A ONE-NIGHT STAND",
+        "phrase": "THE ONE NIGHT YOU SPENT WITH A STRANGER ON VACATION",
         "isReal": false
       },
       {
         "id": "date_t2",
-        "phrase": "THE ONE YOU CAN'T STOP TEXTING",
+        "phrase": "THE PERSON YOU WALK DOWN THE AISLE WITH AT SOMEONE ELSE'S WEDDING",
         "isReal": false
       }
     ],
@@ -6640,17 +6645,17 @@
     "masks": [
       {
         "id": "duck_r0",
-        "phrase": "BABIES FOLLOW MOM IN A ROW",
+        "phrase": "THE QUACKING BIRD YOU SEE FLOATING AROUND THE POND",
         "isReal": true
       },
       {
         "id": "duck_r1",
-        "phrase": "SOMEBODY YELLS HEADS UP",
+        "phrase": "WHAT YOU DO WHEN SOMEONE YELLS ‘FORE!’ ON THE GOLF COURSE",
         "isReal": true
       },
       {
         "id": "duck_r2",
-        "phrase": "EASY TARGET WITH NOWHERE TO HIDE",
+        "phrase": "WHAT YOU CALL AN EASY TARGET SITTING OUT IN THE OPEN WITH NO COVER",
         "isReal": true
       },
       {
@@ -8872,48 +8877,48 @@
     "masks": [
       {
         "id": "jam_r0",
-        "phrase": "WHAT GRANDMA CANS EVERY SUMMER",
+        "phrase": "WHAT MOST PEOPLE CALL JELLY, BUT FOOD SNOBS WOULD DISAGREE",
         "isReal": true
       },
       {
         "id": "jam_r1",
-        "phrase": "WHY THE COPY MACHINE'S DOWN",
+        "phrase": "WHAT THE COPIER ALWAYS DOES WHEN YOU'RE IN A HURRY",
         "isReal": true
       },
       {
         "id": "jam_r2",
-        "phrase": "BUMPER TO BUMPER AGAIN",
+        "phrase": "THE WORST KIND OF TRAFFIC TO GET STUCK IN",
         "isReal": true
       },
       {
         "id": "jam_r3",
-        "phrase": "GARAGE BAND WITHOUT A PLAN",
+        "phrase": "WHAT THE ROCK BAND USES THE GARAGE TO DO",
         "isReal": true
       },
       {
         "id": "jam_r4",
-        "phrase": "BETWEEN A ROCK AND A HARD PLACE",
+        "phrase": "WHAT YOU'RE IN WHEN YOU'RE CAUGHT BETWEEN A ROCK AND A HARD PLACE",
         "isReal": true
       },
       {
         "id": "jam_t0",
-        "phrase": "WOBBLES ON THE SPOON, NO FRUIT CHUNKS",
+        "phrase": "WHAT YOU'RE MAKING WHEN YOU CRUSH GRAPES WITH YOUR FEET",
         "isReal": false
       },
       {
         "id": "jam_t1",
-        "phrase": "HAIR PLUGGING UP THE DRAIN",
-        "isReal": false
-      },
-      {
-        "id": "jam_t2",
-        "phrase": "RED LIGHT YOU'RE STUCK WAITING AT",
+        "phrase": "WHAT YOU DID TO THE TOILET THAT ONLY A PLUNGER COULD FIX",
         "isReal": false
       },
       {
         "id": "jam_t3",
-        "phrase": "SOLD-OUT ARENA ROARING FOR THE ENCORE",
+        "phrase": "WHAT THE CROWD HEARS WHEN THE SINGER'S MIC CUTS OUT",
         "isReal": false
+      },
+      {
+        "id": "jam_r5",
+        "phrase": "WHAT HAPPENS WHEN A GUN STILL HAS BULLETS BUT WON'T FIRE",
+        "isReal": true
       }
     ],
     "gpsTag": "tension",
@@ -11549,37 +11554,32 @@
     "masks": [
       {
         "id": "well_r0",
-        "phrase": "WHERE YOU TOSS A COIN AND WISH",
+        "phrase": "WHERE YOU TOSS A COIN AND MAKE A WISH",
         "isReal": true
       },
       {
         "id": "well_r1",
-        "phrase": "TWO PILLS, CALL IN THE MORNING",
+        "phrase": "WHAT THE CARD YOU GOT IN THE HOSPITAL TOLD YOU TO DO SOON",
         "isReal": true
       },
       {
         "id": "well_r2",
-        "phrase": "HOW YOU COOK CHICKEN, NOT STEAK",
-        "isReal": true
-      },
-      {
-        "id": "well_r3",
-        "phrase": "TEARS BUILDING UP BEFORE THEY FALL",
+        "phrase": "HOW YOU SHOULD ALWAYS COOK CHICKEN BUT NOT NECESSARILY STEAK",
         "isReal": true
       },
       {
         "id": "well_t0",
-        "phrase": "STONE SPOUT SPLASHING IN THE PLAZA",
+        "phrase": "WHAT YOU SAY TO SOMEONE RIGHT AFTER THEY SNEEZE",
         "isReal": false
       },
       {
         "id": "well_t1",
-        "phrase": "HOME IN BED WITH A FEVER",
+        "phrase": "WHAT'S ALWAYS OUT OF ORDER AT THE PARK WHEN YOU'RE DYING OF THIRST",
         "isReal": false
       },
       {
         "id": "well_t2",
-        "phrase": "STILL PINK AND BLOODY INSIDE",
+        "phrase": "WHAT YOU TELL SOMEONE BEFORE A JOB INTERVIEW BECAUSE YOU KNOW THEY'RE GONNA NEED IT",
         "isReal": false
       }
     ],
