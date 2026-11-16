@@ -1823,7 +1823,7 @@
       }
     ],
     "gpsTag": "panic",
-    "wordType": "Sextuple"
+    "wordType": "Quintuple"
   },
   "BOW": {
     "difficulty": "hard",
@@ -1941,7 +1941,7 @@
       }
     ],
     "gpsTag": "panic",
-    "wordType": "Quintuple"
+    "wordType": "Sextuple"
   },
   "BRANCH": {
     "difficulty": "medium",
@@ -2595,7 +2595,7 @@
       }
     ],
     "gpsTag": "tension",
-    "wordType": "Triple"
+    "wordType": "Quadruple"
   },
   "CARPET": {
     "difficulty": "easy",
@@ -8932,7 +8932,7 @@
       }
     ],
     "gpsTag": "tension",
-    "wordType": "Quintuple"
+    "wordType": "Sextuple"
   },
   "KERNEL": {
     "difficulty": "medium",
@@ -11594,7 +11594,7 @@
       }
     ],
     "gpsTag": "tension",
-    "wordType": "Quadruple"
+    "wordType": "Triple"
   },
   "CASE": {
     "difficulty": "hard",
