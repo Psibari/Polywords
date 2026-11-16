@@ -42,28 +42,47 @@ const FINAL_STATUSES = new Set([
   'CARD COMPLETE',
 ]);
 // Statuses that mean "this row/word was explicitly rejected — never import it."
-const DROP_STATUSES = new Set(['CUT', 'CUT BY PETE', 'DEMOTED FROM BOSS BY PETE']);
+const DROP_STATUSES = new Set(['CUT', 'CUT BY PETE', 'DEMOTED FROM BOSS BY PETE', 'RETIRED', 'REVIEW']);
 
-// ---- Tiles sheet: word -> deduped REAL/TRAP maps (fill-down word column, skip BOSS-type rows) ----
-// Boss-hidden content lives in "Boss Words (Production)" instead; Tiles' own BOSS rows are
-// pre-consolidation leftovers for words that were later folded into that sheet.
+function isActiveVisibleStatus(status) {
+  const value = String(status || '').trim().toUpperCase();
+  return Boolean(value) && !DROP_STATUSES.has(value);
+}
+
+// ---- Tiles sheet: canonical visible content (all REAL/TRAP rows, including Boss words) ----
+// Content ID is runtime identity. Never regenerate it from row position.
 const tilesByWord = new Map();
 {
   let currentWord = '';
   for (const row of sheetRows('Tiles').slice(1)) {
     if (!row.some((cell) => cell !== '')) continue;
-    const [wordCol, type, phrase, , , status] = row;
+    const [wordCol, type, phrase, , , status, , contentIdCol] = row;
     if (wordCol) currentWord = String(wordCol).trim();
-    if (!currentWord || type === 'BOSS' || status === 'CUT') continue;
+    if (!currentWord || type === 'BOSS') continue;
     if (type !== 'REAL' && type !== 'TRAP') continue;
-    if (!phrase) continue;
-    if (!tilesByWord.has(currentWord)) {
-      tilesByWord.set(currentWord, { reals: new Map(), traps: new Map() });
+    if (!phrase || !isActiveVisibleStatus(status)) continue;
+
+    const contentId = String(contentIdCol || '').trim();
+    if (!contentId) {
+      throw new Error(`Tiles row for ${currentWord} / ${phrase} is missing Content ID`);
     }
-    const bucket = tilesByWord.get(currentWord)[type === 'REAL' ? 'reals' : 'traps'];
-    // Map.set on a repeated normalized phrase keeps insertion order but overwrites the
-    // value, so a later (re-audited) row for the same tile naturally wins.
-    bucket.set(normalizePhrase(phrase), { phrase: String(phrase).trim(), status });
+    const expectedPrefix = currentWord.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+    const expectedKind = type === 'REAL' ? 'r' : 't';
+    const idMatch = contentId.match(/^([a-z0-9-]+)_([rt])(\d+)$/i);
+    if (!idMatch || idMatch[1].toLowerCase() !== expectedPrefix || idMatch[2].toLowerCase() !== expectedKind) {
+      throw new Error(`Invalid Content ID ${contentId} for ${currentWord} ${type}`);
+    }
+
+    if (!tilesByWord.has(currentWord)) {
+      tilesByWord.set(currentWord, { reals: new Map(), traps: new Map(), ids: new Set() });
+    }
+    const entry = tilesByWord.get(currentWord);
+    if (entry.ids.has(contentId)) {
+      throw new Error(`Duplicate active Content ID in Tiles: ${contentId}`);
+    }
+    entry.ids.add(contentId);
+    const bucket = type === 'REAL' ? entry.reals : entry.traps;
+    bucket.set(contentId, { id: contentId, phrase: String(phrase).trim(), status });
   }
 }
 
@@ -101,8 +120,8 @@ const bossByWord = new Map();
       entry.demoted = true;
       entry.demotedNote = notes;
     }
-    if (type === 'REAL' && phrase) entry.reals.set(normalizePhrase(phrase), { phrase: String(phrase).trim(), status });
-    if (type === 'TRAP' && phrase) entry.traps.set(normalizePhrase(phrase), { phrase: String(phrase).trim(), status });
+    // Visible REAL/TRAP rows on this sheet are historical/reference only.
+    // Canonical visible masks always come from Tiles so stale Boss blocks cannot override them.
     if ((type === 'BOSS-HIDDEN' || type === 'BOSS-HIDDEN-TRAP') && phrase) {
       const pairId = String(hiddenPairId || '').trim();
       if (!pairId) continue; // ungrouped hidden row — surfaced via ungroupedHidden below
@@ -151,11 +170,7 @@ for (const word of [...allWords].sort()) {
   let reals;
   let traps;
   let source;
-  if (bossEntry && bossEntry.reals.size > 0) {
-    reals = [...bossEntry.reals.values()];
-    traps = [...bossEntry.traps.values()];
-    source = 'boss-production';
-  } else if (tileEntry) {
+  if (tileEntry) {
     reals = [...tileEntry.reals.values()];
     traps = [...tileEntry.traps.values()];
     source = 'tiles';
@@ -211,10 +226,9 @@ for (const word of [...allWords].sort()) {
     report.bossIncomplete.push(word);
   }
 
-  const slug = word.toLowerCase();
   const masks = [
-    ...reals.map((r, i) => ({ id: `${slug}_r${i}`, phrase: r.phrase, isReal: true })),
-    ...traps.map((t, i) => ({ id: `${slug}_t${i}`, phrase: t.phrase, isReal: false })),
+    ...reals.map((r) => ({ id: r.id, phrase: r.phrase, isReal: true })),
+    ...traps.map((t) => ({ id: t.id, phrase: t.phrase, isReal: false })),
   ];
 
   staged[word] = {
