@@ -10831,43 +10831,63 @@
     "hiddenTrap": null,
     "masks": [
       {
-        "id": "seal_r0",
-        "phrase": "GETS PAID IN FISH",
+        "id": "seal_r5",
+        "phrase": "WHAT GETS PAID IN FISH TO BARK AND CLAP AT THE AQUARIUM",
         "isReal": true
       },
       {
-        "id": "seal_r1",
-        "phrase": "CLOSED AIRTIGHT",
+        "id": "seal_r6",
+        "phrase": "WHAT THE ZIPPER ON A PLASTIC BAG DOES TO KEEP IT AIRTIGHT",
         "isReal": true
       },
       {
-        "id": "seal_r2",
-        "phrase": "OFFICIAL STAMP OF APPROVAL",
+        "id": "seal_r7",
+        "phrase": "WHAT THEY USED TO PRESS INTO HOT WAX TO MAKE A LETTER OFFICIAL",
         "isReal": true
       },
       {
-        "id": "seal_r3",
-        "phrase": "COULDN'T TELL A SOUL",
+        "id": "seal_r8",
+        "phrase": "WHAT YOU PROMISED YOUR LIPS WOULD STAY WHEN SHE TOLD YOU THE SECRET",
         "isReal": true
       },
       {
-        "id": "seal_t0",
-        "phrase": "TUSKED GIANT LOUNGING ON THE ICE",
+        "id": "seal_r9",
+        "phrase": "THE NAVY TEAM THAT TOOK DOWN BIN LADEN",
+        "isReal": true
+      },
+      {
+        "id": "seal_r10",
+        "phrase": "WHAT THE HANDSHAKE DOES TO THE DEAL",
+        "isReal": true
+      },
+      {
+        "id": "seal_r11",
+        "phrase": "WHAT YOU DO TO THE ENVELOPE RIGHT AFTER YOU LICK IT",
+        "isReal": true
+      },
+      {
+        "id": "seal_r12",
+        "phrase": "WHAT THEY DID TO THE PHARAOH’S TOMB SO NOBODY COULD GET IN",
+        "isReal": true
+      },
+      {
+        "id": "seal_t6",
+        "phrase": "WHAT YOU SCRIBBLE ON THE LINE AT THE BOTTOM OF THE CONTRACT",
         "isReal": false
       },
       {
-        "id": "seal_t1",
-        "phrase": "PLASTIC WRAP STRETCHED OVER THE BOWL",
+        "id": "seal_t7",
+        "phrase": "WHAT YOU PUT ON A LETTER SO THE POST OFFICE WILL MAIL IT",
         "isReal": false
       },
       {
-        "id": "seal_t2",
-        "phrase": "SCRIBBLED SIGNATURE AT THE BOTTOM",
+        "id": "seal_t8",
+        "phrase": "THE HUGE ANIMAL STUCK ON THE BEACH THAT CAN’T GET BACK IN THE WATER",
         "isReal": false
       }
     ],
     "gpsTag": "panic",
-    "wordType": "Quadruple"
+    "wordType": "8-MEANING"
   },
   "SENTENCE": {
     "difficulty": "easy",
