@@ -4613,7 +4613,7 @@
       }
     ],
     "gpsTag": "flow",
-    "wordType": "Double"
+    "wordType": "Triple"
   },
   "CORNER": {
     "difficulty": "hard",
