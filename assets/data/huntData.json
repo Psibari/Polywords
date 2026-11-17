@@ -9231,38 +9231,53 @@
     "hiddenTrap": null,
     "masks": [
       {
-        "id": "long_r0",
-        "phrase": "A ROAD WITH NO END IN SIGHT",
+        "id": "long_r3",
+        "phrase": "THE WAY YOU TAKE HOME WHEN YOU’RE TRYING TO KILL SOME TIME",
         "isReal": true
       },
       {
-        "id": "long_r1",
-        "phrase": "HOW DAYS FEEL WHEN BORING",
+        "id": "long_r4",
+        "phrase": "HOW THE LAST HOUR OF A FRIDAY SHIFT FEELS",
         "isReal": true
       },
       {
-        "id": "long_r2",
-        "phrase": "MISSING HOW IT USED TO BE",
+        "id": "long_r5",
+        "phrase": "THE KIND OF SHOT YOU TAKE WHEN SOMETHING IS UNLIKELY BUT STILL POSSIBLE",
         "isReal": true
       },
       {
-        "id": "long_t0",
-        "phrase": "TOWERS OVER EVERYONE IN THE ROOM",
+        "id": "long_r6",
+        "phrase": "WHAT THE BARTENDER ASKS THE HORSE ABOUT HIS FACE",
+        "isReal": true
+      },
+      {
+        "id": "long_r7",
+        "phrase": "THE KIND OF RELATIONSHIP YOU’RE IN WHEN YOUR PARTNER LIVES IN A DIFFERENT STATE",
+        "isReal": true
+      },
+      {
+        "id": "long_r8",
+        "phrase": "WHAT THE BOSS SAYS WHEN HE DOESN’T CARE HOW YOU DO IT: “AS ___ AS IT GETS DONE”",
+        "isReal": true
+      },
+      {
+        "id": "long_t3",
+        "phrase": "WHAT YOU CALL THE GUY WHO HAS TO DUCK UNDER EVERY DOORWAY",
         "isReal": false
       },
       {
-        "id": "long_t1",
-        "phrase": "OVER BEFORE IT EVEN STARTED",
+        "id": "long_t4",
+        "phrase": "WHAT YOU DO RIGHT BEFORE YOU WORK OUT SO YOU DON’T PULL A MUSCLE",
         "isReal": false
       },
       {
-        "id": "long_t2",
-        "phrase": "CRAVING ONE MORE SLICE OF CAKE",
+        "id": "long_t5",
+        "phrase": "WHAT YOU DO TO THE LADDER SO IT REACHES THE ROOF",
         "isReal": false
       }
     ],
     "gpsTag": "confidence",
-    "wordType": "Triple"
+    "wordType": "Sextuple"
   },
   "MATCH": {
     "difficulty": "medium",
@@ -9314,38 +9329,63 @@
     "hiddenTrap": null,
     "masks": [
       {
-        "id": "mine_r0",
-        "phrase": "I'LL CLAIM IT IF YOU WON'T",
+        "id": "mine_r4",
+        "phrase": "WHAT YOU TELL THE COP IT’S NOT WHEN THEY FIND SOMETHING YOU SHOULDN’T HAVE",
         "isReal": true
       },
       {
-        "id": "mine_r1",
-        "phrase": "HOLE WHERE THEY DIG GOLD AND COAL",
+        "id": "mine_r5",
+        "phrase": "WHAT YOU YELL WHEN YOU CALL DIBS ON THE FINAL SLICE OF PIZZA",
         "isReal": true
       },
       {
-        "id": "mine_r2",
-        "phrase": "PLANTED ON THE BATTLEFIELD",
+        "id": "mine_r6",
+        "phrase": "THE HOLE IN THE MOUNTAIN WHERE THEY DIG FOR GOLD AND COAL",
         "isReal": true
       },
       {
-        "id": "mine_t0",
-        "phrase": "WHAT BELONGS TO YOU, NOT ME",
+        "id": "mine_r7",
+        "phrase": "WHAT YOU HOPE YOU DON’T STEP ON WHEN WALKING THROUGH A WAR ZONE",
+        "isReal": true
+      },
+      {
+        "id": "mine_r8",
+        "phrase": "WHAT THE SEAGULLS IN FINDING NEMO KEEP SCREAMING",
+        "isReal": true
+      },
+      {
+        "id": "mine_r9",
+        "phrase": "WHAT YOUR ROOMMATE WAS DOING FOR BITCOIN THAT TRIPLED THE ELECTRIC BILL",
+        "isReal": true
+      },
+      {
+        "id": "mine_t4",
+        "phrase": "WHAT THE SWAT TEAM THROWS IN FIRST WHEN THEY RAID A HOUSE",
         "isReal": false
       },
       {
-        "id": "mine_t1",
-        "phrase": "CARVED-OUT PIT FOR CUTTING STONE",
+        "id": "mine_t5",
+        "phrase": "WHERE THE OIL COMES UP OUT OF THE GROUND IN TEXAS",
         "isReal": false
       },
       {
-        "id": "mine_t2",
-        "phrase": "TICKING DEVICE STRAPPED WITH WIRES",
+        "id": "mine_t6",
+        "phrase": "WHERE THEY BRUSH THE DIRT OFF DINOSAUR BONES",
+        "isReal": false
+      },
+      {
+        "id": "mine_t7",
+        "phrase": "WHAT YOU SAY WHEN YOU TAKE THE BLAME FOR THE WINDOW YOUR BROTHER BROKE",
+        "isReal": false
+      },
+      {
+        "id": "mine_t8",
+        "phrase": "WHAT YOU YELL TO CALL THE FRONT SEAT OF THE CAR",
         "isReal": false
       }
     ],
     "gpsTag": "tension",
-    "wordType": "Triple"
+    "wordType": "Sextuple"
   },
   "MISS": {
     "difficulty": "medium",
