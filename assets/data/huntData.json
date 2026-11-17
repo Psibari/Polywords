@@ -10694,33 +10694,53 @@
         "isReal": true
       },
       {
-        "id": "row_r1",
-        "phrase": "FIRST SEATS BY THE STAGE",
+        "id": "row_r3",
+        "phrase": "WHAT YOU’RE SITTING IN WHEN YOUR SEATS ARE RIGHT UP FRONT BY THE STAGE",
         "isReal": true
       },
       {
-        "id": "row_r2",
-        "phrase": "FIVE WINS BACK TO BACK",
+        "id": "row_r4",
+        "phrase": "WHAT THREE CHAMPIONSHIPS ARE IN WHEN THEY’RE BACK TO BACK TO BACK",
         "isReal": true
       },
       {
-        "id": "row_t0",
-        "phrase": "SEAT NUMBER PRINTED ON YOUR TICKET",
+        "id": "row_r5",
+        "phrase": "WHAT YOU NEED THREE X’S OR THREE O’S IN TO WIN TIC-TAC-TOE",
+        "isReal": true
+      },
+      {
+        "id": "row_r6",
+        "phrase": "WHAT YOU PUT YOUR DUCKS IN WHEN YOU FINALLY GET ORGANIZED",
+        "isReal": true
+      },
+      {
+        "id": "row_t6",
+        "phrase": "THE SEATS WITH ALL THE LEGROOM AT THE FRONT OF THE PLANE",
         "isReal": false
       },
       {
-        "id": "row_t1",
-        "phrase": "BLEACHERS PACKED FOR THE PLAYOFF GAME",
+        "id": "row_t7",
+        "phrase": "THE WALKWAY BETWEEN THE SEATS IN THE THEATER",
         "isReal": false
       },
       {
-        "id": "row_t2",
-        "phrase": "STREAK SNAPPED AT GAME SIX",
+        "id": "row_t8",
+        "phrase": "HOW THE PANCAKES SHOW UP ON YOUR PLATE AT THE DINER",
+        "isReal": false
+      },
+      {
+        "id": "row_t9",
+        "phrase": "WHAT YOU STAND IN FOR AN HOUR AT THE DMV",
+        "isReal": false
+      },
+      {
+        "id": "row_t10",
+        "phrase": "WHAT THE PIRATES RAISED TO GET THE SHIP MOVING",
         "isReal": false
       }
     ],
     "gpsTag": "tension",
-    "wordType": "Triple"
+    "wordType": "Quintuple"
   },
   "RULER": {
     "difficulty": "medium",
