@@ -11700,43 +11700,63 @@
     "hiddenTrap": null,
     "masks": [
       {
-        "id": "watch_r0",
-        "phrase": "BRACELET WITH TWO HANDS",
+        "id": "watch_r4",
+        "phrase": "THE BRACELET YOU WEAR THAT HAS A FACE AND TWO HANDS",
         "isReal": true
       },
       {
-        "id": "watch_r1",
-        "phrase": "KEPT YOUR EYES ON THE GAME",
+        "id": "watch_r5",
+        "phrase": "WHAT YOU’RE GONNA DO WHEN YOUR FAVORITE SHOW IS ON TV",
         "isReal": true
       },
       {
-        "id": "watch_r2",
-        "phrase": "YOUR TURN TO STAND GUARD",
+        "id": "watch_r6",
+        "phrase": "WHAT ONE SOLDIER DOES WHILE THE OTHER ONE SLEEPS",
         "isReal": true
       },
       {
-        "id": "watch_r3",
-        "phrase": "TORNADO COULD FORM LATER",
+        "id": "watch_r7",
+        "phrase": "WHAT THE WEATHER SERVICE CALLS IT WHEN A TORNADO COULD FORM BUT HASN’T YET",
         "isReal": true
       },
       {
-        "id": "watch_t0",
-        "phrase": "ALARM CLOCK BUZZING AT DAWN",
+        "id": "watch_r8",
+        "phrase": "WHAT KIDS YELL TO THEIR FRIENDS RIGHT BEFORE THEY TRY SOMETHING DUMB",
+        "isReal": true
+      },
+      {
+        "id": "watch_r9",
+        "phrase": "WHAT YOU PAY THE BABYSITTER TO DO WITH THE KIDS SO YOU CAN TAKE THE NIGHT OFF",
+        "isReal": true
+      },
+      {
+        "id": "watch_t5",
+        "phrase": "WHAT YOU DO WITH THE GAME WHEN IT’S ONLY ON AM RADIO",
         "isReal": false
       },
       {
-        "id": "watch_t1",
-        "phrase": "PEEKING THROUGH THE CURTAINS",
+        "id": "watch_t6",
+        "phrase": "WHAT YOU’RE DOING WHEN YOU’RE EAVESDROPPING",
         "isReal": false
       },
       {
-        "id": "watch_t2",
-        "phrase": "SIRENS SCREAMING TAKE COVER NOW",
+        "id": "watch_t7",
+        "phrase": "WHAT YOU DO WITH THE NEWSPAPER OVER BREAKFAST",
+        "isReal": false
+      },
+      {
+        "id": "watch_t8",
+        "phrase": "WHAT TELLS YOU THERE’S AN AMBULANCE IN A HURRY BEHIND YOU",
+        "isReal": false
+      },
+      {
+        "id": "watch_t9",
+        "phrase": "THE GIANT FACE ON THE LONDON TOWER EVERYONE CALLS BIG BEN",
         "isReal": false
       }
     ],
     "gpsTag": "flow",
-    "wordType": "Quadruple"
+    "wordType": "Sextuple"
   },
   "WAVE": {
     "difficulty": "hard",
