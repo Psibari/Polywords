@@ -508,6 +508,11 @@ These are standing rulings. They apply to every ordinary and Boss trap.
 18. **Show the final list before applying** (Pete, 2026-11-13). Before
     anything goes into the game, show every card for the batch (kept,
     new, cut, out) and apply only after Pete approves it.
+19. **More cards, not fewer** (Pete, 2026-11-16). If a card represents
+    the word and is clever enough, it goes in, even when another card
+    already covers the same meaning with a different memory snap. Only
+    meanings nobody uses anymore are dropped. Write every card at full
+    length; the short July-era cards get rewritten.
 
 ------------------------------------------------------------------------
 

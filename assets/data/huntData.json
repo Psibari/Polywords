@@ -4494,8 +4494,8 @@
         "isReal": false
       },
       {
-        "id": "copy_t03",
-        "phrase": "THE REVERSED VERSION OF YOU IN THE MIRROR",
+        "id": "copy_t06",
+        "phrase": "WHAT YOU’RE LOOKING AT WHEN YOU STARE INTO A MIRROR",
         "isReal": false
       },
       {
@@ -5083,8 +5083,8 @@
         "isReal": false
       },
       {
-        "id": "cricket_t03",
-        "phrase": "GREEN INSECT THAT PREYS",
+        "id": "cricket_t04",
+        "phrase": "THE GREEN BUG THAT LOOKS LIKE IT’S PRAYING",
         "isReal": false
       }
     ],
@@ -5824,8 +5824,8 @@
         "isReal": true
       },
       {
-        "id": "digest_t00",
-        "phrase": "THE MAGAZINE THAT TOLD YOU WHAT WAS ON TV",
+        "id": "digest_t05",
+        "phrase": "WHAT YOU CHECKED TO SEE WHAT WAS ON TV BEFORE THERE WAS A GUIDE BUTTON",
         "isReal": false
       },
       {
@@ -5839,8 +5839,8 @@
         "isReal": false
       },
       {
-        "id": "digest_t03",
-        "phrase": "DINNER’S PAYBACK FOR EATING TOO FAST",
+        "id": "digest_t04",
+        "phrase": "WHAT MAKES YOU REGRET THAT SECOND HELPING",
         "isReal": false
       }
     ],
@@ -6141,6 +6141,11 @@
       {
         "id": "double_t04",
         "phrase": "WHAT YOU CALL A NUMBER WITH EXACTLY TWO FACTORS",
+        "isReal": false
+      },
+      {
+        "id": "double_t05",
+        "phrase": "WHAT THE LITTLE 2 NEXT TO A NUMBER TELLS YOU TO DO",
         "isReal": false
       }
     ],
@@ -6571,43 +6576,58 @@
     "hiddenTrap": null,
     "masks": [
       {
-        "id": "drop_r0",
-        "phrase": "THE PHONE SLIPS FROM YOUR HAND",
+        "id": "drop_r5",
+        "phrase": "WHAT YOU FEEL HIT YOU FIRST WHEN YOU SAY, “IT’S STARTING TO RAIN”",
         "isReal": true
       },
       {
-        "id": "drop_r1",
-        "phrase": "SQUEEZE TWO IN EACH EYE",
+        "id": "drop_r6",
+        "phrase": "WHAT HAPPENED TO THE GLASS NOW IN PIECES ON THE FLOOR THAT YOU CLAIM WAS AN ACCIDENT",
         "isReal": true
       },
       {
-        "id": "drop_r2",
-        "phrase": "COULDN'T HOLD ON ANY LONGER",
+        "id": "drop_r7",
+        "phrase": "THE PART OF THE SONG EVERYBODY’S WAITING FOR THE BEAT TO DO",
         "isReal": true
       },
       {
-        "id": "drop_r3",
-        "phrase": "DESERT TEMPERATURE AFTER SUNSET",
+        "id": "drop_r8",
+        "phrase": "HOW YOU TAKE THE MEDICINE YOUR EYE DOCTOR GIVES YOU",
         "isReal": true
       },
       {
-        "id": "drop_t0",
-        "phrase": "SUITCASE ROLLS OFF THE CAROUSEL",
+        "id": "drop_r9",
+        "phrase": "WHAT THE TEMPERATURE DOES IN THE DESERT AS SOON AS THE SUN GOES DOWN",
+        "isReal": true
+      },
+      {
+        "id": "drop_r10",
+        "phrase": "WHAT YOU SHOP UNTIL YOU DO",
+        "isReal": true
+      },
+      {
+        "id": "drop_r11",
+        "phrase": "WHAT THE PROFESSOR TELLS YOU TO DO WITH THE CLASS BEFORE YOU GET AN F",
+        "isReal": true
+      },
+      {
+        "id": "drop_t8",
+        "phrase": "WHAT THE WEATHERMAN SAYS IS COMING DOWN WHEN IT’S HALF RAIN, HALF SNOW",
         "isReal": false
       },
       {
-        "id": "drop_t1",
-        "phrase": "EYE EXAM CHART ON THE WALL",
+        "id": "drop_t9",
+        "phrase": "WHAT A LUMBERJACK DOES TO A TREE WITH A CHAINSAW",
         "isReal": false
       },
       {
-        "id": "drop_t2",
-        "phrase": "CLIFF EDGE WITH NO GUARDRAIL",
+        "id": "drop_t10",
+        "phrase": "WHAT YOU DO TO THE BALL SO THE DOG CAN FETCH IT",
         "isReal": false
       }
     ],
     "gpsTag": "tension",
-    "wordType": "Quadruple"
+    "wordType": "Septuple"
   },
   "DRUM": {
     "difficulty": "medium",
@@ -7275,6 +7295,11 @@
         "isReal": true
       },
       {
+        "id": "face_r08",
+        "phrase": "WHAT YOU REMEMBER WHEN SOMEONE LOOKS FAMILIAR BUT YOU FORGOT THEIR NAME",
+        "isReal": true
+      },
+      {
         "id": "face_t02",
         "phrase": "WHERE A RECEDING HAIRLINE STARTS SHOWING",
         "isReal": false
@@ -7291,7 +7316,7 @@
       }
     ],
     "gpsTag": "tension",
-    "wordType": "8-MEANING"
+    "wordType": "9-MEANING"
   },
   "FAIR": {
     "difficulty": "medium",
@@ -8389,6 +8414,11 @@
         "isReal": true
       },
       {
+        "id": "fold_r12",
+        "phrase": "WHAT HE FINALLY DID UNDER THE PRESSURE OF THE INTERROGATION",
+        "isReal": true
+      },
+      {
         "id": "fold_t0",
         "phrase": "HOW YOU SHARE ONE SANDWICH BETWEEN TWO PEOPLE",
         "isReal": false
@@ -8402,10 +8432,35 @@
         "id": "fold_t92",
         "phrase": "WHAT YOU SAY WHEN YOU MATCH THE BET",
         "isReal": false
+      },
+      {
+        "id": "fold_t93",
+        "phrase": "THE PART THAT LETS A LAPTOP CLOSE FLAT AGAINST ITS KEYBOARD",
+        "isReal": false
+      },
+      {
+        "id": "fold_t94",
+        "phrase": "WHAT THE DRY CLEANER DOES TO YOUR SUIT SO IT COMES BACK SHARP",
+        "isReal": false
+      },
+      {
+        "id": "fold_t95",
+        "phrase": "HOW YOU GET A SLEEPING BAG BACK INTO ITS STORAGE SACK",
+        "isReal": false
+      },
+      {
+        "id": "fold_t96",
+        "phrase": "HOW YOU GET A BED SHEET SMOOTH AGAIN",
+        "isReal": false
+      },
+      {
+        "id": "fold_t97",
+        "phrase": "WHAT YOU DO TO YOUR CLOTHES BEFORE PUTTING THEM IN THE WASHING MACHINE",
+        "isReal": false
       }
     ],
     "gpsTag": "boss",
-    "wordType": "12-MEANING"
+    "wordType": "13-MEANING"
   },
   "FOOT": {
     "difficulty": "hard",
@@ -8944,6 +8999,11 @@
         "id": "jam_r5",
         "phrase": "WHAT HAPPENS WHEN A GUN STILL HAS BULLETS BUT WON'T FIRE",
         "isReal": true
+      },
+      {
+        "id": "jam_t7",
+        "phrase": "WHAT HAPPENS WHEN TWO CARS RUN THE SAME STOP SIGN",
+        "isReal": false
       }
     ],
     "gpsTag": "tension",
@@ -9127,8 +9187,8 @@
     "hiddenTrap": null,
     "masks": [
       {
-        "id": "log_r0",
-        "phrase": "SPLIT AND STACKED BEFORE FIRST SNOW",
+        "id": "log_r3",
+        "phrase": "WHAT YOU NEED TO ADD TO KEEP THE FIRE GOING",
         "isReal": true
       },
       {
@@ -9137,28 +9197,33 @@
         "isReal": true
       },
       {
-        "id": "log_r2",
-        "phrase": "HOW YOU GET INTO YOUR ACCOUNT",
+        "id": "log_r4",
+        "phrase": "WHAT YOU CAN’T DO WHEN YOU FORGET YOUR PASSWORD",
         "isReal": true
       },
       {
-        "id": "log_t0",
-        "phrase": "LEATHER-BOUND DIARY UNDER THE PILLOW",
+        "id": "log_r5",
+        "phrase": "WHAT A PILOT HAS TO DO WITH EVERY HOUR SPENT IN THE AIR",
+        "isReal": true
+      },
+      {
+        "id": "log_t6",
+        "phrase": "WHAT A BEAVER BUILDS ACROSS A STREAM",
         "isReal": false
       },
       {
-        "id": "log_t1",
-        "phrase": "PASSWORD TYPED WRONG TWICE",
+        "id": "log_t7",
+        "phrase": "WHAT YOU ROAST MARSHMALLOWS OVER AT CAMP",
         "isReal": false
       },
       {
-        "id": "log_t2",
-        "phrase": "AXE BITES INTO THE STUMP",
+        "id": "log_t8",
+        "phrase": "WHERE YOU SHARE A 24-HOUR PEEK AT YOUR DAY ON INSTAGRAM",
         "isReal": false
       }
     ],
     "gpsTag": "panic",
-    "wordType": "Triple"
+    "wordType": "Quadruple"
   },
   "LONG": {
     "difficulty": "easy",
@@ -11240,6 +11305,11 @@
       {
         "id": "tank_t5",
         "phrase": "WHAT YOU FILL WITH WATER TO WATER THE GARDEN",
+        "isReal": false
+      },
+      {
+        "id": "tank_t8",
+        "phrase": "WHAT HORSES DRINK THEIR WATER FROM",
         "isReal": false
       }
     ],
