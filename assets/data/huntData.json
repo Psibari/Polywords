@@ -4169,13 +4169,13 @@
     "hiddenTrap": null,
     "masks": [
       {
-        "id": "concentration_r0",
-        "phrase": "SOME PEOPLE NEED DEAD SILENCE TO FOCUS",
+        "id": "concentration_r5",
+        "phrase": "WHAT SOME PEOPLE NEED DEAD SILENCE FOR",
         "isReal": true
       },
       {
-        "id": "concentration_r1",
-        "phrase": "A SUBSECTION WITHIN YOUR COLLEGE MAJOR",
+        "id": "concentration_r6",
+        "phrase": "THE MAJOR YOU PICK INSIDE YOUR COLLEGE MAJOR",
         "isReal": true
       },
       {
@@ -4184,19 +4184,9 @@
         "isReal": true
       },
       {
-        "id": "concentration_r3",
-        "phrase": "TOO STRONG STRAIGHT FROM THE CAN, ADD WATER",
+        "id": "concentration_r7",
+        "phrase": "WHAT GETS BROKEN WHEN SOMEONE ASKS YOU A QUESTION WHILE YOU'RE COUNTING",
         "isReal": true
-      },
-      {
-        "id": "concentration_t0",
-        "phrase": "MIND WANDERS OFF MID-SENTENCE",
-        "isReal": false
-      },
-      {
-        "id": "concentration_t1",
-        "phrase": "UNDECIDED, STILL PICKING A MAJOR",
-        "isReal": false
       },
       {
         "id": "concentration_t3",
@@ -4204,23 +4194,18 @@
         "isReal": false
       },
       {
-        "id": "concentration_t4",
-        "phrase": "TV BLASTING WHILE YOU TRY TO READ",
+        "id": "concentration_t9",
+        "phrase": "THE SIGN YOU HANG ON THE HOTEL DOORKNOB SO NOBODY BOTHERS YOU",
         "isReal": false
       },
       {
-        "id": "concentration_t5",
-        "phrase": "SPREADING YOURSELF THIN ACROSS TEN PROJECTS",
+        "id": "concentration_t10",
+        "phrase": "WHAT THE GUY WITH THE POCKET WATCH IS DOING WHEN HE TELLS YOU TO KEEP YOUR EYES ON IT",
         "isReal": false
       },
       {
-        "id": "concentration_t6",
-        "phrase": "WEAK COFFEE, BARELY ANY GROUNDS USED",
-        "isReal": false
-      },
-      {
-        "id": "concentration_t7",
-        "phrase": "DAYDREAMING OUT THE CLASSROOM WINDOW",
+        "id": "concentration_t11",
+        "phrase": "WHAT THE TEACHER TELLS EVERYBODY TO DO TO GET READY FOR THE BIG TEST",
         "isReal": false
       }
     ],
@@ -6898,23 +6883,6 @@
     "difficulty": "medium",
     "hiddenMeaning": null,
     "hiddenTrap": null,
-    "hiddenPairs": [
-      {
-        "real": "PICARD ORDERS THE SHIP TO WARP SPEED",
-        "trap": "COMMANDER ORDERS THE TROOPS TO RETREAT",
-        "id": "engaged_h00"
-      },
-      {
-        "real": "WHEN IT’S TIME TO BRING IN A SPECIALIST",
-        "trap": "WHAT YOU FEEL WHEN YOU COULDN’T CARE LESS ABOUT IT",
-        "id": "engaged_h01"
-      },
-      {
-        "real": "THE COLUMN THAT LOOKS LIKE THE WALL SWALLOWED HALF OF IT",
-        "trap": "WHEN YOU RAISE YOUR HAND BECAUSE YOU KNOW THE ANSWER",
-        "id": "engaged_h02"
-      }
-    ],
     "masks": [
       {
         "id": "engaged_r0",
@@ -6922,48 +6890,73 @@
         "isReal": true
       },
       {
-        "id": "engaged_r1",
-        "phrase": "THE PROMISE OF THE DIAMOND RING",
+        "id": "engaged_r6",
+        "phrase": "WHAT HAPPENED THE NIGHT YOUR BOYFRIEND BECAME YOUR FIANCÉ",
         "isReal": true
       },
       {
-        "id": "engaged_r2",
-        "phrase": "COULDN'T PUT THE BOOK DOWN ALL NIGHT",
+        "id": "engaged_r7",
+        "phrase": "WHAT THE TEACHER'S VOLCANO EXPERIMENT FINALLY GOT THE BORED CLASS TO BE",
         "isReal": true
       },
       {
-        "id": "engaged_r3",
-        "phrase": "TWO MEN AGREE TO A DUEL AT DAWN",
+        "id": "engaged_r8",
+        "phrase": "WHAT TWO ARMIES ARE ONCE THE FIRST SHOTS ARE FIRED",
         "isReal": true
       },
       {
-        "id": "engaged_t0",
-        "phrase": "COLD FEET THE NIGHT BEFORE THE WEDDING",
+        "id": "engaged_r9",
+        "phrase": "WHAT PICARD SAYS RIGHT BEFORE THE ENTERPRISE JUMPS TO WARP",
+        "isReal": true
+      },
+      {
+        "id": "engaged_t10",
+        "phrase": "WHAT YOU ARE ONCE THE PRIEST SAYS YOU MAY KISS THE BRIDE",
         "isReal": false
       },
       {
-        "id": "engaged_t1",
-        "phrase": "PROBLEM SOLVED WITH NO PUNCHES BEING THROWN",
+        "id": "engaged_t11",
+        "phrase": "WHAT IT WAS CALLED WHEN SHE STARTED WEARING HIS LETTERMAN JACKET",
         "isReal": false
       },
       {
-        "id": "engaged_t2",
-        "phrase": "SAYS YES WITHOUT CHECKING THE CALENDAR FIRST",
+        "id": "engaged_t12",
+        "phrase": "WHAT YOU CALL IT AFTER THE THIRD DATE BUT BEFORE ANYONE MEETS THE PARENTS",
         "isReal": false
       },
       {
-        "id": "engaged_t3",
-        "phrase": "ATTENTION SPAN OF A GOLDFISH DURING CLASS",
+        "id": "engaged_t13",
+        "phrase": "WHAT THE HOST ASKS IF YOU HAVE, BECAUSE WITHOUT ONE IT'S A THREE-HOUR WAIT",
         "isReal": false
       },
       {
-        "id": "engaged_t4",
-        "phrase": "REFUSES TO TAKE THE BAIT, WALKS AWAY",
+        "id": "engaged_t14",
+        "phrase": "WHAT CUSTOMER SERVICE PUTS YOU ON WHILE THE ELEVATOR MUSIC PLAYS",
+        "isReal": false
+      },
+      {
+        "id": "engaged_t15",
+        "phrase": "WHAT THE LIGHT ON THE AIRPLANE BATHROOM DOOR SAYS WHILE SOMEONE'S USING IT",
+        "isReal": false
+      },
+      {
+        "id": "engaged_t16",
+        "phrase": "WHAT THE NEON SIGN FLASHES WHEN THE MOTEL HAS NO ROOMS LEFT",
+        "isReal": false
+      },
+      {
+        "id": "engaged_t17",
+        "phrase": "WHAT YOU ARE THE MINUTE YOU SIGN UP FOR THE ARMY",
+        "isReal": false
+      },
+      {
+        "id": "engaged_t18",
+        "phrase": "WHAT THE HOUSE IS ONCE THE SELLERS ACCEPT YOUR OFFER",
         "isReal": false
       }
     ],
-    "gpsTag": "boss",
-    "wordType": "Quadruple"
+    "gpsTag": "tension",
+    "wordType": "Quintuple"
   },
   "EXCHANGE": {
     "difficulty": "medium",
@@ -9069,58 +9062,83 @@
     "hiddenTrap": null,
     "masks": [
       {
-        "id": "key_r0",
-        "phrase": "SPARE HIDDEN UNDER THE WELCOME MAT",
+        "id": "key_r5",
+        "phrase": "WHAT YOU JUST REALIZED YOU FORGOT, AND NOW YOU'RE LOCKED OUT",
         "isReal": true
       },
       {
-        "id": "key_r1",
-        "phrase": "WHITE ONES ARE LABELED A THROUGH G",
+        "id": "key_r6",
+        "phrase": "WHAT THE FRONT DESK HAS TO MAKE YOU A NEW ONE OF WHEN YOU LOSE YOURS",
         "isReal": true
       },
       {
-        "id": "key_r2",
-        "phrase": "THEME PARK MAP: WHICH ICON MEANS BATHROOM",
+        "id": "key_r7",
+        "phrase": "WHAT A PIANO HAS 88 OF, BLACK AND WHITE",
         "isReal": true
       },
       {
-        "id": "key_r3",
-        "phrase": "LAST STOP ON THE SEVEN MILE BRIDGE",
+        "id": "key_r8",
+        "phrase": "WHERE YOU LOOK ON THE MALL MAP TO FIGURE OUT WHICH LITTLE SYMBOL IS THE BATHROOM",
         "isReal": true
       },
       {
-        "id": "key_t0",
-        "phrase": "SYMBOL DRAWN FIRST ON EVERY SHEET OF MUSIC",
+        "id": "key_r9",
+        "phrase": "WHAT YOU CALL THE CHAIN OF ISLANDS AT THE BOTTOM OF FLORIDA",
+        "isReal": true
+      },
+      {
+        "id": "key_r10",
+        "phrase": "WHAT THE GUY WHO CAN'T SING IS ALWAYS OFF",
+        "isReal": true
+      },
+      {
+        "id": "key_r11",
+        "phrase": "THE HOME ONES YOUR FINGERS SIT ON IN TYPING CLASS: A S D F, J K L",
+        "isReal": true
+      },
+      {
+        "id": "key_r12",
+        "phrase": "WHAT THE GAS STATION CLERK HANDS YOU WHEN YOU ASK TO USE THE BATHROOM",
+        "isReal": true
+      },
+      {
+        "id": "key_r13",
+        "phrase": "WHAT THE BUILDING SUPER CARRIES THAT OPENS EVERY APARTMENT",
+        "isReal": true
+      },
+      {
+        "id": "key_t8",
+        "phrase": "THE THREE NUMBERS YOU SPIN TO OPEN YOUR GYM LOCKER",
         "isReal": false
       },
       {
-        "id": "key_t1",
-        "phrase": "GUITARIST'S FINGERS FORM A SHAPE ON THE FRETS",
+        "id": "key_t9",
+        "phrase": "WHAT YOU CLICK FROM THE DRIVEWAY TO OPEN THE GARAGE",
         "isReal": false
       },
       {
-        "id": "key_t2",
-        "phrase": "ARROW POINTING TO WHICH WAY IS NORTH",
+        "id": "key_t10",
+        "phrase": "WHAT YOU LIFT TO LET YOURSELF IN THROUGH THE BACKYARD GATE",
         "isReal": false
       },
       {
-        "id": "key_t3",
-        "phrase": "LITTLE RULER SHOWING HOW FAR AN INCH GOES",
+        "id": "key_t11",
+        "phrase": "THE SPEED THE CONDUCTOR TELLS THE ORCHESTRA TO PLAY THE SONG AT",
         "isReal": false
       },
       {
-        "id": "key_t4",
-        "phrase": "DRIVE TO THE END, STILL CONNECTED TO SHORE",
+        "id": "key_t12",
+        "phrase": "WHAT THEY USE TO RATE PEPPERS FROM ZERO ALL THE WAY UP TO A CAROLINA REAPER, OVER A MILLION",
         "isReal": false
       },
       {
-        "id": "key_t5",
-        "phrase": "FLIP IT UP AND THE GATE SWINGS OPEN",
+        "id": "key_t13",
+        "phrase": "WHAT YOU BUZZ AT THE FRONT DOOR SO SOMEONE INSIDE WILL COME LET YOU IN",
         "isReal": false
       }
     ],
     "gpsTag": "tension",
-    "wordType": "Quadruple"
+    "wordType": "9-MEANING"
   },
   "LIGHT": {
     "difficulty": "medium",
