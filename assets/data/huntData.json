@@ -9643,33 +9643,43 @@
         "isReal": true
       },
       {
-        "id": "park_r1",
-        "phrase": "SPOT WHERE YOU FEED THE METER",
+        "id": "park_r3",
+        "phrase": "WHAT YOU FAILED TO DO BETWEEN THE CONES ON YOUR DRIVING TEST",
         "isReal": true
       },
       {
-        "id": "park_r2",
-        "phrase": "TWO HOUR LINE, ONE MINUTE RIDE",
+        "id": "park_r4",
+        "phrase": "WHERE YOU SPEND ALL DAY IN LINE JUST FOR A ONE-MINUTE ROLLER COASTER RIDE",
         "isReal": true
       },
       {
-        "id": "park_t0",
-        "phrase": "FENCED-IN GRASS BEHIND THE HOUSE",
+        "id": "park_r5",
+        "phrase": "WHAT YOU PUT THE CAR IN WHEN IT’S SITTING IN THE DRIVEWAY",
+        "isReal": true
+      },
+      {
+        "id": "park_r6",
+        "phrase": "WHAT YELLOWSTONE AND THE GRAND CANYON ARE BOTH CALLED",
+        "isReal": true
+      },
+      {
+        "id": "park_t6",
+        "phrase": "WHERE YOU PAY TO SEE A BUNCH OF ANIMALS ALL CAGED UP",
         "isReal": false
       },
       {
-        "id": "park_t1",
-        "phrase": "CONCRETE LEVELS WHERE CARS STACK UP",
+        "id": "park_t7",
+        "phrase": "WHERE YOU LET THE DOG OUT TO DO HIS BUSINESS BEHIND THE HOUSE",
         "isReal": false
       },
       {
-        "id": "park_t2",
-        "phrase": "CAGED LIONS AND A PETTING PEN",
+        "id": "park_t8",
+        "phrase": "WHERE GRANDMA GROWS HER TOMATOES",
         "isReal": false
       }
     ],
     "gpsTag": "panic",
-    "wordType": "Triple"
+    "wordType": "Quintuple"
   },
   "PEN": {
     "difficulty": "hard",
@@ -9736,8 +9746,8 @@
     "hiddenTrap": null,
     "masks": [
       {
-        "id": "pitch_r0",
-        "phrase": "HEATER BLOWN PAST THE BATTER",
+        "id": "pitch_r7",
+        "phrase": "FASTBALL, CURVEBALL, SLIDER, KNUCKLEBALL",
         "isReal": true
       },
       {
@@ -9746,19 +9756,24 @@
         "isReal": true
       },
       {
-        "id": "pitch_r2",
-        "phrase": "SPEECH HOPING FOR INVESTMENT",
+        "id": "pitch_r8",
+        "phrase": "THE SPEECH A SALESMAN GIVES TO TALK EVERYBODY INTO BUYING HIS PRODUCT",
         "isReal": true
       },
       {
-        "id": "pitch_r3",
-        "phrase": "TAR USED TO SEAL THE ROOF",
+        "id": "pitch_r9",
+        "phrase": "WHAT YOU DO TO THE TENT AS SOON AS YOU GET TO THE CAMPSITE",
         "isReal": true
       },
       {
-        "id": "pitch_t0",
-        "phrase": "LOBS IT SOFTLY OVER THE NET",
-        "isReal": false
+        "id": "pitch_r10",
+        "phrase": "WHAT EVERYBODY IN THE OFFICE DID TO GET YOU A BIRTHDAY GIFT",
+        "isReal": true
+      },
+      {
+        "id": "pitch_r11",
+        "phrase": "HOW BLACK IT IS WHEN YOU HAVE TO FEEL YOUR WAY ALONG THE WALL",
+        "isReal": true
       },
       {
         "id": "pitch_t1",
@@ -9766,13 +9781,23 @@
         "isReal": false
       },
       {
-        "id": "pitch_t2",
-        "phrase": "FLASHY AD DURING THE BIG GAME",
+        "id": "pitch_t10",
+        "phrase": "WHAT YOU DO TO START THE POINT IN TENNIS",
+        "isReal": false
+      },
+      {
+        "id": "pitch_t11",
+        "phrase": "WHAT THE BLEACHER FANS DO WITH THE OTHER TEAM’S HOME RUN BALL",
+        "isReal": false
+      },
+      {
+        "id": "pitch_t12",
+        "phrase": "WHAT THE BOWLER DOES WITH THE BALL DOWN THE LANE",
         "isReal": false
       }
     ],
     "gpsTag": "panic",
-    "wordType": "Quadruple"
+    "wordType": "Sextuple"
   },
   "PLANE": {
     "difficulty": "medium",
