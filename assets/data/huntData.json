@@ -1008,63 +1008,78 @@
     "hiddenTrap": null,
     "masks": [
       {
-        "id": "belt_r0",
-        "phrase": "ONE MORE NOTCH AFTER DINNER",
+        "id": "belt_r7",
+        "phrase": "WHAT YOU LOOSEN AFTER A BIG HOLIDAY DINNER",
         "isReal": true
       },
       {
-        "id": "belt_r1",
-        "phrase": "SHOWER SINGER HITS THE HIGH NOTE",
+        "id": "belt_r8",
+        "phrase": "WHAT EVERYONE TRIES TO DO WITH THE BIG NOTE AT KARAOKE",
         "isReal": true
       },
       {
-        "id": "belt_r2",
-        "phrase": "A CLEAN SHOT TO THE JAW",
+        "id": "belt_r9",
+        "phrase": "WHAT YOU AWKWARDLY YANK YOUR SUITCASE OFF OF AT THE AIRPORT",
         "isReal": true
       },
       {
-        "id": "belt_r3",
-        "phrase": "BAGGAGE CLAIM LOOP",
+        "id": "belt_r10",
+        "phrase": "WHERE ALL THOSE \"IT COULD HIT EARTH\" ASTEROIDS COME FROM",
         "isReal": true
       },
       {
-        "id": "belt_r4",
-        "phrase": "ASTEROIDS PAST MARS",
+        "id": "belt_r11",
+        "phrase": "WHAT YOU HAVE TO EARN IN EVERY COLOR BEFORE YOU GET THE BLACK ONE",
         "isReal": true
       },
       {
-        "id": "belt_r5",
-        "phrase": "THE RANK EVERY STUDENT TRAINS FOR",
+        "id": "belt_r12",
+        "phrase": "WHERE BATMAN KEEPS ALL HIS BAT GADGETS",
         "isReal": true
       },
       {
-        "id": "belt_r6",
-        "phrase": "BUCKLE UP FOR SAFETY",
+        "id": "belt_r13",
+        "phrase": "WHAT THE WRESTLER WALKS TO THE RING HOLDING TO REMIND EVERYBODY WHO THE CHAMP IS",
         "isReal": true
       },
       {
-        "id": "belt_t0",
-        "phrase": "SUSPENDERS CLIPPED TO YOUR SLACKS",
+        "id": "belt_r14",
+        "phrase": "CLICK IT OR TICKET",
+        "isReal": true
+      },
+      {
+        "id": "belt_r15",
+        "phrase": "WHAT YOU BUCKLE TO SHUT UP THAT ANNOYING DING IN YOUR CAR",
+        "isReal": true
+      },
+      {
+        "id": "belt_t4",
+        "phrase": "WHAT KEEPS YOUR OVERALLS FROM FALLING DOWN",
         "isReal": false
       },
       {
-        "id": "belt_t1",
-        "phrase": "HUMMING SOFTLY UNDER YOUR BREATH",
+        "id": "belt_t5",
+        "phrase": "WHAT YOU STAND ON TO RIDE UP TO THE TOP FLOOR OF THE MALL",
         "isReal": false
       },
       {
-        "id": "belt_t2",
-        "phrase": "SLAP ACROSS THE FACE IN ANGER",
+        "id": "belt_t6",
+        "phrase": "WHAT THE BEAUTY QUEEN GETS DRAPED ON HER ALONG WITH THE CROWN",
         "isReal": false
       },
       {
-        "id": "belt_t3",
-        "phrase": "STAIRCASE THAT MOVES ON ITS OWN",
+        "id": "belt_t7",
+        "phrase": "WHAT YOU CALL THE CIRCLE THAT WRAPS AROUND SATURN",
+        "isReal": false
+      },
+      {
+        "id": "belt_t8",
+        "phrase": "WHAT THE TUX RENTAL GUY WRAPS AROUND YOUR WAIST TO MATCH YOUR PROM DATE'S DRESS",
         "isReal": false
       }
     ],
     "gpsTag": "panic",
-    "wordType": "Septuple"
+    "wordType": "9-MEANING"
   },
   "BENCH": {
     "difficulty": "easy",
@@ -1356,13 +1371,13 @@
         "isReal": true
       },
       {
-        "id": "block_r1",
-        "phrase": "HOW YOU MEASURE A WALK IN THE CITY",
+        "id": "block_r7",
+        "phrase": "WHAT YOU COUNT TO MEASURE HOW FAR YOU WALKED IN THE CITY",
         "isReal": true
       },
       {
-        "id": "block_r2",
-        "phrase": "WHAT THE DEFENSE DOES TO STOP THE FIELD GOAL",
+        "id": "block_r8",
+        "phrase": "WHAT THE DEFENSE NEEDS TO DO TO STOP THE FIELD GOAL",
         "isReal": true
       },
       {
@@ -1378,11 +1393,6 @@
       {
         "id": "block_r5",
         "phrase": "WHAT YOU DO TO SOMEONE'S NUMBER WHEN THEY JUST WON'T GET THE HINT",
-        "isReal": true
-      },
-      {
-        "id": "block_r6",
-        "phrase": "EX CAN'T SEE YOUR STORY ANYMORE",
         "isReal": true
       },
       {
@@ -1407,7 +1417,7 @@
       }
     ],
     "gpsTag": "panic",
-    "wordType": "Septuple"
+    "wordType": "Sextuple"
   },
   "BLOOM": {
     "difficulty": "easy",
@@ -1581,8 +1591,8 @@
     "hiddenTrap": null,
     "masks": [
       {
-        "id": "bolt_r0",
-        "phrase": "NEEDS A MATCHING NUT",
+        "id": "bolt_r6",
+        "phrase": "WHAT NEEDS A NUT FASTENED ON IT TO DO ITS JOB",
         "isReal": true
       },
       {
@@ -1925,11 +1935,6 @@
         "isReal": false
       },
       {
-        "id": "bowl_t3",
-        "phrase": "WHAT YOU JIGGLE WHEN THE TOILET WON'T STOP RUNNING",
-        "isReal": false
-      },
-      {
         "id": "bowl_t4",
         "phrase": "WHAT YOU USE TO DRAIN THE WATER FROM YOUR PASTA",
         "isReal": false
@@ -2094,8 +2099,8 @@
         "isReal": true
       },
       {
-        "id": "brief_t0",
-        "phrase": "WHAT A VISIT TO THE DMV IS NOT",
+        "id": "brief_t10",
+        "phrase": "HOW LONG YOU'RE STUCK AT THE DMV",
         "isReal": false
       },
       {
@@ -8991,11 +8996,6 @@
         "isReal": false
       },
       {
-        "id": "jam_t3",
-        "phrase": "WHAT THE CROWD HEARS WHEN THE SINGER'S MIC CUTS OUT",
-        "isReal": false
-      },
-      {
         "id": "jam_r5",
         "phrase": "WHAT HAPPENS WHEN A GUN STILL HAS BULLETS BUT WON'T FIRE",
         "isReal": true
@@ -9004,10 +9004,15 @@
         "id": "jam_t7",
         "phrase": "WHAT HAPPENS WHEN TWO CARS RUN THE SAME STOP SIGN",
         "isReal": false
+      },
+      {
+        "id": "jam_r6",
+        "phrase": "THE BASKETBALL MOVE SO DOMINANT IT CAN SHATTER THE BACKBOARD",
+        "isReal": true
       }
     ],
     "gpsTag": "tension",
-    "wordType": "Sextuple"
+    "wordType": "Septuple"
   },
   "KERNEL": {
     "difficulty": "medium",
