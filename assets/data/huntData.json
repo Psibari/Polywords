@@ -9918,8 +9918,8 @@
         "isReal": true
       },
       {
-        "id": "play_r1",
-        "phrase": "HOW KIDS HAVE FUN TOGETHER",
+        "id": "play_r5",
+        "phrase": "WHAT KIDS ASK THEIR PARENTS IF THEY CAN GO OUTSIDE TO DO WITH THEIR FRIENDS",
         "isReal": true
       },
       {
@@ -9928,28 +9928,53 @@
         "isReal": true
       },
       {
-        "id": "play_r3",
-        "phrase": "PRESS THE TRIANGLE BUTTON",
+        "id": "play_r6",
+        "phrase": "THE SIDEWAYS TRIANGLE YOU HIT TO START THE VIDEO",
         "isReal": true
       },
       {
-        "id": "play_t0",
-        "phrase": "SILVER SCREEN IN A DARK THEATER",
+        "id": "play_r7",
+        "phrase": "WHAT A GOOD DJ WON’T DO WITH THE SAME SONG TWICE",
+        "isReal": true
+      },
+      {
+        "id": "play_r8",
+        "phrase": "WHAT YOU STAYED UP ALL NIGHT DOING WITH YOUR FAVORITE VIDEO GAME",
+        "isReal": true
+      },
+      {
+        "id": "play_r9",
+        "phrase": "WHAT YOU DO WITH SOLITAIRE BECAUSE NOBODY ELSE CAN JOIN IN",
+        "isReal": true
+      },
+      {
+        "id": "play_r10",
+        "phrase": "WHAT YOU DO WITH THE GUITAR AROUND THE CAMPFIRE",
+        "isReal": true
+      },
+      {
+        "id": "play_t5",
+        "phrase": "WHAT YOU GO TO THE THEATER TO WATCH ON THE BIG SCREEN",
         "isReal": false
       },
       {
-        "id": "play_t1",
-        "phrase": "STUFFED BEAR TUCKED IN AT NIGHT",
+        "id": "play_t6",
+        "phrase": "WHAT YOU DO WITH THE DICE ON YOUR TURN IN MONOPOLY",
         "isReal": false
       },
       {
-        "id": "play_t2",
-        "phrase": "TWO BARS THAT FREEZE THE FILM",
+        "id": "play_t7",
+        "phrase": "WHAT THE BAND DOES BEFORE THE SHOW TO GET THE SOUND RIGHT",
+        "isReal": false
+      },
+      {
+        "id": "play_t8",
+        "phrase": "WHAT YOU DO THROUGH THE COMMERCIALS ON A SHOW YOU RECORDED",
         "isReal": false
       }
     ],
     "gpsTag": "flow",
-    "wordType": "Quadruple"
+    "wordType": "8-MEANING"
   },
   "PLOT": {
     "difficulty": "medium",
@@ -10080,33 +10105,53 @@
         "isReal": true
       },
       {
-        "id": "point_r2",
-        "phrase": "THE REASON WE'RE ALL HERE",
-        "isReal": true
-      },
-      {
         "id": "point_r3",
         "phrase": "PAST HERE, THERE'S NO RETURN",
         "isReal": true
       },
       {
-        "id": "point_t0",
-        "phrase": "DUELISTS SALUTE BEFORE THE MATCH",
+        "id": "point_r5",
+        "phrase": "WHAT YOU ASK WHEN YOU CAN’T SEE ANY REASON TO KEEP TRYING",
+        "isReal": true
+      },
+      {
+        "id": "point_r6",
+        "phrase": "THE EXTRA ONE THE KICKER MAKES AFTER A TOUCHDOWN",
+        "isReal": true
+      },
+      {
+        "id": "point_r7",
+        "phrase": "WHAT YOU CALL THE DOT IN 5.0",
+        "isReal": true
+      },
+      {
+        "id": "point_r8",
+        "phrase": "WHAT YOU WANT YOUR UNCLE TO GET TO WHEN HE WON’T STOP TALKING",
+        "isReal": true
+      },
+      {
+        "id": "point_r9",
+        "phrase": "WHAT THE SHARPENER PUTS BACK ON YOUR DULL PENCIL",
+        "isReal": true
+      },
+      {
+        "id": "point_t8",
+        "phrase": "THE LITTLE DOT AT THE END OF A SENTENCE",
         "isReal": false
       },
       {
-        "id": "point_t1",
-        "phrase": "COMPASS NEEDLE SWINGING NORTH",
+        "id": "point_t9",
+        "phrase": "WHAT MAKES A UNICORN A UNICORN",
         "isReal": false
       },
       {
-        "id": "point_t2",
-        "phrase": "LOSING THE THREAD OF THE ARGUMENT",
+        "id": "point_t10",
+        "phrase": "THE FINGER YOU WEAR YOUR WEDDING RING ON",
         "isReal": false
       }
     ],
     "gpsTag": "tension",
-    "wordType": "Quadruple"
+    "wordType": "8-MEANING"
   },
   "POOL": {
     "difficulty": "medium",
