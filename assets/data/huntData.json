@@ -10655,23 +10655,33 @@
         "isReal": true
       },
       {
+        "id": "rock_r6",
+        "phrase": "WHAT GRANDPA DOES IN HIS CHAIR ON THE FRONT PORCH ALL AFTERNOON",
+        "isReal": true
+      },
+      {
+        "id": "rock_r7",
+        "phrase": "WHAT YOU’RE STUCK BETWEEN, ALONG WITH A HARD PLACE",
+        "isReal": true
+      },
+      {
         "id": "rock_t0",
         "phrase": "TWANGY GUITAR AND A COWBOY HAT",
         "isReal": false
       },
       {
-        "id": "rock_t1",
-        "phrase": "WOODEN CRIB THAT SWAYS SIDE TO SIDE",
+        "id": "rock_t12",
+        "phrase": "WHAT YOU HOPE TO FIND WHEN YOU OPEN UP AN OYSTER",
         "isReal": false
       },
       {
-        "id": "rock_t2",
-        "phrase": "TUMBLING DOWN AFTER THE EARTHQUAKE",
+        "id": "rock_t13",
+        "phrase": "WHAT THE RAPPER SHOWS OFF AROUND HIS NECK",
         "isReal": false
       }
     ],
     "gpsTag": "tension",
-    "wordType": "Quadruple"
+    "wordType": "Sextuple"
   },
   "ROW": {
     "difficulty": "medium",
