@@ -10213,18 +10213,13 @@
     "hiddenTrap": null,
     "masks": [
       {
-        "id": "pot_r0",
-        "phrase": "THE BIG ONE CAME OUT FOR SUNDAY GRAVY",
+        "id": "pot_r5",
+        "phrase": "THE BIG ONE YOUR MOM USES TO COOK THE SAUCE IN",
         "isReal": true
       },
       {
-        "id": "pot_r1",
-        "phrase": "WINNER TAKES IT ALL. I'M ALL IN.",
-        "isReal": true
-      },
-      {
-        "id": "pot_r2",
-        "phrase": "LEGAL HERE, A CRIME ONE STATE OVER",
+        "id": "pot_r6",
+        "phrase": "WHAT WHOEVER WINS THE POKER HAND GETS TO TAKE",
         "isReal": true
       },
       {
@@ -10233,23 +10228,38 @@
         "isReal": true
       },
       {
-        "id": "pot_t0",
-        "phrase": "USED TO COOK YOUR EGGS SUNNY SIDE UP",
-        "isReal": false
+        "id": "pot_r7",
+        "phrase": "WHAT YOU BREW COFFEE IN, THEN POUR IT OUT OF TO DRINK",
+        "isReal": true
       },
       {
-        "id": "pot_t1",
-        "phrase": "WHERE YOU CASH OUT YOUR CHIPS",
+        "id": "pot_r8",
+        "phrase": "WHAT YOU MOVE THE HOUSEPLANT INTO WHEN IT OUTGROWS ITS OLD ONE",
+        "isReal": true
+      },
+      {
+        "id": "pot_t7",
+        "phrase": "WHAT YOU NEED TO FRY AN EGG IN",
         "isReal": false
       },
       {
         "id": "pot_t2",
         "phrase": "GIVES A WIDER CAST THAN A FISHING LINE",
         "isReal": false
+      },
+      {
+        "id": "pot_t8",
+        "phrase": "WHAT YOU POUR THE SOUP INTO TO EAT IT",
+        "isReal": false
+      },
+      {
+        "id": "pot_t9",
+        "phrase": "WHAT THEY AGE THE WHISKEY IN FOR YEARS BEFORE IT’S BOTTLED",
+        "isReal": false
       }
     ],
     "gpsTag": "tension",
-    "wordType": "Quadruple"
+    "wordType": "Quintuple"
   },
   "POUND": {
     "difficulty": "hard",
