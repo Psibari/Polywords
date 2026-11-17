@@ -9715,18 +9715,13 @@
         "isReal": true
       },
       {
-        "id": "pen_r1",
-        "phrase": "WHAT YOU SHOULD NEVER BRING TO A TEST",
-        "isReal": true
-      },
-      {
         "id": "pen_r2",
         "phrase": "WILBUR'S HOME IN CHARLOTTE'S WEB",
         "isReal": true
       },
       {
-        "id": "pen_r3",
-        "phrase": "FRIENDS THAT WRITE LETTERS TO EACH OTHER",
+        "id": "pen_r6",
+        "phrase": "THE LONG-DISTANCE FRIEND YOU ONLY EVER KNEW THROUGH LETTERS",
         "isReal": true
       },
       {
@@ -9735,33 +9730,48 @@
         "isReal": true
       },
       {
+        "id": "pen_r7",
+        "phrase": "WHAT LEAKED IN YOUR POCKET AND LEFT A BIG BLUE STAIN ON YOUR PANTS",
+        "isReal": true
+      },
+      {
+        "id": "pen_r8",
+        "phrase": "WHAT YOU'RE USING WHEN YOU HAVE TO CROSS OUT YOUR MISTAKES BECAUSE YOU CAN'T ERASE THEM",
+        "isReal": true
+      },
+      {
         "id": "pen_t0",
         "phrase": "THE YELLOW ONE HAS NUMBER TWO ON IT",
         "isReal": false
       },
       {
-        "id": "pen_t1",
-        "phrase": "USED TO COLOR INSIDE THE LINES",
+        "id": "pen_t6",
+        "phrase": "WHAT'S USED TO COLOR IN THE COLORING BOOK",
         "isReal": false
       },
       {
-        "id": "pen_t2",
-        "phrase": "WHITE DUST WIPED FROM THE BLACKBOARD",
-        "isReal": false
-      },
-      {
-        "id": "pen_t4",
-        "phrase": "TWO PUFFS WHEN YOU CAN'T CATCH YOUR BREATH",
+        "id": "pen_t7",
+        "phrase": "WHAT THE TEACHER IS CLEARING OFF THE BLACKBOARD",
         "isReal": false
       },
       {
         "id": "pen_t5",
         "phrase": "WHERE EVERY HORSE HAS ITS OWN ROOM",
         "isReal": false
+      },
+      {
+        "id": "pen_t8",
+        "phrase": "WHAT HEMINGWAY CLACKED AWAY ON",
+        "isReal": false
+      },
+      {
+        "id": "pen_t9",
+        "phrase": "WHERE THE PARROT SLEEPS AT NIGHT",
+        "isReal": false
       }
     ],
     "gpsTag": "tension",
-    "wordType": "Quintuple"
+    "wordType": "Sextuple"
   },
   "PITCH": {
     "difficulty": "medium",
@@ -9843,8 +9853,18 @@
         "isReal": true
       },
       {
-        "id": "plane_r3",
-        "phrase": "CARPENTER’S TOOL THAT LEAVES WOOD SHAVINGS BEHIND",
+        "id": "plane_r4",
+        "phrase": "THE TOOL A CARPENTER USES TO SHAVE",
+        "isReal": true
+      },
+      {
+        "id": "plane_r5",
+        "phrase": "WHAT YOU FOLD NOTEBOOK PAPER INTO TO SEE HOW FAR IT'LL GO",
+        "isReal": true
+      },
+      {
+        "id": "plane_r6",
+        "phrase": "THE TIN CAN YOU RIDE IN AT 35,000 FEET",
         "isReal": true
       },
       {
@@ -9853,23 +9873,38 @@
         "isReal": false
       },
       {
-        "id": "plane_t2",
-        "phrase": "WE TOURED THE CITY, HOVERING BESIDE THE SKYSCRAPERS",
+        "id": "plane_t6",
+        "phrase": "WHAT THE TRAFFIC REPORTER IS HOVERING IN OVER THE HIGHWAY",
         "isReal": false
       },
       {
-        "id": "plane_t3",
-        "phrase": "ONE SLICE, JUST CHEESE—NO TOPPINGS",
+        "id": "plane_t7",
+        "phrase": "WHAT YOU CALL A SLICE WITH JUST CHEESE AND NO TOPPINGS",
         "isReal": false
       },
       {
         "id": "plane_t5",
         "phrase": "IT’S STRAIGHT BECAUSE THE BUBBLE SAYS SO",
         "isReal": false
+      },
+      {
+        "id": "plane_t8",
+        "phrase": "WHAT FLOATS OVER THE STADIUM WITH GOODYEAR ON THE SIDE",
+        "isReal": false
+      },
+      {
+        "id": "plane_t9",
+        "phrase": "WHAT TONY MONTANA SAW FLOATING BY THAT SAID \"THE WORLD IS YOURS\"",
+        "isReal": false
+      },
+      {
+        "id": "plane_t10",
+        "phrase": "WHAT YOU RUB ROUGH WOOD WITH SO IT'S SMOOTH ENOUGH TO PAINT",
+        "isReal": false
       }
     ],
     "gpsTag": "flow",
-    "wordType": "Quadruple"
+    "wordType": "Sextuple"
   },
   "PLANT": {
     "difficulty": "medium",
@@ -9882,13 +9917,18 @@
         "isReal": true
       },
       {
-        "id": "plant_r1",
-        "phrase": "WHERE NUCLEAR POWER GETS GENERATED",
+        "id": "plant_r5",
+        "phrase": "WHAT HAD THE MELTDOWN AT CHERNOBYL",
         "isReal": true
       },
       {
-        "id": "plant_r2",
-        "phrase": "PUT IN PLACE BY THE MUSIC INDUSTRY",
+        "id": "plant_r6",
+        "phrase": "THE PERSON THE MAGICIAN PUTS IN THE AUDIENCE WHO'S ALREADY IN ON THE TRICK",
+        "isReal": true
+      },
+      {
+        "id": "plant_r7",
+        "phrase": "WHAT FANS CALL AN \"OVERNIGHT SUCCESS\" SINGER THE RECORD LABEL SECRETLY MADE",
         "isReal": true
       },
       {
@@ -9902,9 +9942,9 @@
         "isReal": true
       },
       {
-        "id": "plant_t0",
-        "phrase": "WHAT YOU BURY BEFORE ANYTHING GREEN APPEARS",
-        "isReal": false
+        "id": "plant_r8",
+        "phrase": "WHAT WAS PUT AT THE CRIME SCENE TO TURN YOU FROM INNOCENT TO GUILTY",
+        "isReal": true
       },
       {
         "id": "plant_t2",
@@ -9912,23 +9952,28 @@
         "isReal": false
       },
       {
-        "id": "plant_t3",
-        "phrase": "WHAT PROVED YOU WEREN’T AT THE CRIME SCENE",
-        "isReal": false
-      },
-      {
-        "id": "plant_t4",
-        "phrase": "WHEN SOMEONE MAKES YOU LOOK GUILTY ON PURPOSE",
-        "isReal": false
-      },
-      {
         "id": "plant_t5",
         "phrase": "WHAT HOLDS THE TENT DOWN IN HEAVY WIND",
+        "isReal": false
+      },
+      {
+        "id": "plant_t7",
+        "phrase": "WHERE THE BOXES SIT UNTIL THE TRUCK COMES TO PICK THEM UP",
+        "isReal": false
+      },
+      {
+        "id": "plant_t8",
+        "phrase": "WHAT YOU SPRINKLE ON THE GARDEN SO EVERYTHING GROWS TWICE AS FAST",
+        "isReal": false
+      },
+      {
+        "id": "plant_t9",
+        "phrase": "WHAT YOU HAUL HOME IN BIG BAGS FROM HOME DEPOT TO FILL THE GARDEN BED",
         "isReal": false
       }
     ],
     "gpsTag": "panic",
-    "wordType": "Quintuple"
+    "wordType": "Septuple"
   },
   "PLAY": {
     "difficulty": "medium",
