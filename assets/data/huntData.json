@@ -10050,18 +10050,18 @@
     "hiddenTrap": null,
     "masks": [
       {
-        "id": "plot_r0",
-        "phrase": "WHERE GRANDPA GREW TOMATOES EVERY SUMMER",
+        "id": "plot_r4",
+        "phrase": "THE LITTLE SQUARE YOU RENT AT THE COMMUNITY GARDEN",
         "isReal": true
       },
       {
-        "id": "plot_r1",
-        "phrase": "THIS IS WHERE THE STORY REALLY GETS GOOD",
+        "id": "plot_r5",
+        "phrase": "WHAT THEY SAY THICKENS WHEN THE STORY REALLY STARTS GETTING GOOD",
         "isReal": true
       },
       {
-        "id": "plot_r2",
-        "phrase": "THEY MET IN SECRET TO OVERTHROW THE KING",
+        "id": "plot_r6",
+        "phrase": "WHAT THEY HATCHED IN SECRET TO OVERTHROW THE KING",
         "isReal": true
       },
       {
@@ -10070,9 +10070,9 @@
         "isReal": true
       },
       {
-        "id": "plot_t0",
-        "phrase": "THE WHOLE SEQUENCE BEFORE THE TITLE EVEN APPEARS",
-        "isReal": false
+        "id": "plot_r7",
+        "phrase": "THE CEMETERY PURCHASE YOU MAKE, BECAUSE EVEN DYING IS EXPENSIVE NOW",
+        "isReal": true
       },
       {
         "id": "plot_t1",
@@ -10101,7 +10101,7 @@
       }
     ],
     "gpsTag": "panic",
-    "wordType": "Quadruple"
+    "wordType": "Quintuple"
   },
   "PLUG": {
     "difficulty": "hard",
@@ -10109,18 +10109,28 @@
     "hiddenTrap": null,
     "masks": [
       {
-        "id": "plug_r0",
-        "phrase": "CHEWING GUM STOPPED THE LEAK UNTIL MORNING",
+        "id": "plug_r3",
+        "phrase": "WHAT YOU SQUISH INTO YOUR EARS TO DROWN OUT THE NOISE",
         "isReal": true
       },
       {
-        "id": "plug_r1",
-        "phrase": "DON'T TOUCH THOSE PRONGS, THEY'LL SHOCK YOU",
+        "id": "plug_r4",
+        "phrase": "WHAT THE TV NEEDS IN THE WALL BECAUSE IT DOESN'T RUN ON BATTERIES",
         "isReal": true
       },
       {
-        "id": "plug_r2",
-        "phrase": "THAT GLOWING PRODUCT MENTION WAS DEFINITELY PAID FOR",
+        "id": "plug_r5",
+        "phrase": "WHAT YOU PUSH INTO EVERY OUTLET WHEN YOU BABY-PROOF THE HOUSE",
+        "isReal": true
+      },
+      {
+        "id": "plug_r6",
+        "phrase": "THE SHAMELESS WAY A CELEBRITY PROMOTES THEIR NEW PRODUCT",
+        "isReal": true
+      },
+      {
+        "id": "plug_r7",
+        "phrase": "WHAT THE NETWORK PULLED ON YOUR FAVORITE SHOW AFTER ONE SEASON",
         "isReal": true
       },
       {
@@ -10129,33 +10139,28 @@
         "isReal": false
       },
       {
-        "id": "plug_t1",
-        "phrase": "TWISTED INTO THE CORK BEFORE DINNER'S FIRST POUR",
+        "id": "plug_t6",
+        "phrase": "WHAT YOU TWIST INTO THE CORK BEFORE YOU CAN POUR THE WINE",
         "isReal": false
       },
       {
-        "id": "plug_t2",
-        "phrase": "THE LAST OPEN SPOT ON THE POWER STRIP",
+        "id": "plug_t7",
+        "phrase": "WHAT YOU FEEL ALONG THE WALL FOR IN A DARK ROOM",
         "isReal": false
       },
       {
-        "id": "plug_t3",
-        "phrase": "FLIPPED BY THE DOOR, THE ROOM LIGHTS UP",
+        "id": "plug_t8",
+        "phrase": "THE COMPANY THE PODCAST HOST THANKS BEFORE THE SHOW STARTS",
         "isReal": false
       },
       {
-        "id": "plug_t4",
-        "phrase": "THE COMPANY PAYING FOR THIS PODCAST EPISODE",
-        "isReal": false
-      },
-      {
-        "id": "plug_t5",
-        "phrase": "THE CODE THAT SAVES TEN PERCENT AT CHECKOUT",
+        "id": "plug_t9",
+        "phrase": "WHAT THE INFLUENCER TELLS YOU TO TYPE IN AT CHECKOUT FOR TEN PERCENT OFF",
         "isReal": false
       }
     ],
     "gpsTag": "panic",
-    "wordType": "Triple"
+    "wordType": "Quintuple"
   },
   "POINT": {
     "difficulty": "medium",
@@ -10232,48 +10237,48 @@
         "isReal": true
       },
       {
-        "id": "pool_r1",
-        "phrase": "BLOOD GATHERING AT THE SCENE",
+        "id": "pool_r5",
+        "phrase": "THE ABOVE-GROUND ONE IN THE BACKYARD THAT NO ONE'S USED IN YEARS",
         "isReal": true
       },
       {
-        "id": "pool_r2",
-        "phrase": "WE ALL CHIPPED IN FOR THE CAUSE",
+        "id": "pool_r6",
+        "phrase": "WHAT THE INTERN WON WITH THE WORST MARCH MADNESS BRACKET IN THE OFFICE",
         "isReal": true
       },
       {
-        "id": "pool_r3",
-        "phrase": "RACK 'EM UP ON THE GREEN FELT",
+        "id": "pool_r7",
+        "phrase": "THE GAME WHERE THE SOLIDS AND STRIPES GET RACKED",
         "isReal": true
       },
       {
-        "id": "pool_r4",
-        "phrase": "CANDIDATE LIST TO CHOOSE FROM",
+        "id": "pool_r8",
+        "phrase": "WHAT EVERYONE SAYS GETS SMALLER AFTER THIRTY WHEN YOU'RE STILL SINGLE",
         "isReal": true
       },
       {
-        "id": "pool_t0",
-        "phrase": "SPLASHING IN THE BACKYARD HOT TUB",
+        "id": "pool_r9",
+        "phrase": "WHAT YOU'RE IN WHEN IT'S YOUR TURN TO DRIVE EVERYONE TO WORK",
+        "isReal": true
+      },
+      {
+        "id": "pool_t5",
+        "phrase": "WHAT YOU SIT IN WITH THE HOT WATER JETS BUT CAN'T SWIM IN",
         "isReal": false
       },
       {
-        "id": "pool_t1",
-        "phrase": "TOSS THE DART AT THE BULLSEYE",
+        "id": "pool_t6",
+        "phrase": "THE BAR GAME WHERE EVERYBODY STEPS BACK WHEN THE DRUNK GUY TAKES HIS TURN",
         "isReal": false
       },
       {
-        "id": "pool_t2",
-        "phrase": "SPLITTING THE BILL EVENLY FOUR WAYS",
-        "isReal": false
-      },
-      {
-        "id": "pool_t3",
-        "phrase": "SHORTLIST OF NAMES FOR THE JOB",
+        "id": "pool_t7",
+        "phrase": "WHAT YOU'RE DOING WHEN EVERYBODY SPLITS THE BILL",
         "isReal": false
       }
     ],
     "gpsTag": "panic",
-    "wordType": "Quintuple"
+    "wordType": "Sextuple"
   },
   "POT": {
     "difficulty": "medium",
