@@ -2619,8 +2619,8 @@
     "hiddenTrap": null,
     "masks": [
       {
-        "id": "capital_r0",
-        "phrase": "MONEY THAT STARTS THE BUSINESS",
+        "id": "capital_r4",
+        "phrase": "THE MONEY THAT GETS A BRAND-NEW BUSINESS STARTED",
         "isReal": true
       },
       {
@@ -2634,28 +2634,33 @@
         "isReal": true
       },
       {
-        "id": "capital_r3",
-        "phrase": "HIGHEST FORM OF PUNISHMENT",
+        "id": "capital_r5",
+        "phrase": "WHAT YOU CALL THE HIGHEST FORM OF PUNISHMENT",
         "isReal": true
       },
       {
-        "id": "capital_t1",
-        "phrase": "MAYOR'S OFFICE DOWNTOWN",
-        "isReal": false
+        "id": "capital_r6",
+        "phrase": "WHAT EVERY LETTER IS WHEN SOMEONE'S YELLING AT YOU THROUGH A TEXT",
+        "isReal": true
       },
       {
-        "id": "capital_t91",
-        "phrase": "WHAT THE FIRST LETTERS OF YOUR NAME ARE CALLED",
+        "id": "capital_t5",
+        "phrase": "THE BUILDING DOWNTOWN WHERE THE MAYOR KEEPS AN OFFICE",
         "isReal": false
       },
       {
         "id": "capital_t92",
         "phrase": "WHAT CTRL+C THEN CTRL+V GIVES YOU",
         "isReal": false
+      },
+      {
+        "id": "capital_t6",
+        "phrase": "WHAT YOU GOT FOR TALKING DURING CLASS",
+        "isReal": false
       }
     ],
     "gpsTag": "tension",
-    "wordType": "Quadruple"
+    "wordType": "Quintuple"
   },
   "CARPET": {
     "difficulty": "easy",
@@ -4714,11 +4719,6 @@
         "id": "corner_t3",
         "phrase": "WHERE TWO HIGHWAYS CAME TOGETHER",
         "isReal": false
-      },
-      {
-        "id": "corner_t5",
-        "phrase": "WHAT YOU TOOK TO FINISH THE JOB FASTER",
-        "isReal": false
       }
     ],
     "gpsTag": "panic",
@@ -4898,33 +4898,38 @@
         "isReal": true
       },
       {
-        "id": "course_r3",
-        "phrase": "THE PATH TO STAY ON TO COMPLETE THE GOAL",
+        "id": "course_r4",
+        "phrase": "WHAT THE SHIP'S CAPTAIN SETS FOR THE JOURNEY",
         "isReal": true
       },
       {
-        "id": "course_t0",
-        "phrase": "A ROUND OF DRINKS BEFORE DINNER",
+        "id": "course_r5",
+        "phrase": "WHAT YOU SIGN UP FOR WHEN YOU NEED MORE CREDITS",
+        "isReal": true
+      },
+      {
+        "id": "course_t4",
+        "phrase": "WHAT EVERYONE ORDERS AT THE BAR WHILE THEY WAIT FOR A TABLE",
         "isReal": false
       },
       {
-        "id": "course_t1",
-        "phrase": "YOUR SCHOOL'S CLASS SCHEDULE",
+        "id": "course_t5",
+        "phrase": "WHAT THE TOUR GUIDE WALKS YOU AROUND ON COLLEGE VISIT DAY",
         "isReal": false
       },
       {
-        "id": "course_t2",
-        "phrase": "THE STORE'S POLICY IS NO RETURNS",
+        "id": "course_t6",
+        "phrase": "WHERE YOU HIT A BUCKET OF BALLS WITHOUT PLAYING A ROUND",
         "isReal": false
       },
       {
-        "id": "course_t3",
-        "phrase": "TOOK A TOUR OF THE COLLEGE CAMPUS",
+        "id": "course_t7",
+        "phrase": "WHAT THE GPS DOES THE SECOND YOU MISS YOUR EXIT",
         "isReal": false
       }
     ],
     "gpsTag": "tension",
-    "wordType": "Quadruple"
+    "wordType": "Quintuple"
   },
   "COURT": {
     "difficulty": "medium",

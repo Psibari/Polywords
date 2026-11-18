@@ -26,12 +26,14 @@ const expectedMasks = {
     cape_t91: 'THE GRIM REAPER’S FASHION CHOICE IN BLACK',
   },
   CAPITAL: {
-    capital_r0: 'MONEY THAT STARTS THE BUSINESS',
+    capital_r4: 'THE MONEY THAT GETS A BRAND-NEW BUSINESS STARTED',
     capital_r1: 'EVERY STATE HAS ONE',
     capital_r2: 'HOW EVERY SENTENCE IS SUPPOSED TO BEGIN',
-    capital_t1: "MAYOR'S OFFICE DOWNTOWN",
-    capital_t91: 'WHAT THE FIRST LETTERS OF YOUR NAME ARE CALLED',
+    capital_r5: 'WHAT YOU CALL THE HIGHEST FORM OF PUNISHMENT',
+    capital_r6: "WHAT EVERY LETTER IS WHEN SOMEONE'S YELLING AT YOU THROUGH A TEXT",
+    capital_t5: 'THE BUILDING DOWNTOWN WHERE THE MAYOR KEEPS AN OFFICE',
     capital_t92: 'WHAT CTRL+C THEN CTRL+V GIVES YOU',
+    capital_t6: 'WHAT YOU GOT FOR TALKING DURING CLASS',
   },
   CHAMBER: {
     chamber_t100: 'WHAT OPENS BEHIND THE BOOKCASE WHEN YOU PULL THE RIGHT BOOK',
@@ -134,7 +136,7 @@ assert.deepEqual(
     FOOT: huntData.FOOT.wordType,
   },
   {
-    CAPITAL: 'Quadruple',
+    CAPITAL: 'Quintuple',
     LIGHT: 'Septuple',
     PALM: 'Sextuple',
     FAST: '8-MEANING',
