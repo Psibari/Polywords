@@ -974,33 +974,58 @@
         "isReal": true
       },
       {
-        "id": "bed_r1",
-        "phrase": "WHERE A SUNKEN RIVERBOAT SITS",
+        "id": "bed_r4",
+        "phrase": "COMES IN KING, QUEEN, AND TWIN SIZES",
         "isReal": true
       },
       {
-        "id": "bed_r2",
-        "phrase": "LOADED WITH BOXES ON MOVING DAY",
+        "id": "bed_r5",
+        "phrase": "WHAT THE MAID IS MAKING NEXT DOOR WHILE YOU RAID HER TOWEL CART",
         "isReal": true
       },
       {
-        "id": "bed_t0",
-        "phrase": "FLUFFED PILLOWS PROPPED AGAINST THE HEADBOARD",
+        "id": "bed_r6",
+        "phrase": "STILL PERFECTLY MADE THE MORNING AFTER YOU NEVER CAME HOME",
+        "isReal": true
+      },
+      {
+        "id": "bed_r7",
+        "phrase": "WHAT THE COUCH BECOMES WHEN YOU PULL IT OUT FOR GUESTS",
+        "isReal": true
+      },
+      {
+        "id": "bed_r8",
+        "phrase": "WHERE THE GOLD PANNERS DIG FOR NUGGETS IN THE STREAM",
+        "isReal": true
+      },
+      {
+        "id": "bed_r9",
+        "phrase": "THE PART OF THE TRUCK YOU LOAD UP ON MOVING DAY",
+        "isReal": true
+      },
+      {
+        "id": "bed_t3",
+        "phrase": "WHAT YOU FLIP TO THE COOL SIDE IN THE MIDDLE OF THE NIGHT",
         "isReal": false
       },
       {
-        "id": "bed_t1",
-        "phrase": "WATER RUSHING OVER SMOOTH STONES",
+        "id": "bed_t4",
+        "phrase": "WHERE YOU THROW THE GROCERIES IN THE CAR",
         "isReal": false
       },
       {
-        "id": "bed_t2",
-        "phrase": "TRUNK POPPED FOR THE GROCERIES",
+        "id": "bed_t5",
+        "phrase": "YOU CLIMB IN, IT FLIPS, AND YOU'RE FACE-DOWN IN THE SAND",
+        "isReal": false
+      },
+      {
+        "id": "bed_t6",
+        "phrase": "WHAT EVERYBODY USUALLY BRINGS THEIR OWN TO A SLEEPOVER",
         "isReal": false
       }
     ],
     "gpsTag": "tension",
-    "wordType": "Triple"
+    "wordType": "Septuple"
   },
   "BELT": {
     "difficulty": "hard",
@@ -1136,13 +1161,23 @@
     "hiddenTrap": null,
     "masks": [
       {
-        "id": "berry_r0",
-        "phrase": "STAINS YOUR FINGERS PURPLE WHILE PICKING",
+        "id": "berry_r2",
+        "phrase": "WOULD YOU BELIEVE ME IF I TOLD YOU A BANANA WAS ONE?",
         "isReal": true
       },
       {
-        "id": "berry_r1",
-        "phrase": "BANANA PASSES THE BOTANY TEST",
+        "id": "berry_r3",
+        "phrase": "EATING THE WRONG ONES IN THE WILD COULD DO MORE THAN RUIN YOUR DAY",
+        "isReal": true
+      },
+      {
+        "id": "berry_r4",
+        "phrase": "MOST OF THEM TASTE GREAT IN A SMOOTHIE",
+        "isReal": true
+      },
+      {
+        "id": "berry_r5",
+        "phrase": "ONE KIND TOPS THE SHORTCAKE, ONE FILLS THE MUFFIN, AND ALL OF THEM GO IN A PIE",
         "isReal": true
       },
       {
@@ -1151,18 +1186,23 @@
         "isReal": false
       },
       {
-        "id": "berry_t1",
-        "phrase": "LAB COAT AND A CLIPBOARD",
+        "id": "berry_t4",
+        "phrase": "GOES ON TOP OF THE WHIPPED CREAM ON YOUR SUNDAE",
         "isReal": false
       },
       {
-        "id": "berry_t2",
-        "phrase": "PIT SPLIT OUT WITH THE THUMB",
+        "id": "berry_t5",
+        "phrase": "WHAT FALLS FROM THE TOP OF A PALM TREE AND IS A NIGHTMARE TO OPEN",
+        "isReal": false
+      },
+      {
+        "id": "berry_t6",
+        "phrase": "WHAT THE SQUIRREL STUFFS IN ITS CHEEKS BEFORE WINTER",
         "isReal": false
       }
     ],
     "gpsTag": "confidence",
-    "wordType": "Double"
+    "wordType": "Quadruple"
   },
   "BILL": {
     "difficulty": "hard",
@@ -1170,39 +1210,39 @@
     "hiddenTrap": null,
     "masks": [
       {
-        "id": "bill_r0",
-        "phrase": "COMES DUE TWELVE TIMES A YEAR",
+        "id": "bill_r5",
+        "phrase": "SOMEHOW THEY ALL COME DUE AT ONCE, TWELVE TIMES A YEAR",
         "isReal": true
       },
       {
-        "id": "bill_r1",
-        "phrase": "FACE OF A DEAD PRESIDENT",
+        "id": "bill_r6",
+        "phrase": "WHAT'S GREEN AND HAS FACES OF DEAD PRESIDENTS ON IT",
         "isReal": true
       },
       {
-        "id": "bill_r2",
-        "phrase": "LIST OF YOUR RIGHTS AS A CITIZEN",
+        "id": "bill_r7",
+        "phrase": "WHERE YOU CAN READ EVERY RIGHT YOU HAVE AS AN AMERICAN",
         "isReal": true
       },
       {
-        "id": "bill_r3",
-        "phrase": "FLAT BEAK ON A DUCK",
+        "id": "bill_r8",
+        "phrase": "WHAT'S WRITTEN UP AS PROOF OF PURCHASE",
         "isReal": true
       },
       {
-        "id": "bill_r4",
-        "phrase": "THE RECEIPT WHEN YOU BUY A BOAT",
+        "id": "bill_r9",
+        "phrase": "WHAT THE GUY SAYS HIS FRIENDS CALL HIM, BUT HIS REAL NAME IS WILLIAM",
         "isReal": true
       },
       {
-        "id": "bill_t0",
-        "phrase": "JUNK MAIL STUFFED IN THE MAILBOX",
-        "isReal": false
+        "id": "bill_r10",
+        "phrase": "WHAT WAS HIGHER THAN EXPECTED BECAUSE YOU RAIDED THE MINI FRIDGE",
+        "isReal": true
       },
       {
-        "id": "bill_t1",
-        "phrase": "COIN JINGLING IN YOUR POCKET",
-        "isReal": false
+        "id": "bill_r11",
+        "phrase": "WHAT MAKES A BASEBALL HAT A BASEBALL HAT?",
+        "isReal": true
       },
       {
         "id": "bill_t6",
@@ -1210,13 +1250,28 @@
         "isReal": false
       },
       {
-        "id": "bill_t3",
-        "phrase": "WEBBED FEET PADDLING THE POND",
+        "id": "bill_t7",
+        "phrase": "WHAT GETS EMAILED STRAIGHT TO YOUR SPAM FOLDER",
+        "isReal": false
+      },
+      {
+        "id": "bill_t8",
+        "phrase": "WHAT YOU DIG OUT OF THE COUCH CUSHIONS WHEN THE ICE CREAM TRUCK COMES",
+        "isReal": false
+      },
+      {
+        "id": "bill_t9",
+        "phrase": "WHAT THE DRUGSTORE REGISTER PRINTS THAT'S LONGER THAN YOUR ARM",
+        "isReal": false
+      },
+      {
+        "id": "bill_t10",
+        "phrase": "THE PART OF THE COWBOY HAT THAT GOES ALL THE WAY AROUND",
         "isReal": false
       }
     ],
     "gpsTag": "panic",
-    "wordType": "Quintuple"
+    "wordType": "Septuple"
   },
   "BITTER": {
     "difficulty": "easy",
