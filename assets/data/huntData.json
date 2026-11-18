@@ -10541,48 +10541,38 @@
     "hiddenTrap": null,
     "masks": [
       {
-        "id": "rank_r0",
-        "phrase": "EARN THE STRIPES, MOVE UP THE LADDER",
+        "id": "rank_r4",
+        "phrase": "WHAT EARNING YOUR STRIPES MOVES YOU UP IN",
         "isReal": true
       },
       {
-        "id": "rank_r1",
-        "phrase": "FIRST MOVE IN CHESS USUALLY BREAKS IT",
+        "id": "rank_r5",
+        "phrase": "HOW YOUR GYM BAG SMELLS AFTER A WEEK IN THE TRUNK",
         "isReal": true
       },
       {
-        "id": "rank_r2",
-        "phrase": "EW, WHAT'S THAT SMELL?",
+        "id": "rank_r6",
+        "phrase": "WHAT YOU HAVE TO DO WHEN SOMEONE ASKS FOR YOUR TOP THREE MOVIES",
         "isReal": true
       },
       {
-        "id": "rank_r3",
-        "phrase": "YOUR FAVORITE'S ALWAYS NUMBER ONE ON THE LIST",
-        "isReal": true
-      },
-      {
-        "id": "rank_t5",
-        "phrase": "THE PURPLE HEART PINNED ON A WOUNDED SOLDIER",
+        "id": "rank_t6",
+        "phrase": "OLYMPIC WINNERS STAND ON IT",
         "isReal": false
       },
       {
-        "id": "rank_t1",
-        "phrase": "CASTLING SWAPS THE KING AND ROOK'S POSITIONS",
+        "id": "rank_t7",
+        "phrase": "EVERY KID ON THE TEAM GETS ONE JUST FOR SHOWING UP",
         "isReal": false
       },
       {
-        "id": "rank_t2",
-        "phrase": "SPOILED FOOD TASTES WORSE THAN IT SMELLS",
-        "isReal": false
-      },
-      {
-        "id": "rank_t3",
-        "phrase": "NOT EVEN THE SAME LEAGUE",
+        "id": "rank_t8",
+        "phrase": "THE LETTER AT THE TOP OF YOUR REPORT CARD",
         "isReal": false
       }
     ],
     "gpsTag": "tension",
-    "wordType": "Quadruple"
+    "wordType": "Triple"
   },
   "REVOLUTION": {
     "difficulty": "medium",
@@ -10590,8 +10580,8 @@
     "hiddenTrap": null,
     "masks": [
       {
-        "id": "revolution_r0",
-        "phrase": "THE PUBLIC FORCED A CHANGE OF POWER",
+        "id": "revolution_r6",
+        "phrase": "WHAT THE BOSTON TEA PARTY KICKED OFF FOR AMERICA",
         "isReal": true
       },
       {
@@ -10600,8 +10590,8 @@
         "isReal": true
       },
       {
-        "id": "revolution_r2",
-        "phrase": "WHEEL MAKES FULL TURN",
+        "id": "revolution_r7",
+        "phrase": "WHAT THE R IN RPM STANDS FOR",
         "isReal": true
       },
       {
@@ -10615,18 +10605,18 @@
         "isReal": false
       },
       {
-        "id": "revolution_t1",
-        "phrase": "THE MOON'S GRAVITY PULLS THE TIDES",
+        "id": "revolution_t6",
+        "phrase": "WHAT THE PUBLIC DOES EVERY FOUR YEARS TO CHOOSE A LEADER",
         "isReal": false
       },
       {
-        "id": "revolution_t2",
-        "phrase": "TIGHTEN THE KNOT WITH A RATCHET",
+        "id": "revolution_t7",
+        "phrase": "WHAT FANS START IN THE STREETS AFTER WINNING THE CHAMPIONSHIP",
         "isReal": false
       },
       {
-        "id": "revolution_t3",
-        "phrase": "THE FLYING CAR NEVER REACHED THE FUTURE",
+        "id": "revolution_t8",
+        "phrase": "THE WAR THE NORTH AND SOUTH FOUGHT",
         "isReal": false
       }
     ],
@@ -10639,8 +10629,8 @@
     "hiddenTrap": null,
     "masks": [
       {
-        "id": "ring_r0",
-        "phrase": "WORN ON THE FOURTH FINGER",
+        "id": "ring_r6",
+        "phrase": "WHAT EVERY PLAYER GETS FOR WINNING A PRO SPORTS CHAMPIONSHIP",
         "isReal": true
       },
       {
@@ -10649,38 +10639,58 @@
         "isReal": true
       },
       {
-        "id": "ring_r2",
-        "phrase": "A FIGHT IN THE SQUARED CIRCLE",
+        "id": "ring_r7",
+        "phrase": "WHAT THE FOUR-ROPED SQUARED CIRCLE BOXERS FIGHT IN IS CALLED",
         "isReal": true
       },
       {
-        "id": "ring_r3",
-        "phrase": "INSTEAD OF KNOCKING AT THE DOOR",
+        "id": "ring_r8",
+        "phrase": "WHAT YOU DID TO MAKE THE FRONT DOOR GO DING-DONG",
         "isReal": true
       },
       {
-        "id": "ring_t0",
-        "phrase": "BRASS ONE HANGS IN THE CHURCH TOWER",
+        "id": "ring_r9",
+        "phrase": "THEY MADE A WHOLE FRANCHISE ABOUT HOBBITS TRYING TO DESTROY A VERY PRECIOUS ONE",
+        "isReal": true
+      },
+      {
+        "id": "ring_r10",
+        "phrase": "THE MORE A TREE HAS, THE OLDER IT IS",
+        "isReal": true
+      },
+      {
+        "id": "ring_r11",
+        "phrase": "WHAT SATURN IS FAMOUS FOR THAT THE OTHER PLANETS AREN'T",
+        "isReal": true
+      },
+      {
+        "id": "ring_t12",
+        "phrase": "WHAT HANGS IN THE CHURCH TOWER",
         "isReal": false
       },
       {
-        "id": "ring_t1",
-        "phrase": "HALO OVER THE ANGEL'S HEAD",
+        "id": "ring_t13",
+        "phrase": "WHAT ANGELS ARE FAMOUS FOR HAVING ABOVE THEIR HEADS",
         "isReal": false
       },
       {
-        "id": "ring_t2",
-        "phrase": "SPINNING DIAL ON THE OLD PHONE",
+        "id": "ring_t14",
+        "phrase": "WHAT YOU SPUN ON GRANDMA'S OLD PHONE TO CALL SOMEONE",
         "isReal": false
       },
       {
-        "id": "ring_t3",
-        "phrase": "WHERE TWO SAY I DO",
+        "id": "ring_t15",
+        "phrase": "WHAT YOUR PHONE DOES WHEN IT'S ON SILENT",
+        "isReal": false
+      },
+      {
+        "id": "ring_t16",
+        "phrase": "THE HOLE IN THE MIDDLE OF A DONUT",
         "isReal": false
       }
     ],
     "gpsTag": "panic",
-    "wordType": "Quadruple"
+    "wordType": "Septuple"
   },
   "ROCK": {
     "difficulty": "medium",
