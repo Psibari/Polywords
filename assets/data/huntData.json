@@ -11076,13 +11076,8 @@
     "hiddenTrap": null,
     "masks": [
       {
-        "id": "sound_r0",
-        "phrase": "THAT BUMP FROM THE ATTIC",
-        "isReal": true
-      },
-      {
-        "id": "sound_r1",
-        "phrase": "THE ABSENCE OF SILENCE",
+        "id": "sound_r7",
+        "phrase": "THAT BUMP IN THE ATTIC THAT HAS YOU SITTING UP IN BED",
         "isReal": true
       },
       {
@@ -11101,43 +11096,38 @@
         "isReal": true
       },
       {
-        "id": "sound_r5",
-        "phrase": "SAFE IN BED, DEEPLY ASLEEP",
+        "id": "sound_r8",
+        "phrase": "THE WATER BETWEEN LONG ISLAND AND CONNECTICUT",
         "isReal": true
       },
       {
-        "id": "sound_r6",
-        "phrase": "NOT A RIVER, HARBOR, OR BAY",
+        "id": "sound_r9",
+        "phrase": "THE BARRIER A FIGHTER JET CAN BREAK",
         "isReal": true
       },
       {
-        "id": "sound_t0",
-        "phrase": "QUIET ON THE HOME FRONT",
-        "isReal": false
-      },
-      {
-        "id": "sound_t1",
-        "phrase": "BLOCKED NOSE, DINNER LOSES ITS FLAVOR",
-        "isReal": false
-      },
-      {
-        "id": "sound_t2",
-        "phrase": "IN THE DARK, YOUR HANDS BECOME EYES",
-        "isReal": false
-      },
-      {
-        "id": "sound_t3",
-        "phrase": "NEEDED TO SEE IN THE DARK",
+        "id": "sound_t5",
+        "phrase": "WHAT THE LIBRARIAN WANTS FROM EVERYONE",
         "isReal": false
       },
       {
         "id": "sound_t4",
         "phrase": "WHAT THREE BLIND MICE COULDN'T DO",
         "isReal": false
+      },
+      {
+        "id": "sound_t6",
+        "phrase": "THE NAME OF THE GREAT LAKE CHICAGO SITS ON",
+        "isReal": false
+      },
+      {
+        "id": "sound_t7",
+        "phrase": "WHAT YOU HIT ON THE REMOTE TO SHUT THE TV UP",
+        "isReal": false
       }
     ],
     "gpsTag": "flow",
-    "wordType": "Septuple"
+    "wordType": "Sextuple"
   },
   "SPRING": {
     "difficulty": "medium",
@@ -11204,53 +11194,58 @@
         "isReal": true
       },
       {
-        "id": "stick_r1",
-        "phrase": "GUM WELDED UNDER THE SCHOOL DESK",
+        "id": "stick_r6",
+        "phrase": "WHAT YOU DO WITH YOUR GUM UNDER THE DESK WHEN YOU'RE DONE WITH IT",
         "isReal": true
       },
       {
-        "id": "stick_r2",
-        "phrase": "EVERYBODY HAS TO FOLLOW THE PLAN",
+        "id": "stick_r7",
+        "phrase": "WHAT THE COACH TELLS EVERYONE TO DO WITH THE GAME PLAN",
         "isReal": true
       },
       {
-        "id": "stick_r3",
-        "phrase": "SLAP SHOT RIPPED FROM THE BLUE LINE",
+        "id": "stick_r8",
+        "phrase": "WHAT GETS YOU A PENALTY IN HOCKEY IF YOU CARRY IT TOO HIGH",
         "isReal": true
       },
       {
-        "id": "stick_r4",
-        "phrase": "THREE PEDALS INSTEAD OF TWO",
+        "id": "stick_r9",
+        "phrase": "A CAR THAT HAS THREE PEDALS INSTEAD OF TWO",
         "isReal": true
       },
       {
-        "id": "stick_r5",
-        "phrase": "THUMB POKING OUT OF THE TORN GLOVE",
+        "id": "stick_r10",
+        "phrase": "WHAT YOUR FINGERS DO WHEN YOUR GLOVES HAVE HOLES IN THEM",
         "isReal": true
       },
       {
-        "id": "stick_t0",
-        "phrase": "CLEAR TAPE PEELED FROM THE ROLL",
+        "id": "stick_r11",
+        "phrase": "THE RECIPE CALLS FOR A FULL ONE OF BUTTER",
+        "isReal": true
+      },
+      {
+        "id": "stick_t10",
+        "phrase": "WHAT KEEPS THE PICTURE UP ON THE FRIDGE",
         "isReal": false
       },
       {
-        "id": "stick_t1",
-        "phrase": "SUPERGLUE BONDS IN SECONDS",
+        "id": "stick_t11",
+        "phrase": "WHAT'S ON THE KID'S SHOES INSTEAD OF LACES",
         "isReal": false
       },
       {
-        "id": "stick_t2",
-        "phrase": "RELAY BATON PASSED HAND TO HAND",
+        "id": "stick_t12",
+        "phrase": "WHAT'S BLOCKING THE HIKING TRAIL AFTER THE STORM",
         "isReal": false
       },
       {
-        "id": "stick_t3",
-        "phrase": "CLUTCH POPPED TOO FAST, ENGINE STALLS",
+        "id": "stick_t13",
+        "phrase": "WHAT YOU USE TO RAISE A FLAG",
         "isReal": false
       }
     ],
     "gpsTag": "panic",
-    "wordType": "Sextuple"
+    "wordType": "Septuple"
   },
   "STOCK": {
     "difficulty": "medium",
@@ -11565,43 +11560,38 @@
         "isReal": true
       },
       {
-        "id": "tire_r1",
-        "phrase": "MIND SAYS YES, BODY SAYS NO",
+        "id": "tire_r3",
+        "phrase": "WHAT THE ROPE-A-DOPE STRATEGY DOES TO YOUR OPPONENT",
         "isReal": true
       },
       {
-        "id": "tire_r2",
-        "phrase": "YOUR FAVORITE SONG STARTS FEELING OLD",
+        "id": "tire_r4",
+        "phrase": "HOW YOU FEEL ABOUT YOUR FAVORITE SONG WHEN THE RADIO WON'T STOP PLAYING IT",
         "isReal": true
       },
       {
-        "id": "tire_t0",
-        "phrase": "HUBCAP HIDES THE LUG NUTS",
+        "id": "tire_r5",
+        "phrase": "WHAT'S HANGING FROM A ROPE ON THE TREE THAT YOU CAN SWING ON",
+        "isReal": true
+      },
+      {
+        "id": "tire_t6",
+        "phrase": "WHAT THERE'S NO NEED TO REINVENT",
         "isReal": false
       },
       {
-        "id": "tire_t1",
-        "phrase": "JACK LIFTS THE FRAME OFF THE GROUND",
+        "id": "tire_t7",
+        "phrase": "WHAT YOU NEED AFTER PULLING AN ALL-NIGHTER",
         "isReal": false
       },
       {
-        "id": "tire_t2",
-        "phrase": "GAS STATION PUMP HISSES WITH AIR",
-        "isReal": false
-      },
-      {
-        "id": "tire_t3",
-        "phrase": "DASHBOARD LIGHT FLICKERS ON AT DUSK",
-        "isReal": false
-      },
-      {
-        "id": "tire_t4",
-        "phrase": "KEEPS REFRESHING FOR SOMETHING NEW",
+        "id": "tire_t8",
+        "phrase": "WHAT GRANDPA FINALLY GOT TO DO AT SIXTY-FIVE",
         "isReal": false
       }
     ],
     "gpsTag": "panic",
-    "wordType": "Triple"
+    "wordType": "Quadruple"
   },
   "TRAIN": {
     "difficulty": "hard",
