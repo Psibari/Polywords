@@ -10340,13 +10340,8 @@
     "hiddenTrap": null,
     "masks": [
       {
-        "id": "pound_r0",
-        "phrase": "PRESS THIS TO KEEP HOLDING FOR AN AGENT",
-        "isReal": true
-      },
-      {
-        "id": "pound_r1",
-        "phrase": "A HEADACHE WITH A PULSE",
+        "id": "pound_r6",
+        "phrase": "WHAT THE SIGN YOU CALL A HASHTAG ON SOCIAL MEDIA IS CALLED ON A PHONE",
         "isReal": true
       },
       {
@@ -10360,8 +10355,8 @@
         "isReal": true
       },
       {
-        "id": "pound_r4",
-        "phrase": "WHAT SWAT DOES BEFORE YELLING POLICE, OPEN UP",
+        "id": "pound_r7",
+        "phrase": "WHAT THE SWAT TEAM DOES TO YOUR DOOR RIGHT BEFORE THEY BREAK IT DOWN",
         "isReal": true
       },
       {
@@ -10370,18 +10365,13 @@
         "isReal": false
       },
       {
-        "id": "pound_t1",
-        "phrase": "THE SIZE MILK AND PAINT BOTH COME IN",
+        "id": "pound_t9",
+        "phrase": "HOW THEY MEASURE BOTH THE MILK AND THE PAINT YOU BUY",
         "isReal": false
       },
       {
-        "id": "pound_t2",
-        "phrase": "PRESS IT AND YOUR FRONT DOOR STARTS RECORDING",
-        "isReal": false
-      },
-      {
-        "id": "pound_t3",
-        "phrase": "ONE STEP LATER, BREAKFAST FEELS LIKE A MISTAKE",
+        "id": "pound_t10",
+        "phrase": "WHAT YOU DON'T EVEN HAVE TO PRESS FOR THE FRONT DOOR TO START RECORDING YOU",
         "isReal": false
       },
       {
@@ -10390,13 +10380,13 @@
         "isReal": false
       },
       {
-        "id": "pound_t5",
-        "phrase": "WHAT STARTS THE FIGHT WITHOUT THROWING A PUNCH",
+        "id": "pound_t11",
+        "phrase": "WHAT YOUR WEIGHT IS MEASURED IN ALMOST EVERYWHERE BUT AMERICA",
         "isReal": false
       }
     ],
     "gpsTag": "panic",
-    "wordType": "Quintuple"
+    "wordType": "Quadruple"
   },
   "POWDER": {
     "difficulty": "medium",
@@ -10404,18 +10394,18 @@
     "hiddenTrap": null,
     "masks": [
       {
-        "id": "powder_r0",
-        "phrase": "WHAT MILK BECOMES AFTER THE WATER'S GONE",
+        "id": "powder_r5",
+        "phrase": "WHAT WHEY PROTEIN COMES AS FOR GYM BROS WHO MAKE THEIR OWN SHAKE",
         "isReal": true
       },
       {
-        "id": "powder_r1",
-        "phrase": "THE OLD-SCHOOL SUMMER FIX FOR CHAFING",
+        "id": "powder_r6",
+        "phrase": "WHAT THE BARBER BRUSHES ON YOUR NECK AFTER A FRESH HAIRCUT",
         "isReal": true
       },
       {
-        "id": "powder_r2",
-        "phrase": "SKIERS AND SNOWBOARDERS LOVE IT FRESH",
+        "id": "powder_r7",
+        "phrase": "WHAT SKIERS PRAY FOR OVERNIGHT",
         "isReal": true
       },
       {
@@ -10424,23 +10414,13 @@
         "isReal": true
       },
       {
-        "id": "powder_r4",
-        "phrase": "CHINA'S BLACK EXPLOSIVE CHANGED THE FACE OF WARFARE",
+        "id": "powder_r8",
+        "phrase": "WHAT THEY USED TO PACK IN A CANNON THAT MADE IT GO BOOM",
         "isReal": true
-      },
-      {
-        "id": "powder_t0",
-        "phrase": "WHAT YOU AVOID INHALING WHILE PAINTING THE ROOM",
-        "isReal": false
       },
       {
         "id": "powder_t1",
         "phrase": "WHAT YOU WIPE OFF THAT FORGOTTEN PHOTO ALBUM",
-        "isReal": false
-      },
-      {
-        "id": "powder_t2",
-        "phrase": "WHAT YOU WIPE FROM THE MIRROR AFTER SHOWERING",
         "isReal": false
       },
       {
@@ -10454,8 +10434,13 @@
         "isReal": false
       },
       {
-        "id": "powder_t5",
-        "phrase": "WHAT SURVIVES EVERY CLEANUP AFTER A CRAFT PROJECT",
+        "id": "powder_t6",
+        "phrase": "WHAT ENDS UP ALL OVER THE FLOOR AFTER THE KIDS DO ARTS AND CRAFTS",
+        "isReal": false
+      },
+      {
+        "id": "powder_t7",
+        "phrase": "WHAT YOU SHAKE OUT OF YOUR SHOES AFTER THE BEACH",
         "isReal": false
       }
     ],
@@ -10473,8 +10458,8 @@
         "isReal": true
       },
       {
-        "id": "project_r1",
-        "phrase": "PUTS THE FILM ON THE SILVER SCREEN",
+        "id": "project_r6",
+        "phrase": "WHAT YOU DO TO WATCH THOSE OLD FAMILY FILMS YOU FOUND IN THE ATTIC",
         "isReal": true
       },
       {
@@ -10483,38 +10468,33 @@
         "isReal": true
       },
       {
-        "id": "project_r3",
-        "phrase": "WHY THEY YODELING ON TOP OF A MOUNTAIN",
+        "id": "project_r7",
+        "phrase": "WHAT THEATER PERFORMERS NEED TO DO WITH THEIR VOICE SO EVERYONE CAN HEAR THEM",
         "isReal": true
       },
       {
-        "id": "project_r4",
-        "phrase": "THE ACCUSATIONS OF THE GUILTY",
+        "id": "project_r8",
+        "phrase": "WHAT YOU LIVE IN IF YOUR RESIDENCE IS PROVIDED BY PUBLIC HOUSING",
         "isReal": true
       },
       {
-        "id": "project_t0",
-        "phrase": "HOMEWORK PILED UP ALL WEEKEND",
+        "id": "project_t10",
+        "phrase": "WHAT HAPPENS WHEN YOU YELL HELLO INTO THE GRAND CANYON",
         "isReal": false
       },
       {
-        "id": "project_t1",
-        "phrase": "LIVE BROADCAST OF THE EVENING NEWS",
+        "id": "project_t11",
+        "phrase": "THE PAPER PLAN THE CONTRACTOR BUILDS FROM",
         "isReal": false
       },
       {
-        "id": "project_t2",
-        "phrase": "SALES HAVE CLIMBED FOR TEN YEARS STRAIGHT",
+        "id": "project_t12",
+        "phrase": "WHAT YOU CLICK THROUGH ON A POWERPOINT PRESENTATION",
         "isReal": false
       },
       {
-        "id": "project_t3",
-        "phrase": "CANYON WALLS SEND YOUR SHOUT RIGHT BACK",
-        "isReal": false
-      },
-      {
-        "id": "project_t4",
-        "phrase": "A WRITTEN CONFESSION TO THE CRIME",
+        "id": "project_t13",
+        "phrase": "WHAT YOU TELL THE TEACHER YOUR DOG ATE",
         "isReal": false
       }
     ],
