@@ -11822,73 +11822,53 @@
         "isReal": true
       },
       {
-        "id": "wave_r1",
-        "phrase": "A HELLO FROM ACROSS THE ROOM",
+        "id": "wave_r7",
+        "phrase": "HOW YOU SAY HELLO FROM ACROSS THE ROOM",
         "isReal": true
       },
       {
-        "id": "wave_r2",
-        "phrase": "HALFWAY BETWEEN CURLY AND STRAIGHT",
+        "id": "wave_r8",
+        "phrase": "WHAT YOU CALL HAIR BETWEEN CURLY AND STRAIGHT",
         "isReal": true
       },
       {
-        "id": "wave_r3",
-        "phrase": "COVID CAME BACK FOR ROUND TWO",
+        "id": "wave_r9",
+        "phrase": "A COLLECTIVE RALLY THAT RIPPLES THROUGH THE STANDS OF THE STADIUM",
         "isReal": true
       },
       {
-        "id": "wave_r4",
-        "phrase": "WHOLE STADIUM STANDS SECTION BY SECTION",
+        "id": "wave_r10",
+        "phrase": "THE INVISIBLE ONES THAT KEEP YOUR CELL PHONE, WIFI AND RADIO WORKING",
         "isReal": true
       },
       {
-        "id": "wave_r5",
-        "phrase": "HOW WIFI CROSSES THE ROOM",
+        "id": "wave_r11",
+        "phrase": "WHAT YOU CALL THREE OR MORE DAYS ABOVE 100 DEGREES",
         "isReal": true
       },
       {
-        "id": "wave_r6",
-        "phrase": "THREE DAYS ABOVE A HUNDRED DEGREES",
-        "isReal": true
-      },
-      {
-        "id": "wave_t0",
-        "phrase": "TIDE'S HIGHS AND LOWS",
+        "id": "wave_t13",
+        "phrase": "HOW THE MOON AFFECTS THE OCEAN'S HIGHS AND LOWS THROUGHOUT THE DAY",
         "isReal": false
       },
       {
-        "id": "wave_t1",
-        "phrase": "CURRENT PULLS SWIMMERS PAST THE BUOY",
+        "id": "wave_t14",
+        "phrase": "WHAT THE LIFEGUARD WARNS CAN DRAG YOU OUT TO SEA",
         "isReal": false
       },
       {
-        "id": "wave_t2",
-        "phrase": "BRAID HANGING OVER HER SHOULDER",
+        "id": "wave_t15",
+        "phrase": "WHAT YOU DON'T HAVE WHEN YOUR PHONE SHOWS ZERO BARS",
         "isReal": false
       },
       {
-        "id": "wave_t3",
-        "phrase": "CROWD CHANTS THE SAME NAME TOGETHER",
-        "isReal": false
-      },
-      {
-        "id": "wave_t4",
-        "phrase": "ROUTER BLINKS RED AND RESTARTS",
-        "isReal": false
-      },
-      {
-        "id": "wave_t5",
-        "phrase": "ONE HOT AFTERNOON BREAKS A RECORD",
-        "isReal": false
-      },
-      {
-        "id": "wave_t6",
-        "phrase": "HANDS CLAP OVERHEAD IN MATCHING RHYTHM",
+        "id": "wave_t16",
+        "phrase": "WHAT YOU DO WITH SOMEONE'S HAND THE FIRST TIME YOU MEET",
         "isReal": false
       }
     ],
     "gpsTag": "panic",
-    "wordType": "Septuple"
+    "wordType": "Sextuple"
   },
   "WELL": {
     "difficulty": "medium",
