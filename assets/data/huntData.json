@@ -9703,17 +9703,12 @@
       },
       {
         "id": "palm_r1",
-        "phrase": "WHAT COMES TO MIND WHEN YOU THINK TROPICAL ISLAND",
+        "phrase": "WHAT TYPE OF TREE COMES TO MIND WHEN YOU THINK OF A TROPICAL ISLAND",
         "isReal": true
       },
       {
         "id": "palm_r2",
         "phrase": "WHERE THE MAGICIAN KEPT IT THE WHOLE TIME",
-        "isReal": true
-      },
-      {
-        "id": "palm_r6",
-        "phrase": "WHAT CHARMING MANIPULATION CAN HAVE SOMEONE EATING OUT OF",
         "isReal": true
       },
       {
