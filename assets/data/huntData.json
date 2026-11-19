@@ -9411,10 +9411,15 @@
         "id": "match_t2",
         "phrase": "THREE OF A KIND IN YOUR HAND",
         "isReal": false
+      },
+      {
+        "id": "match_r4",
+        "phrase": "WHAT WAS EXACT BETWEEN THE SUSPECT'S DNA AND THE DNA FOUND AT THE CRIME SCENE",
+        "isReal": true
       }
     ],
     "gpsTag": "tension",
-    "wordType": "Quadruple"
+    "wordType": "Quintuple"
   },
   "MINE": {
     "difficulty": "medium",
