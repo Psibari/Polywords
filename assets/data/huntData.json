@@ -9614,6 +9614,11 @@
         "isReal": true
       },
       {
+        "id": "mouse_r2",
+        "phrase": "LEFT CLICKING, RIGHT CLICKING, SCROLLING",
+        "isReal": true
+      },
+      {
         "id": "mouse_t0",
         "phrase": "WHAT YOU USE TO NAVIGATE A TOUCHSCREEN",
         "isReal": false
