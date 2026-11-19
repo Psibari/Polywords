@@ -7034,17 +7034,17 @@
     "hiddenTrap": null,
     "hiddenPairs": [
       {
-        "real": "BOTH SIDES OPENED FIRE ACROSS THE RIDGE",
-        "trap": "THE DEBATE WAS OVER, NO REBUTTAL LEFT",
+        "real": "WHEN BOTH ENEMIES OPEN FIRE ON EACH OTHER",
+        "trap": "WITH NO REBUTTAL LEFT, THE DEBATE WAS OVER",
         "id": "exchange_h02"
       },
       {
-        "real": "A VERBAL ARGUMENT WITH BACK-AND-FORTH INSULTS",
-        "trap": "WHERE TWO SEPARATE HIGHWAYS MERGE",
+        "real": "AN ARGUMENT WHERE EACH SIDE ANSWERS AN INSULT WITH AN EVEN BETTER ONE",
+        "trap": "WHEN TWO TWO-LANE HIGHWAYS MERGE INTO ONE FOUR-LANE HIGHWAY",
         "id": "exchange_h03"
       },
       {
-        "real": "WHEN YOU TURN YOUR DOLLARS INTO EUROS",
+        "real": "WHEN YOU MAKE DOLLARS BECOME POUNDS AND POUNDS BECOME DOLLARS",
         "trap": "WHEN YOU ASK THE CASHIER TO BREAK A HUNDRED",
         "id": "exchange_h04"
       }
@@ -7057,12 +7057,12 @@
       },
       {
         "id": "exchange_r1",
-        "phrase": "BUY LOW, SELL HIGH",
+        "phrase": "WHERE THEY BUY LOW AND SELL HIGH ON WALL STREET",
         "isReal": true
       },
       {
         "id": "exchange_r2",
-        "phrase": "DON'T KNOW THE NUMBER? PRESS ZERO",
+        "phrase": "WHAT YOU DO WITH YOUR INSURANCE INFORMATION AFTER YOU GET INTO A FENDER BENDER",
         "isReal": true
       },
       {
