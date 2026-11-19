@@ -9556,12 +9556,12 @@
       },
       {
         "id": "mold_r1",
-        "phrase": "WHAT THE STATUE WAS CAST IN",
+        "phrase": "WHAT ALLOWS A ONE-OF-A-KIND CREATION TO BE MASS-PRODUCED",
         "isReal": true
       },
       {
         "id": "mold_r2",
-        "phrase": "MENTOR'S INFLUENCE SHAPED THE PROTEGE",
+        "phrase": "WHAT BASIC TRAINING DOES TO RECRUITS TO MAKE THEM FIT THE MILITARY'S STANDARDS",
         "isReal": true
       },
       {
@@ -9570,8 +9570,13 @@
         "isReal": true
       },
       {
+        "id": "mold_r4",
+        "phrase": "WHAT YOU DID TO A LUMP OF PLAY-DOH TO MAKE A DINOSAUR",
+        "isReal": true
+      },
+      {
         "id": "mold_t0",
-        "phrase": "THE GREEN CARPET GROWING OVER A ROCK IN A DAMP FOREST",
+        "phrase": "WHAT GROWS ALL OVER A DAMP FOREST FLOOR?",
         "isReal": false
       },
       {
@@ -9581,7 +9586,12 @@
       },
       {
         "id": "mold_t2",
-        "phrase": "CHISELS AWAY UNTIL THE FACE APPEARS",
+        "phrase": "WHAT A SCULPTOR DOES TO A BLOCK OF MARBLE UNTIL A FACE APPEARS",
+        "isReal": false
+      },
+      {
+        "id": "mold_t3",
+        "phrase": "THE GREEN SLIME THAT BUILDS UP INSIDE A FISH TANK",
         "isReal": false
       }
     ],
