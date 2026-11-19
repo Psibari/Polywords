@@ -9506,6 +9506,21 @@
         "isReal": true
       },
       {
+        "id": "miss_r3",
+        "phrase": "WHAT YOU DID WHEN YOU STRUCK OUT SWINGING",
+        "isReal": true
+      },
+      {
+        "id": "miss_r4",
+        "phrase": "ONE WAY TO ADDRESS A WOMAN WHOSE NAME YOU DON'T KNOW",
+        "isReal": true
+      },
+      {
+        "id": "miss_r5",
+        "phrase": "THE PAGEANT WHERE EVERY STATE HAS ONE, BUT ONLY ONE GETS TO BE AMERICA'S",
+        "isReal": true
+      },
+      {
         "id": "miss_t0",
         "phrase": "BALL SLIPS THROUGH BUTTERFINGERS",
         "isReal": false
@@ -9522,7 +9537,7 @@
       }
     ],
     "gpsTag": "tension",
-    "wordType": "Triple"
+    "wordType": "Sextuple"
   },
   "MOLD": {
     "difficulty": "medium",
