@@ -11098,27 +11098,17 @@
     "masks": [
       {
         "id": "sink_r0",
-        "phrase": "TAKE ON WATER, IT'S JUST A MATTER OF TIME",
+        "phrase": "WHAT AN ICEBERG DOES TO THE TITANIC",
         "isReal": true
       },
       {
         "id": "sink_r1",
-        "phrase": "SO DEEP IN THE CUSHIONS YOU CAN'T GET UP",
+        "phrase": "WHAT YOU DO INTO A COUCH SO COMFORTABLE YOU CAN'T GET UP",
         "isReal": true
       },
       {
         "id": "sink_r2",
-        "phrase": "WHEN THE LESSON FINALLY GETS THROUGH",
-        "isReal": true
-      },
-      {
-        "id": "sink_r3",
-        "phrase": "WHAT BAD NEWS DOES TO YOUR HEART",
-        "isReal": true
-      },
-      {
-        "id": "sink_r4",
-        "phrase": "STOCK PRICE HEADED THE WRONG WAY",
+        "phrase": "WHAT REALITY FINALLY DOES WHEN YOU CAN'T IGNORE IT ANYMORE",
         "isReal": true
       },
       {
@@ -11127,48 +11117,23 @@
         "isReal": true
       },
       {
-        "id": "sink_r6",
-        "phrase": "POURED EVERY DOLLAR INTO THE BUSINESS",
-        "isReal": true
-      },
-      {
         "id": "sink_t0",
-        "phrase": "FAUCET DRIPS ALL NIGHT LONG",
+        "phrase": "WHAT KEEPS DRIPPING ALL NIGHT LONG",
         "isReal": false
       },
       {
         "id": "sink_t1",
-        "phrase": "GARBAGE DISPOSAL HUMS UNDER THE CABINET",
+        "phrase": "WHAT HAPPENS WHEN YOU CAN NO LONGER KEEP YOUR HEAD ABOVE WATER",
         "isReal": false
       },
       {
         "id": "sink_t2",
-        "phrase": "BASEMENT FLOODS DURING THE STORM",
+        "phrase": "WHAT HAPPENS TO YOUR BASEMENT WHEN HEAVY RAIN GETS INSIDE",
         "isReal": false
       },
       {
         "id": "sink_t3",
-        "phrase": "MOP BUCKET SLOSHES ACROSS THE KITCHEN FLOOR",
-        "isReal": false
-      },
-      {
-        "id": "sink_t4",
-        "phrase": "TIDE POOL FILLS WHEN THE SURF ROLLS IN",
-        "isReal": false
-      },
-      {
-        "id": "sink_t5",
-        "phrase": "BROKER WATCHES THE CLOSING BELL RING",
-        "isReal": false
-      },
-      {
-        "id": "sink_t6",
-        "phrase": "GAMBLER GOES ALL IN ON THE FINAL HAND",
-        "isReal": false
-      },
-      {
-        "id": "sink_t7",
-        "phrase": "WASHING MACHINE SPINS OUT OF BALANCE",
+        "phrase": "WHAT HAPPENS TO YOUR FAVORITE SWEATER WHEN YOU WASH IT IN HOT WATER",
         "isReal": false
       }
     ],
