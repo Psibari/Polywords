@@ -5021,17 +5021,22 @@
     "masks": [
       {
         "id": "craft_r0",
-        "phrase": "YEARS WERE SPENT MASTERING THE SKILL",
-        "isReal": true
-      },
-      {
-        "id": "craft_r1",
-        "phrase": "YOU GOT AN ANGLE FOR EVERYTHING",
+        "phrase": "WHAT A MASTER CARPENTER HAS SPENT A LIFETIME PERFECTING",
         "isReal": true
       },
       {
         "id": "craft_r2",
-        "phrase": "AN ALIEN'S UFO — A SPACESHIP FROM ANOTHER WORLD",
+        "phrase": "WHAT THE ALIENS TOOK YOU ABOARD BEFORE PROBING YOU",
+        "isReal": true
+      },
+      {
+        "id": "craft_r3",
+        "phrase": "WHAT COMES AFTER ARTS AND...",
+        "isReal": true
+      },
+      {
+        "id": "craft_r4",
+        "phrase": "WHAT WOMEN WITH POINTY HATS AND FLYING BROOMSTICKS ARE KNOWN FOR PRACTICING",
         "isReal": true
       },
       {
@@ -5046,7 +5051,12 @@
       },
       {
         "id": "craft_t2",
-        "phrase": "COMET STREAKING ACROSS THE NIGHT SKY",
+        "phrase": "A MAN-MADE DEVICE THAT ORBITS THE EARTH IN OUTER SPACE",
+        "isReal": false
+      },
+      {
+        "id": "craft_t3",
+        "phrase": "WHAT YOU CALL THAT HALF-FINISHED DIY PROJECT STILL SITTING IN YOUR BACKYARD",
         "isReal": false
       }
     ],
@@ -6465,27 +6475,27 @@
     "masks": [
       {
         "id": "draw_r0",
-        "phrase": "PENCIL STROKES FORM A PORTRAIT",
+        "phrase": "WHAT YOU'RE NOT VERY GOOD AT IF STICK FIGURES ARE YOUR MASTERPIECES",
         "isReal": true
       },
       {
         "id": "draw_r1",
-        "phrase": "WEAPON PULLED WITH INTENT",
+        "phrase": "WHAT TWO GUNSLINGERS WAIT FOR EACH OTHER TO DO AT HIGH NOON",
         "isReal": true
       },
       {
         "id": "draw_r2",
-        "phrase": "GAME ENDS, NOBODY WINS, EVERYBODY LOSES",
+        "phrase": "HOW A GAME ENDS WHEN NOBODY WINS AND EVERYBODY LOSES",
         "isReal": true
       },
       {
         "id": "draw_r3",
-        "phrase": "WHOSE TICKET GETS PICKED FROM THE HAT",
+        "phrase": "WHAT THE STATE LOTTERY DOES AT 8 O'CLOCK WHEN THE ONLY WINNER IS THE GOVERNMENT",
         "isReal": true
       },
       {
         "id": "draw_r4",
-        "phrase": "THE HEADLINER EVERYONE CAME TO SEE",
+        "phrase": "THE BIGGEST AND PROBABLY ONLY REASON THE CROWD SHOWED UP",
         "isReal": true
       },
       {
@@ -6495,17 +6505,17 @@
       },
       {
         "id": "draw_t1",
-        "phrase": "COWBOY HOLSTERS THE PISTOL",
+        "phrase": "WHAT THE COP TOLD THE SUSPECT TO DO WITH HIS WEAPON OR HE'LL SHOOT",
         "isReal": false
       },
       {
         "id": "draw_t2",
-        "phrase": "OVERTIME TO SETTLE THE SCORE",
+        "phrase": "WHAT A BANK DOES WHEN YOUR ACCOUNT DOESN'T HAVE ENOUGH MONEY",
         "isReal": false
       },
       {
         "id": "draw_t3",
-        "phrase": "SPINNING WHEEL LANDS ON A PRIZE",
+        "phrase": "WHAT A TEACHER TELLS YOU TO DO WITH YOUR NAME AT THE TOP OF THE TEST",
         "isReal": false
       }
     ],
