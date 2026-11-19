@@ -11461,37 +11461,47 @@
     "masks": [
       {
         "id": "table_r0",
-        "phrase": "KEEP YOUR ELBOWS OFF WHILE YOU EAT",
+        "phrase": "WHAT YOU WERE TOLD TO KEEP YOUR ELBOWS OFF OF",
         "isReal": true
       },
       {
         "id": "table_r1",
-        "phrase": "THE CHART YOU STUDY TO PASS CHEMISTRY CLASS",
+        "phrase": "THE CHART YOU STUDY IN CHEMISTRY CLASS",
         "isReal": true
       },
       {
-        "id": "table_r2",
-        "phrase": "BOSS CUTS IT OFF, SAVE IT FOR NEXT TIME",
+        "id": "table_r3",
+        "phrase": "WHERE YOU END UP LYING WHEN THE SURGEON PUTS YOU UNDER",
+        "isReal": true
+      },
+      {
+        "id": "table_r4",
+        "phrase": "WHAT YOU HAD TO MEMORIZE TO GET THROUGH ELEMENTARY SCHOOL MATH",
+        "isReal": true
+      },
+      {
+        "id": "table_r5",
+        "phrase": "WHAT TELLS YOU WHICH PAGE EACH CHAPTER STARTS ON",
         "isReal": true
       },
       {
         "id": "table_t0",
-        "phrase": "WHERE YOU FILL YOUR PLATE AT THE BUFFET",
+        "phrase": "WHERE YOU GO TO FILL YOUR PLATE WHEN IT'S ALL YOU CAN EAT",
         "isReal": false
       },
       {
         "id": "table_t1",
-        "phrase": "WHERE THE COMPUTER SITS IN YOUR OFFICE",
-        "isReal": false
-      },
-      {
-        "id": "table_t2",
-        "phrase": "STEP-BY-STEP DIRECTIONS FOR THE LAB EXPERIMENT",
+        "phrase": "WHAT PEOPLE SIT AT IN THEIR CUBICLES AT WORK",
         "isReal": false
       },
       {
         "id": "table_t3",
-        "phrase": "WHERE YOU GRAB A DRINK AND SIT ON A STOOL",
+        "phrase": "WHERE YOU PULL UP A STOOL AND ORDER A DRINK",
+        "isReal": false
+      },
+      {
+        "id": "table_t4",
+        "phrase": "WHAT YOU ASK THE HOSTESS FOR WHEN YOU'D RATHER SLIDE IN THAN PULL OUT A CHAIR",
         "isReal": false
       }
     ],
