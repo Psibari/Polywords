@@ -11680,27 +11680,32 @@
     "masks": [
       {
         "id": "train_r0",
-        "phrase": "YOUR TICKET OUT OF TOWN",
+        "phrase": "WHAT YOU'RE TRAVELING ON WHEN YOU'RE RIDING THE RAILS",
         "isReal": true
       },
       {
         "id": "train_r1",
-        "phrase": "MONTHS IN THE GYM BEFORE THE FIGHT",
+        "phrase": "HOW AN ATHLETE PREPARES FOR THEIR BIG MOMENT",
         "isReal": true
       },
       {
         "id": "train_r2",
-        "phrase": "WHAT THE BRIDESMAID HELD",
+        "phrase": "THE PART OF THE WEDDING DRESS THAT TRAILS BEHIND THE BRIDE",
         "isReal": true
       },
       {
         "id": "train_r3",
-        "phrase": "NOW I FORGOT WHAT I WAS SAYING",
+        "phrase": "WHAT YOU LOSE YOUR THOUGHT IN WHEN SOMEONE INTERRUPTS YOU",
+        "isReal": true
+      },
+      {
+        "id": "train_r4",
+        "phrase": "WHAT YOU NEED TO DO TO YOUR PUPPY SO IT OBEYS YOUR EVERY COMMAND",
         "isReal": true
       },
       {
         "id": "train_t6",
-        "phrase": "WHAT THE GROOM LIFTS BEFORE HE KISSES THE BRIDE",
+        "phrase": "WHAT THE CONDUCTOR PUNCHES BEFORE YOU TAKE YOUR SEAT",
         "isReal": false
       },
       {
@@ -11710,7 +11715,17 @@
       },
       {
         "id": "train_t8",
-        "phrase": "WHAT THE OLD SAYING TELLS YOU TO DO TO MAKE THINGS PERFECT",
+        "phrase": "WHAT MAKES PERFECT ACCORDING TO THE OLD SAYING",
+        "isReal": false
+      },
+      {
+        "id": "train_t9",
+        "phrase": "WHAT YOU WAIT BEHIND WHEN THE CROSSING LIGHTS START FLASHING",
+        "isReal": false
+      },
+      {
+        "id": "train_t10",
+        "phrase": "WHAT RUNNERS RACE AROUND WHEN COMPETING FOR THE FASTEST TIME",
         "isReal": false
       }
     ],
