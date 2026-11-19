@@ -9522,7 +9522,7 @@
       },
       {
         "id": "miss_t0",
-        "phrase": "BALL SLIPS THROUGH BUTTERFINGERS",
+        "phrase": "WHAT YOU ALWAYS DO WITH THE BALL WHEN YOUR NICKNAME IS BUTTERFINGERS",
         "isReal": false
       },
       {
@@ -9532,7 +9532,12 @@
       },
       {
         "id": "miss_t2",
-        "phrase": "PACKED BAGS FOR THE FLIGHT HOME",
+        "phrase": "WHAT YOUR DATE DID TO YOU WHEN YOU ENDED UP EATING ALONE AT A TABLE FOR TWO",
+        "isReal": false
+      },
+      {
+        "id": "miss_t3",
+        "phrase": "WHAT HAPPENS TO YOU WHEN YOU KNOW THE ANSWER BUT CAN'T THINK OF IT",
         "isReal": false
       }
     ],
