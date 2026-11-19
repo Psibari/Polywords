@@ -11059,7 +11059,12 @@
     "masks": [
       {
         "id": "sentence_r0",
-        "phrase": "THE LINE YOUR TEACHER MAKES YOU READ OUT LOUD",
+        "phrase": "WHAT YOU PUT A PERIOD AT THE END OF",
+        "isReal": true
+      },
+      {
+        "id": "sentence_r2",
+        "phrase": "WHAT A TODDLER STARTS FORMING WHEN THEY PUT THEIR FIRST WORDS TOGETHER",
         "isReal": true
       },
       {
@@ -11074,7 +11079,7 @@
       },
       {
         "id": "sentence_t6",
-        "phrase": "WHAT YOU TEACH A PARROT TO SAY OVER AND OVER",
+        "phrase": "WHAT A DOG LEARNS TO RECOGNIZE WHEN YOU CALL IT",
         "isReal": false
       },
       {
