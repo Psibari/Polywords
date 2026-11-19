@@ -12560,6 +12560,16 @@
         "isReal": true
       },
       {
+        "id": "green_r4",
+        "phrase": "WHAT YELLOW AND BLUE MAKE TOGETHER",
+        "isReal": true
+      },
+      {
+        "id": "green_r5",
+        "phrase": "THE COLOR OF MISS PIGGY’S BOYFRIEND",
+        "isReal": true
+      },
+      {
         "id": "green_t0",
         "phrase": "HOW YOU KNOW A BANANA IS RIPE",
         "isReal": false
@@ -12581,7 +12591,7 @@
       }
     ],
     "gpsTag": "confidence",
-    "wordType": "Quadruple"
+    "wordType": "Sextuple"
   },
   "GROSS": {
     "difficulty": "medium",
