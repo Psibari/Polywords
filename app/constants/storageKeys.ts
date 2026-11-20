@@ -9,6 +9,3 @@ export const HAUNT_INTRO_SEEN_KEY = 'polywords_haunt_intro_seen';
 // day: it is the gate that spends the one attempt, so it can never stop
 // appearing or a mis-tap would burn the day.
 export const DAILY_INTRO_SEEN_KEY = 'polywords_daily_intro_seen';
-
-// Separate one-time practice; never tied to the real Daily attempt or result.
-export const DAILY_PRACTICE_SEEN_KEY = 'polywords_daily_practice_seen_v1';
