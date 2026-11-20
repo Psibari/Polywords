@@ -65,3 +65,8 @@ Current editorial rules (Pete, 2026-11-16): every card is written at full length
 ## Do not work on yet
 
 No Home redesign, Polly full-body rig, Daily content expansion, new monetization, mass historical-card restoration, unrelated refactors, or reopening approved words. Preserve local stashes and uncommitted work. Use `npm run state` for current content counts rather than copying numbers into this file.
+
+
+## Eight-round standard Hunt decision (Pete, 2026-11-19)
+
+Pete approved **eight rounds for all standard Hunts** after the verified 2,400-run synthetic comparison (GitHub Actions `44651912379`). The first three fledgling Hunts retain gentle selection and stronger mercy, but no longer have a distinct length. Polly's Word is final (round 8); Returning Haunt is round 4. Explicit ten-round generator overrides are retained for historical comparison/regression only. This is a pre-release migration; no legacy save migration required. Prior 8-versus-10 measurements are historical and must not be rewritten. Physical TestFlight visual verification remains required.
