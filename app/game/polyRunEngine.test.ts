@@ -845,3 +845,89 @@ console.log('OK');
   eq(duplicateTerminal, finished, 'resume.terminalVerdictCannotReverse');
   console.log('engine save/resume simulation: passed');
 }
+
+
+// Controlled 8-vs-10 sensitivity comparison. Same player seeds and accuracy
+// assumptions, same six starting feathers, same engine. Different layouts and
+// word draws mean these are matched scenarios, not identical tile sequences.
+// Not a retention experiment or a recommendation to change live settings.
+{
+  const profiles = [
+    { name: 'struggling', accuracy: 0.65, hiddenAccuracy: 0.55 },
+    { name: 'developing', accuracy: 0.82, hiddenAccuracy: 0.72 },
+    { name: 'experienced', accuracy: 0.95, hiddenAccuracy: 0.90 },
+  ] as const;
+  const runsPerCell = 400;
+  const results: Record<string, Record<string, {
+    hunts: number; bossReached: number; completed: number; mastered: number;
+    haunted: number; deaths: number; feathersLost: number; decisions: number;
+    mistakes: number; scoreTotal: number; roundsReached: number;
+  }>> = {};
+  for (const profile of profiles) {
+    results[profile.name] = {};
+    for (const length of [8, 10]) {
+      const counts = {
+        hunts: 0, bossReached: 0, completed: 0, mastered: 0, haunted: 0,
+        deaths: 0, feathersLost: 0, decisions: 0, mistakes: 0,
+        scoreTotal: 0, roundsReached: 0,
+      };
+      for (let run = 0; run < runsPerCell; run++) {
+        const seed = 220011 + run * 7907 + profiles.indexOf(profile) * 1000003;
+        let randomState = (seed ^ 0x9e3779b9) >>> 0;
+        const random = () => {
+          randomState = (Math.imul(randomState, 1664525) + 1013904223) >>> 0;
+          return randomState / 4294967296;
+        };
+        const steps = generateHunt({ seed, length });
+        let state = createGame(steps, 0, seed);
+        counts.hunts++;
+        while (state.status === 'playing') {
+          const step = state.session[state.stepIndex];
+          if (step.kind !== 'word') throw new Error('comparison: unexpected step');
+          counts.roundsReached++;
+          if (step.eventType === 'bossWord') counts.bossReached++;
+          for (const mask of state.shuffledMasks[state.stepIndex]) {
+            if (state.status !== 'playing') break;
+            const correct = random() < profile.accuracy;
+            counts.decisions++;
+            if (!correct) counts.mistakes++;
+            const before = state.lives;
+            state = (correct ? mask.isReal : !mask.isReal)
+              ? submitSwipeUp(state, mask.id)
+              : submitSwipeDown(state, mask.id);
+            counts.feathersLost += Math.max(0, before - state.lives);
+          }
+          if (state.status !== 'playing') break;
+          if (step.eventType === 'bossWord') {
+            state = beginMysteryGauntlet(state, [true, false, true]);
+            for (let i = 0; i < 3 && state.bossOutcome === 'pending'; i++) {
+              state = resolveMysteryTile(state, {
+                correct: random() < profile.hiddenAccuracy,
+                visiblePerfect: state.mistakesOnWord === 0,
+                pairIndex: i,
+              });
+            }
+            if (state.bossOutcome === 'mastered') counts.mastered++;
+            else if (state.bossOutcome === 'haunted') counts.haunted++;
+            else throw new Error('comparison: unresolved Boss');
+          }
+          state = completeWord(state);
+        }
+        if (state.status === 'complete') counts.completed++;
+        else if (state.status === 'gameOver') counts.deaths++;
+        else throw new Error('comparison: invalid terminal status');
+        counts.scoreTotal += state.score;
+      }
+      eq(counts.completed + counts.deaths, runsPerCell, 'comparison.everyRunTerminates');
+      if (counts.mastered + counts.haunted > counts.bossReached) {
+        throw new Error('comparison: more Boss outcomes than Boss encounters');
+      }
+      results[profile.name][String(length)] = counts;
+    }
+  }
+  console.log('controlled Hunt length comparison:', JSON.stringify({
+    runsPerCell, sixStartingFeathers: true, mercy: false,
+    assumption: 'independent per-card accuracy, no real-player calibration',
+    results,
+  }));
+}
