@@ -495,8 +495,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
       ghostWordIds: runStartGhostWordIds,
       recentWordIds: get().progress.recentWordIds ?? [],
       recentHuntPerformance: get().progress.recentHuntPerformance ?? [],
-      ...(isFledgling || onboardingMode === 'first-run'
-        ? { length: 8, gentle: true }
+      ...((isFledgling || onboardingMode === 'first-run')
+        ? { gentle: true }
         : {}),
       seed: runSeed,
       firstRunOnboarding: onboardingMode !== null,

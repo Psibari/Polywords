@@ -1,5 +1,20 @@
 # POLYWORDS Current Context
 
+## CURRENT HANDOFF — 2026-11-20 pre-merge verification
+
+**Active branch:** `hunt-eight-round-migration`. **Do not merge into `play-screen-overhaul` without Pete's explicit approval.** This supersedes the 2026-11-19 evening checkpoint below; retain older entries as history, not current instructions.
+
+- **Git cleanup verified locally by Pete:** the oversized `POLYWORDS_8_ROUND_WEB_TEST.zip` commit and its merge commit were removed from the active branch using a safety backup branch. Local and origin matched at `be34f76` with `0 0` divergence and a clean working tree. The backup branch retains the historical ZIP commit; do not merge it.
+- **Current rules:** eight standard Hunt rounds, six regular starting feathers, eligible Returning Haunt in round 4, Boss in round 8. First-run FINE and fledgling mercy are preserved. Explicit ten-round generation remains a historical test override only.
+- **Native observations reported by Pete:** multiple eight-round Hunts and working iPhone book/card animation; six regular feather icons plus the earned Daily Gold Feather display correctly together (seven icons, no overlap); Returning Haunt / BANISHED gameplay appeared correct in manual play. A full Gold Feather revive-after-banish sequence and persistence across force-close have **not** been separately certified.
+- **CI evidence:** GitHub Actions Quality Checks run `44673171596` on `be34f76` passed TypeScript, tests, and live Hunt content-quality gate. Any later commit requires fresh CI verification.
+- **Pre-merge audit:** source code and governing gameplay docs agree on eight rounds / six starting feathers. Historical ten-round references are not automatically defects. Full tracked-file stale-reference scan, Returning Haunt persistence edge-case verification, and diverged-branch integration review remain open. `play-screen-overhaul` has a separate restore commit `189f923`; review before merge.
+- **Priority:** finish source-backed stale-reference and persistence checks, validate CI on the final head, and review the integration diff. **Do not** redesign Home, rebalance feathers, change Gold Feather mechanics, or merge before approval.
+
+---
+
+
+
 Verified against `Psibari/Polywords`, branch `play-screen-overhaul`, through 2026-11-19. This file is the short current handoff, not a chronological work log. `CLAUDE.md` is the durable architecture map; `AGENTS.md` and focused specs control changes. Never infer the current state from an old date-stamped note when Git, the workbook or a device can answer it.
 
 ## Branch and verified baseline

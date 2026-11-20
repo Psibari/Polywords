@@ -27,7 +27,7 @@ const RECENT_WORDS_CAP = 30; // mirrors useGameStore recordRunComplete
 
 // 1. Rounds 1-2 are always easy words; rounds 3-4 are never hard (no mastery, no first run).
 for (let seed = 1; seed <= 300; seed += 1) {
-  for (const opts of [{}, { length: 8, gentle: true }]) {
+  for (const opts of [{}, { gentle: true }]) {
     const steps = generateHunt({ seed: seed * 104729, ...opts });
     steps.slice(0, 2).forEach((s, i) =>
       assert.equal(bank[wordOf(s)].difficulty, 'easy', `round ${i + 1} must be easy (seed ${seed})`));
@@ -45,7 +45,7 @@ function seenByPlayers(dieAt: number, players: number): Set<string> {
     for (let h = 0; h < 20; h += 1) {
       const steps = generateHunt({
         seed: p * 1000 + h + 7, recentWordIds: recent, pinnedBossWord: pin,
-        firstRunOnboarding: h === 0, ...(h < 3 ? { length: 8, gentle: true } : {}),
+        firstRunOnboarding: h === 0, ...(h < 3 ? { gentle: true } : {}),
       });
       pin = pinnedBossForHunt(steps) ?? undefined;
       const reached = steps.slice(0, Math.min(dieAt, steps.length - 1)).map(wordOf);
@@ -91,7 +91,7 @@ console.log('huntReachability.test.ts: ok');
 // 4. Every generated Hunt has unique headwords, including the pinned Boss and a returning Haunt.
 for (let seed = 1; seed <= 300; seed += 1) {
   const opts = { seed: seed * 65537, recentWordIds: ordinary.slice(seed % 30, seed % 30 + 30) };
-  for (const steps of [generateHunt(opts), generateHunt({ ...opts, length: 8, gentle: true })]) {
+  for (const steps of [generateHunt(opts), generateHunt({ ...opts, gentle: true })]) {
     const words = steps.map(wordOf);
     assert.equal(new Set(words).size, words.length, `Hunt must not repeat a word within a run (seed ${seed})`);
   }
@@ -144,7 +144,7 @@ console.log('hunt rotation regression tests passed');
         recentWordIds: recent,
         pinnedBossWord: pin,
         firstRunOnboarding: hunt === 0,
-        ...(hunt < 3 ? { length: 8, gentle: true } : {}),
+        ...(hunt < 3 ? { gentle: true } : {}),
       };
       const steps = generateHunt(opts);
       assert.deepEqual(generateHunt(opts), steps, 'identical state and seed must reproduce the same Hunt');

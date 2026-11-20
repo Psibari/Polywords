@@ -1,5 +1,19 @@
 # POLYWORDS Architecture
 
+## Current feature-branch checkpoint (2026-11-20)
+
+**Branch:** `hunt-eight-round-migration`. Read `CONTEXT.md` for the latest verification and open pre-merge checks. **Do not merge without Pete's approval.** Yesterday's local 103 MB web ZIP commit was safely removed from the active branch, with a backup branch retained; the local and origin heads matched at `be34f76` before this documentation update. Do not restore or merge the ZIP.
+
+**Current Hunt contract:** eight standard rounds across tiers, six regular starting feathers, Returning Haunt in round 4 when eligible, Boss in round 8; first-run FINE and fledgling mercy preserved. Explicit ten-round generation is a legacy/test override only. Daily-earned Gold Feather appears as a separate seventh HUD icon when available; Pete confirmed on iPhone that it displays correctly alongside all six regular feathers. Gold Feather revive mechanics were not changed.
+
+**Verification:** Pete reports successful eight-round iPhone playtests, working book/card animations, and correct Returning Haunt / BANISHED gameplay. Those observations do not independently certify revive-after-banish or force-close persistence. GitHub Actions Quality Checks `44673171596` passed TypeScript, tests, and content-quality gate on `be34f76`; rerun checks after further edits. The web-only HeroBook issue remains tracked in issue #19 and is not a native release blocker.
+
+**Next:** finish stale-reference and state-integrity audit, review the diverged integration with `play-screen-overhaul`, then seek explicit merge authorization. Preserve approved gameplay and visuals; do not make speculative fixes.
+
+---
+
+
+
 Durable implementation map, not a session diary. `AGENTS.md` owns repository authority and safeguards; `CONTEXT.md` owns the current state and next task. Focused specifications own product detail. Executable code and canonical data establish what actually ships. Prior decisions and discarded experiments remain recoverable in Git history.
 
 Do not hard-code live content counts here; run `npm run state`.
