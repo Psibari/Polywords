@@ -333,11 +333,11 @@ function ResultsOverlay({
                 : DAILY_WIN_REWARD}
             </Text>
           </View>
-          {isWin && (
-            <Text allowFontScaling={false} style={[res.stat, { textAlign: 'center', marginTop: 8 }]}>
-              {'One extra Hunt life, good until midnight.\nUSE IT WISELY!'}
-            </Text>
-          )}
+        )}
+        {isWin && (
+          <Text allowFontScaling={false} style={[res.stat, { textAlign: 'center', marginTop: 8 }]}>
+            {'One extra Hunt life, good until midnight.\nUSE IT WISELY!'}
+          </Text>
         )}
 
         {(() => {
