@@ -42,7 +42,7 @@ not gpsTag, so a player who keeps dying early can still meet every easy and medi
 | Panic (7) | hard, plus mastered returns |
 
 Boss words (gpsTag `boss`) never fill ordinary rounds. Before this, gpsTag locked Tension and Panic
-words to rounds 5-9 even when easy, and a round-3 player saw 44 of the bank's words in 20 Hunts.
+words to late rounds even when easy, and a round-3 player saw 44 of the bank's words in 20 Hunts.
 `app/game/huntReachability.test.ts` fails if any ordinary word becomes unreachable.
 
 ## Selection Priority
