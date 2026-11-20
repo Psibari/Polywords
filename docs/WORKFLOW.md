@@ -45,3 +45,13 @@ development build.
 
 Report changed files, checks, deferred risk, and any incomplete native validation. Commit, push,
 merge, or touch stashes only after explicit approval.
+
+## Hunt Content Validation and Editorial Closure (2026-11-19)
+
+- Run `npm.cmd run content:quality` for the live Hunt content gate; `npm.cmd test` and `npx.cmd tsc --noEmit` remain separate checks. CI **Quality Checks** run `44648860014` succeeded at commit `67fb414f` after the approved `FLY/fly_t6` case exception.
+- Distinguish structural blockers from nonblocking editorial heuristics. Never rewrite Pete-approved REALs/traps simply to clear a heuristic warning. Case exceptions must match the approved ID and exact phrase; keep all other uppercase checks active.
+- Legitimate proper names, slang and established terms flagged by cSpell belong in the workspace `.vscode/settings.json` dictionary when appropriate, not in rewritten gameplay copy. The 33 user-reported terms were added in commits `da2b58fe` and `28c9fef9`.
+- Pete confirmed the **Group D audit re-edit finished** on 2026-11-19. Treat earlier Group D pickup instructions as stale. Do not claim that this also verifies workbook parity, device gameplay, or a fresh human fairness audit.
+- For rotation changes, run the seeded Hunt reachability tests and explicitly test repeated early losses/restarts; the current no-overlap regression for consecutive **full** Hunts does not establish an absolute no-repeat guarantee for every possible run.
+
+**Next verification order:** (1) inspect the current runtime bank and any actual canonical workbook before editorial parity claims; (2) test early-loss/restart rotation and Boss persistence; (3) run phone regressions before release. Do not begin Home redesign, new content expansion or unrelated refactors to address this maintenance work.
