@@ -118,3 +118,80 @@ for (let seed = 1; seed <= 300; seed += 1) {
 }
 
 console.log('hunt rotation regression tests passed');
+
+
+// 6. Simulated player campaigns: early losses, full clears, onboarding, pinning,
+//    recency, and reproducibility. These are generator-level simulations, not UI playtests.
+{
+  const campaigns = 200;
+  const huntsPerCampaign = 40;
+  let hunts = 0;
+  let earlyLosses = 0;
+  let completed = 0;
+  let ordinaryImmediateRepeats = 0;
+  let pinnedBossFailures = 0;
+  let maskMixFailures = 0;
+  const distinctReached = new Set<string>();
+
+  for (let player = 0; player < campaigns; player += 1) {
+    let recent: string[] = [];
+    let pin: string | undefined;
+    let priorReached = new Set<string>();
+    for (let hunt = 0; hunt < huntsPerCampaign; hunt += 1) {
+      const seed = player * 100003 + hunt * 7919 + 13;
+      const opts = {
+        seed,
+        recentWordIds: recent,
+        pinnedBossWord: pin,
+        firstRunOnboarding: hunt === 0,
+        ...(hunt < 3 ? { length: 8, gentle: true } : {}),
+      };
+      const steps = generateHunt(opts);
+      assert.deepEqual(generateHunt(opts), steps, 'identical state and seed must reproduce the same Hunt');
+      const words = steps.map(wordOf);
+      assert.equal(new Set(words).size, words.length, 'a Hunt cannot contain duplicate headwords');
+      assert.equal(steps.length, hunt < 3 ? 8 : 10);
+      if (hunt === 0) assert.equal(words[0], 'FINE', 'first-run onboarding begins with FINE');
+
+      const currentBoss = pinnedBossForHunt(steps);
+      if (pin && currentBoss !== pin) pinnedBossFailures += 1;
+      pin = currentBoss ?? undefined;
+
+      for (const step of steps) {
+        if (step.kind !== 'word') continue;
+        if (step.masks.length > 5 ||
+            !step.masks.some(mask => mask.isReal) ||
+            !step.masks.some(mask => !mask.isReal)) maskMixFailures += 1;
+      }
+
+      // Model a mix of early deaths and full runs. A full run reaches the Boss,
+      // which resolves the pending pin. A loss records only reached words.
+      const dieEarly = (player + hunt) % 4 !== 0;
+      const reachedCount = dieEarly ? 2 + ((player * 7 + hunt) % 4) : steps.length;
+      const reached = words.slice(0, reachedCount);
+      for (const word of reached) distinctReached.add(word);
+      ordinaryImmediateRepeats += reached.slice(0, -1).filter(word => priorReached.has(word)).length;
+      priorReached = new Set(reached.slice(0, -1));
+      recent = [...new Set([...reached].reverse().concat(recent))].slice(0, RECENT_WORDS_CAP);
+      if (dieEarly) earlyLosses += 1;
+      else {
+        completed += 1;
+        pin = undefined; // Boss was reached; a subsequent run may draw another.
+      }
+      hunts += 1;
+    }
+  }
+
+  assert.equal(hunts, 8000);
+  assert.equal(pinnedBossFailures, 0, 'unreached eligible Boss must stay pinned');
+  assert.equal(maskMixFailures, 0, 'every simulated word must show <=5 cards with both REAL and trap');
+  assert.ok(distinctReached.size >= ordinary.length - 1,
+    'campaigns must expose nearly all ordinary headwords over time');
+  console.log(JSON.stringify({
+    simulation: 'Hunt player campaigns',
+    campaigns, hunts, earlyLosses, completed,
+    distinctReached: distinctReached.size,
+    ordinaryImmediateRepeats, pinnedBossFailures, maskMixFailures,
+    note: 'Immediate repeats are measured, not forbidden by the soft-recency contract',
+  }));
+}
