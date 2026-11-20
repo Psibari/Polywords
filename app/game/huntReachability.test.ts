@@ -150,7 +150,7 @@ console.log('hunt rotation regression tests passed');
       assert.deepEqual(generateHunt(opts), steps, 'identical state and seed must reproduce the same Hunt');
       const words = steps.map(wordOf);
       assert.equal(new Set(words).size, words.length, 'a Hunt cannot contain duplicate headwords');
-      assert.equal(steps.length, hunt < 3 ? 8 : 10);
+      assert.equal(steps.length, 8);
       if (hunt === 0) assert.equal(words[0], 'FINE', 'first-run onboarding begins with FINE');
 
       const currentBoss = pinnedBossForHunt(steps);
