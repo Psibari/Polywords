@@ -70,7 +70,6 @@ const expectedMasks = {
     light_t97: 'HOW YOU TAKE YOUR COFFEE WHEN YOU SKIP THE CREAM',
   },
   PALM: {
-    palm_r6: 'WHAT CHARMING MANIPULATION CAN HAVE SOMEONE EATING OUT OF',
     palm_r4: 'WHAT SMACKS AGAINST THEIRS WHEN YOU HIGH-FIVE SOMEONE',
     palm_r5: 'WHAT GETS CLAMMY WHEN YOU’RE REALLY NERVOUS',
     palm_t91: 'WHAT THE POLICE TAKE IN INK AFTER THEY ARREST YOU',
@@ -78,7 +77,7 @@ const expectedMasks = {
   },
   SENTENCE: {
     sentence_t5: 'WHAT YOU PUT ON THE FRONT PAGE OF A BOOK REPORT',
-    sentence_t6: 'WHAT YOU TEACH A PARROT TO SAY OVER AND OVER',
+    sentence_t6: 'WHAT A DOG LEARNS TO RECOGNIZE WHEN YOU CALL IT',
   },
 };
 
@@ -118,6 +117,7 @@ const retiredMaskIds = [
   'light_t95',
   'plant_t1',
   'round_t0',
+  'palm_r6',
   'tire_t5',
 ];
 const canonicalMaskIds = new Set(
