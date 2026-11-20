@@ -15,3 +15,13 @@ Player progress also persists discovered visible REAL mask IDs (`realMaskIdsFoun
 **Important distinction:** Haunted-word hidden content remains the exact unresolved hidden pair that beat the player. This finding applies to visible mask selection and must not weaken the existing revenge/memory behavior of Returning Haunts.
 
 **Why it matters:** Repeated encounters should naturally produce the POLYWORDS realization: the player already uses these ordinary words in many different ways and knows the meanings, but rarely notices how many meanings live under the same word.
+
+## 2026-11-19 — Hunt rotation, content gate and Group D closure
+
+**Status:** Group D audit re-edit completed per Pete's explicit confirmation. Hunt CI maintenance closed at commit `67fb414f` (successful Quality Checks run `44648860014`). No editorial copy was changed to clear the gate.
+
+**Verified generator behavior:** Within a Hunt, word selection is unique. Recency is a soft preference, so no-repeat behavior across *every* consecutive Hunt is not a hard guarantee. A regression test exercises 60 consecutive full Hunts; early-loss/restart behavior requires separate coverage. Boss pinning and Returning Haunt behavior should remain protected.
+
+**Next highest-value work:** Verify early-loss/restart rotation and pinned Boss behavior with deterministic tests, then perform release-oriented phone checks and current-workbook parity review. **Acceptance:** no duplicates within a Hunt; documented and tested recency behavior after early losses; unchanged Boss/Haunt rules; green TypeScript/tests/content gate; any device or workbook gaps reported rather than assumed closed.
+
+**Not yet:** Home redesign, full-body Polly animation, unrelated gameplay systems, or bulk content rewrites. Group D's completion is an editorial milestone, not a blanket certification of every historical card or a device-tested release.
