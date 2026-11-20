@@ -473,10 +473,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const runSeed = createRunSeed();
     const runStartGhostWordIds = get().ghosts.map(g => g.wordId);
     const runsCompleted = get().progress.runsCompleted;
-    // Fledgling: first 3 runs get the shorter 8-round arc, an easy-biased
-    // draw, and a full revive-to-3 mercy. Grace: runs 4-9 return to the
-    // standard 10-round draw but keep a lighter revive-to-2 safety net, so
-    // the jump to full stakes is a taper instead of a cliff. Run 10+: no net.
+    // All tiers use the standard eight-round Hunt. Fledgling: first 3 runs
+    // get an easy-biased draw and full revive-to-3 mercy. Grace: runs 4-9
+    // keep a lighter revive-to-2 safety net. Run 10+: no mercy net.
     const isFledgling = runsCompleted < FLEDGLING_RUNS;
     const isGrace = !isFledgling && runsCompleted < GRACE_RUNS;
     const mercyReviveLives = isFledgling
