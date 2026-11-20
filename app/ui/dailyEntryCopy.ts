@@ -23,13 +23,13 @@ export function dailyEntryKicker(number: number): string {
 }
 
 /** The card's title. Deliberately not DAILY_CLUE_TITLE: the kicker already says DAILY. */
-export const DAILY_ENTRY_TITLE = "POLLY'S CHALLENGE";
+export const DAILY_ENTRY_TITLE = "POLLY'S DAILY CHALLENGE";
 
 /** The one-line rule under the title. */
-export const DAILY_ENTRY_RULE = 'FIVE ROUNDS • TWO LIVES';
+export const DAILY_ENTRY_RULE = 'YOU HAVE 2 LIVES TO BEAT 5 ROUNDS.';
 
 /** Polly's framing, above the mechanics. */
-export const DAILY_ENTRY_INTRO = 'Polly sets the traps. One challenge a day.';
+export const DAILY_ENTRY_INTRO = 'Six words. Find the correct one using the clues that appear on the door.';
 
 /**
  * How it works, one idea per line so three clues read as three.
@@ -51,13 +51,9 @@ export const DAILY_ENTRY_INTRO = 'Polly sets the traps. One challenge a day.';
 //  - a wrong claim costs one of the two lives and reveals the next clue
 //  - UP only; there is no reject swipe and no tap-submit
 export const DAILY_ENTRY_RULES: readonly string[] = [
-  'THREE CLUES. SIX WORDS. ONE ANSWER.',
   'Clues appear one at a time.',
-  'Only one word fits all three.',
-  'SWIPE UP to claim your answer.',
-  'WAIT for another clue, free.',
-  'ANSWER fast. Surprise Polly.',
-  'WRONG ANSWER costs one life.',
+  'Wait for more clues, or answer early to surprise Polly and knock her off her perch!',
+  'SWIPE UP on your answer.',
 ];
 
 /**
@@ -66,8 +62,7 @@ export const DAILY_ENTRY_RULES: readonly string[] = [
  * next local midnight and is spent at Hunt game over for an in-place
  * one-feather revive.
  */
-export const DAILY_ENTRY_REWARD = 'BEAT ALL FIVE TO WIN A GOLD FEATHER!';
-export const DAILY_ENTRY_REWARD_SUB = 'One free Hunt life, good until midnight.';
+export const DAILY_ENTRY_REWARD = 'BEAT ALL 5 ROUNDS TO WIN A GOLD FEATHER!';
 
 /** The cost of entering. Opening the screen is free; BEGIN DAILY spends the attempt. */
 export const DAILY_ENTRY_ATTEMPT = 'One attempt. Starts when you enter.';
