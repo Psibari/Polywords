@@ -1,5 +1,17 @@
 # POLYWORDS Current Context
 
+## CURRENT VERIFIED BASELINE — 2026-11-20
+
+**Active development branch:** `play-screen-overhaul`, head `34eccd0` at lock-in. Eight-round Hunt migration approved and locked by Pete after iPhone playtesting. Original ten-round snapshot preserved at `backup-play-screen-overhaul-10-round-pre-merge-2026-11-20` (`189f923`). The feature branch `hunt-eight-round-migration` remains available. Do not reopen the eight-round decision without new evidence.
+
+**Verified:** GitHub Quality Checks run `44808877477` passed TypeScript, automated tests and live Hunt content-quality gate on `34eccd0`. Pete completed native Hunt playthroughs confirming eight rounds, Returning Haunt between rounds 4 and 5 when eligible, BANISHED, round-eight Boss MASTERED, journal records, Gold Feather and presentation behavior. This is a successful smoke test, not exhaustive edge-case certification.
+
+**Next priority:** first-time player experience audit on current build. Inspect actual onboarding copy, FINE sequence, first unaided swipe, event-triggered HUD lessons, and Home-to-Hunt path before recommending changes. Issue #17 word rotation has regression coverage and positive native observations; treat as improved, not an active redesign, while retaining early-loss/restart as a specific unverified edge case. Issue #18 deferred editorial heuristics may follow onboarding. Do not redesign approved Home or alter locked Hunt mechanics.
+
+**Historical note:** the pre-merge checkpoint below is superseded and preserved only for provenance.
+
+---
+
 ## CURRENT HANDOFF — 2026-11-20 pre-merge verification
 
 **Active branch:** `hunt-eight-round-migration`. **Do not merge into `play-screen-overhaul` without Pete's explicit approval.** This supersedes the 2026-11-19 evening checkpoint below; retain older entries as history, not current instructions.
