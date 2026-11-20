@@ -23,6 +23,7 @@ const APPROVED_HEADWORD_LEAKS = new Map([
 
 const APPROVED_CASE_EXCEPTIONS = new Map([
   ['LEAD/lead_r4', 'WHAT Pb STANDS FOR ON THE PERIODIC TABLE'],
+  ['FLY/fly_t6', "WHAT MARTY McFLY'S SKATEBOARD COULD DO IN BACK TO THE FUTURE PART II"],
 ]);
 
 // These words carry little or no memory-snap information by themselves. The
