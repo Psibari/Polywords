@@ -1,16 +1,17 @@
 # POLYWORDS Architecture
 
-## Current feature-branch checkpoint (2026-11-19 evening)
+## Current feature-branch checkpoint (2026-11-20)
 
-Read `CONTEXT.md` first for the up-to-date pause/resume handoff. Pete is pausing work for the night on `hunt-eight-round-migration`; **do not merge without explicit approval**. Remote feature head: `c571cdba0658`. Local `19fc22f` adds only the 103 MB `POLYWORDS_8_ROUND_WEB_TEST.zip`; exclude this temporary artifact from integration. The older ten-round standard-Hunt campaign descriptions later in this file are **historical pre-migration test results**, not the present default.
+**Branch:** `hunt-eight-round-migration`. Read `CONTEXT.md` for the latest verification and open pre-merge checks. **Do not merge without Pete's approval.** Yesterday's local 103 MB web ZIP commit was safely removed from the active branch, with a backup branch retained; the local and origin heads matched at `be34f76` before this documentation update. Do not restore or merge the ZIP.
 
-**Current Hunt contract:** eight standard rounds across player tiers, six starting feathers, eligible Returning Haunt at round 4, Boss at round 8; preserve first-run FINE and fledgling mercy/gentle selection. Explicit ten-round generation remains solely for legacy comparison tests. Starting feathers come from `app/game/polyRunEngine.ts`; display cap in `app/screens/GameScreen.tsx`; round count from `app/game/huntGenerator.ts`. Score milestones do not award lives. Balance is provisional pending player data.
+**Current Hunt contract:** eight standard rounds across tiers, six regular starting feathers, Returning Haunt in round 4 when eligible, Boss in round 8; first-run FINE and fledgling mercy preserved. Explicit ten-round generation is a legacy/test override only. Daily-earned Gold Feather appears as a separate seventh HUD icon when available; Pete confirmed on iPhone that it displays correctly alongside all six regular feathers. Gold Feather revive mechanics were not changed.
 
-**Native evidence:** Pete played multiple Hunts on the iPhone development build and reports eight-round consistency, reaching and losing to Bosses, and working animations. Returning Haunt round 4 and Boss victory were not separately verified. The Chrome web export's nonrotating cover is tracked in GitHub issue #19 and intentionally deprioritized: no web-only animation work unless it reproduces on supported mobile. Working Git Bash launch: `APP_VARIANT=development npx expo start --dev-client -c`; tunnel launch failed, but LAN development worked.
+**Verification:** Pete reports successful eight-round iPhone playtests, working book/card animations, and correct Returning Haunt / BANISHED gameplay. Those observations do not independently certify revive-after-banish or force-close persistence. GitHub Actions Quality Checks `44673171596` passed TypeScript, tests, and content-quality gate on `be34f76`; rerun checks after further edits. The web-only HeroBook issue remains tracked in issue #19 and is not a native release blocker.
 
-**Next:** inspect latest feature CI/diff, verify remaining Haunt/Boss/results cases, and prepare clean integration into `play-screen-overhaul` excluding the ZIP, subject to Pete's approval. No Home/art/content rework or feather rebalance in this task. Preserve all locked product decisions.
+**Next:** finish stale-reference and state-integrity audit, review the diverged integration with `play-screen-overhaul`, then seek explicit merge authorization. Preserve approved gameplay and visuals; do not make speculative fixes.
 
 ---
+
 
 
 Durable implementation map, not a session diary. `AGENTS.md` owns repository authority and safeguards; `CONTEXT.md` owns the current state and next task. Focused specifications own product detail. Executable code and canonical data establish what actually ships. Prior decisions and discarded experiments remain recoverable in Git history.
