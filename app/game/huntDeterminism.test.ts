@@ -122,12 +122,9 @@ ok(
   'returning Haunt is followed by a decompression beat',
 );
 
-// The ghost round's weight must not depend on where it lands — regression
-// guard for the position-inherited-role bug fixed 2026-08-18. At the new
-// hauntIdx, both arc lengths inherit a weaker role without the fix:
-// standard lands 'firstTension'/medium (hauntIdx coincides with
-// firstTensionIdx), fledgling lands 'tension'/medium. Both assertions
-// below are real regression guards, not redundant ones.
+// The ghost round must retain adrenaline/heavy feedback even though
+// round four normally has a lighter Flow role. Check standard and gentle
+// draws separately; both now use the same eight-round arc.
 ok(
   hauntHunt[hauntIndex]?.kind === 'word' &&
     hauntHunt[hauntIndex].emotionalRole === 'adrenaline' &&
