@@ -750,7 +750,7 @@ console.log('OK');
         rngState = (Math.imul(rngState, 1664525) + 1013904223) >>> 0;
         return rngState / 4294967296;
       };
-      const steps = generateHunt({ seed, ...(run < 3 ? { length: 8, gentle: true } : {}) });
+      const steps = generateHunt({ seed, ...(run < 3 ? { gentle: true } : {}) });
       let state = createGame(steps, 0, seed);
       counts.runs++;
       let guard = 0;
