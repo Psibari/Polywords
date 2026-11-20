@@ -5,8 +5,8 @@ Owns durable Hunt player rules. Live code remains authoritative for implementati
 
 ## Hunt
 
-- Standard arc: 10 rounds. First three fledgling runs: 8.
-- Polly's Word is always final. Returning Haunt may occupy round 5 standard / round 4 fledgling
+- Standard arc: 8 rounds across all tiers. First three fledgling runs retain their easy-biased draw and mercy rules.
+- Polly's Word is always final in round 8. Returning Haunt may occupy round 4
   and remains normal-round presentation.
 - Six starting feathers; zero ends the run. Up to five visible masks appear per word.
 - UP claims a REAL; RIGHT rejects a trap. Wrong choices cost one feather, reset the chain and
