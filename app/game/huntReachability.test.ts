@@ -87,3 +87,34 @@ function seenByPlayers(dieAt: number, players: number): Set<string> {
 }
 
 console.log('huntReachability.test.ts: ok');
+
+// 4. Every generated Hunt has unique headwords, including the pinned Boss and a returning Haunt.
+for (let seed = 1; seed <= 300; seed += 1) {
+  const opts = { seed: seed * 65537, recentWordIds: ordinary.slice(seed % 30, seed % 30 + 30) };
+  for (const steps of [generateHunt(opts), generateHunt({ ...opts, length: 8, gentle: true })]) {
+    const words = steps.map(wordOf);
+    assert.equal(new Set(words).size, words.length, `Hunt must not repeat a word within a run (seed ${seed})`);
+  }
+}
+
+// 5. Consecutive completed Hunts rotate ordinary words rather than repeating the previous roster.
+// The Boss may intentionally remain pinned when the player never reaches it.
+{
+  let recent: string[] = [];
+  let pin: string | undefined;
+  let previousOrdinary = new Set<string>();
+  for (let hunt = 0; hunt < 60; hunt += 1) {
+    const steps = generateHunt({ seed: hunt * 104729 + 71, recentWordIds: recent, pinnedBossWord: pin });
+    const ordinaryWords = steps.slice(0, -1).map(wordOf);
+    assert.equal(new Set(ordinaryWords).size, ordinaryWords.length);
+    if (hunt > 0) {
+      assert.ok(ordinaryWords.every(word => !previousOrdinary.has(word)),
+        `consecutive Hunt ${hunt} repeated a prior ordinary word despite available fresh words`);
+    }
+    previousOrdinary = new Set(ordinaryWords);
+    pin = pinnedBossForHunt(steps);
+    recent = [...new Set([...ordinaryWords].reverse().concat(recent))].slice(0, RECENT_WORDS_CAP);
+  }
+}
+
+console.log('hunt rotation regression tests passed');
