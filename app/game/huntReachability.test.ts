@@ -200,7 +200,7 @@ console.log('hunt rotation regression tests passed');
 // 7. Returning Haunt placement and Boss isolation across many generated Hunts.
 {
   const bossCapable = Object.keys(db).filter(word => {
-    const entry = db[word] as unknown as { hiddenPairs?: { real: string | null; trap: string | null }[] };
+    const entry = (db as Record<string, { hiddenPairs?: { real: string | null; trap: string | null }[] }>)[word];
     return entry.hiddenPairs?.some(pair => pair.real != null && pair.trap != null);
   });
   assert.ok(bossCapable.length >= 2);
