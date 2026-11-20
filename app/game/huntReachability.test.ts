@@ -195,3 +195,34 @@ console.log('hunt rotation regression tests passed');
     note: 'Immediate repeats are measured, not forbidden by the soft-recency contract',
   }));
 }
+
+
+// 7. Returning Haunt placement and Boss isolation across many generated Hunts.
+{
+  const bossCapable = Object.keys(db).filter(word => {
+    const entry = db[word] as unknown as { hiddenPairs?: { real: string | null; trap: string | null }[] };
+    return entry.hiddenPairs?.some(pair => pair.real != null && pair.trap != null);
+  });
+  assert.ok(bossCapable.length >= 2);
+  const ghost = bossCapable[0];
+  const boss = bossCapable[1];
+  let checks = 0;
+  for (let seed = 1; seed <= 200; seed++) {
+    for (const length of [8, 10]) {
+      const steps = generateHunt({
+        seed: seed * 12347, length, gentle: length === 8,
+        ghostWordIds: [ghost], pinnedBossWord: boss,
+      });
+      const hauntIndex = length === 8 ? 3 : 4;
+      const haunt = steps[hauntIndex];
+      assert.equal(wordOf(haunt), ghost, 'queued Haunt appears in reserved slot');
+      assert.equal(haunt.kind, 'word');
+      if (haunt.kind !== 'word') throw new Error('Haunt slot not a word');
+      assert.equal(haunt.isHauntReturn, true);
+      assert.equal(wordOf(steps[steps.length - 1]), boss, 'Haunt does not replace eligible pinned Boss');
+      assert.equal(new Set(steps.map(wordOf)).size, length);
+      checks++;
+    }
+  }
+  console.log('returning Haunt placement simulation:', JSON.stringify({ checks, ghost, pinnedBoss: boss }));
+}
