@@ -213,7 +213,7 @@ console.log('hunt rotation regression tests passed');
         seed: seed * 12347, length, gentle: length === 8,
         ghostWordIds: [ghost], pinnedBossWord: boss,
       });
-      const hauntIndex = 3;
+      const hauntIndex = length === 8 ? 3 : 4;
       const haunt = steps[hauntIndex];
       assert.equal(wordOf(haunt), ghost, 'queued Haunt appears in reserved slot');
       assert.equal(haunt.kind, 'word');
