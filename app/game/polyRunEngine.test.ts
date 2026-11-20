@@ -728,3 +728,78 @@ function untrappable(base: GameState): GameState {
 }
 
 console.log('OK');
+
+
+// Multi-persona, real-engine synthetic playthroughs. These are sensitivity
+// scenarios, not measured human skill or retention forecasts.
+{
+  const profiles = [
+    { name: 'struggling', accuracy: 0.65, hiddenAccuracy: 0.55 },
+    { name: 'developing', accuracy: 0.82, hiddenAccuracy: 0.72 },
+    { name: 'experienced', accuracy: 0.95, hiddenAccuracy: 0.90 },
+  ] as const;
+  const runsPerProfile = 150;
+  const summary: Record<string, { runs: number; deaths: number; bossReached: number; mastered: number; haunted: number; livesLost: number; decisions: number; mistakes: number }> = {};
+
+  for (const profile of profiles) {
+    const counts = { runs: 0, deaths: 0, bossReached: 0, mastered: 0, haunted: 0, livesLost: 0, decisions: 0, mistakes: 0 };
+    for (let run = 0; run < runsPerProfile; run += 1) {
+      const seed = 140001 + run * 7919 + profiles.indexOf(profile) * 1000003;
+      let rngState = seed >>> 0;
+      const draw = () => {
+        rngState = (Math.imul(rngState, 1664525) + 1013904223) >>> 0;
+        return rngState / 4294967296;
+      };
+      const steps = generateHunt({ seed, ...(run < 3 ? { length: 8, gentle: true } : {}) });
+      let state = createGame(steps, 0, seed);
+      counts.runs++;
+      let guard = 0;
+      while (state.status === 'playing') {
+        if (++guard > 20) throw new Error('simulation did not advance through the Hunt');
+        const step = state.session[state.stepIndex];
+        if (step.kind !== 'word') throw new Error('unexpected non-word Hunt step');
+        if (step.eventType === 'bossWord') counts.bossReached++;
+        for (const mask of state.shuffledMasks[state.stepIndex]) {
+          if (state.status !== 'playing') break;
+          const correct = draw() < profile.accuracy;
+          counts.decisions++;
+          if (!correct) counts.mistakes++;
+          const beforeLives = state.lives;
+          const swipeUp = correct ? mask.isReal : !mask.isReal;
+          state = swipeUp ? submitSwipeUp(state, mask.id) : submitSwipeDown(state, mask.id);
+          counts.livesLost += Math.max(0, beforeLives - state.lives);
+          if (state.lives < 0 || state.lives > 6) throw new Error('invalid feather count');
+        }
+        if (state.status !== 'playing') break;
+        if (step.eventType === 'bossWord') {
+          state = beginMysteryGauntlet(state, [true, false, true]);
+          for (let pair = 0; pair < 3 && state.bossOutcome === 'pending'; pair++) {
+            const before = state;
+            state = resolveMysteryTile(state, {
+              correct: draw() < profile.hiddenAccuracy,
+              visiblePerfect: state.mistakesOnWord === 0,
+              pairIndex: pair,
+            });
+            if (state.mysteryResolved !== before.mysteryResolved + 1) throw new Error('hidden judgment did not advance');
+            const replay = resolveMysteryTile(state, { correct: true, visiblePerfect: true, pairIndex: pair });
+            if (replay !== state) throw new Error('hidden judgment replay changed outcome');
+          }
+          if (state.bossOutcome === 'mastered') counts.mastered++;
+          else if (state.bossOutcome === 'haunted') counts.haunted++;
+          else throw new Error('boss outcome unresolved after three judgments');
+        }
+        const prior = state.stepIndex;
+        state = completeWord(state);
+        if (state.status === 'playing' && state.stepIndex !== prior + 1) throw new Error('word did not advance');
+      }
+      if (state.status === 'gameOver') counts.deaths++;
+      else if (state.status !== 'complete') throw new Error('invalid terminal state');
+    }
+    summary[profile.name] = counts;
+  }
+  if (!(summary.struggling.deaths > summary.developing.deaths &&
+        summary.developing.deaths > summary.experienced.deaths)) {
+    throw new Error('persona difficulty sensitivity failed: ' + JSON.stringify(summary));
+  }
+  console.log('synthetic player decision simulation:', JSON.stringify(summary));
+}
