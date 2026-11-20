@@ -803,3 +803,45 @@ console.log('OK');
   }
   console.log('synthetic player decision simulation:', JSON.stringify(summary));
 }
+
+
+// Persistence/resume simulation: serialize mid-word and mid-hidden-gauntlet,
+// then replay against uninterrupted engine state without double judgments.
+{
+  const steps = generateHunt({ seed: 991177 });
+  let uninterrupted = createGame(steps, 0, 991177);
+  const first = uninterrupted.shuffledMasks[0][0];
+  uninterrupted = first.isReal
+    ? submitSwipeUp(uninterrupted, first.id)
+    : submitSwipeDown(uninterrupted, first.id);
+  let resumed = JSON.parse(JSON.stringify(uninterrupted)) as GameState;
+  const next = resumed.shuffledMasks[0][1];
+  uninterrupted = next.isReal
+    ? submitSwipeUp(uninterrupted, next.id)
+    : submitSwipeDown(uninterrupted, next.id);
+  resumed = next.isReal
+    ? submitSwipeUp(resumed, next.id)
+    : submitSwipeDown(resumed, next.id);
+  eq(resumed.score, uninterrupted.score, 'resume.scoreMatches');
+  eq(resumed.lives, uninterrupted.lives, 'resume.livesMatch');
+  eq(resumed.streak, uninterrupted.streak, 'resume.streakMatches');
+  eq(resumed.swipedUpIds.join(','), uninterrupted.swipedUpIds.join(','), 'resume.upHistoryMatches');
+  eq(resumed.swipedDownIds.join(','), uninterrupted.swipedDownIds.join(','), 'resume.downHistoryMatches');
+
+  let boss = createGame(steps, 0, 991177);
+  boss = { ...boss, stepIndex: steps.length - 1 };
+  boss = beginMysteryGauntlet(boss, [true, false, true]);
+  boss = resolveMysteryTile(boss, { correct: true, visiblePerfect: true, pairIndex: 0 });
+  const recovered = JSON.parse(JSON.stringify(boss)) as GameState;
+  const remounted = beginMysteryGauntlet(recovered, [true, false, true]);
+  eq(remounted.mysteryResolved, 1, 'resume.hiddenProgressPreserved');
+  eq(remounted.bossOutcome, 'pending', 'resume.bossStillPending');
+  const twice = resolveMysteryTile(remounted, { correct: true, visiblePerfect: true, pairIndex: 0 });
+  eq(twice, remounted, 'resume.hiddenReplayNoop');
+  let finished = resolveMysteryTile(twice, { correct: true, visiblePerfect: true, pairIndex: 1 });
+  finished = resolveMysteryTile(finished, { correct: true, visiblePerfect: true, pairIndex: 2 });
+  eq(finished.bossOutcome, 'mastered', 'resume.hiddenCanMaster');
+  const duplicateTerminal = resolveMysteryTile(finished, { correct: false, visiblePerfect: false, pairIndex: 2 });
+  eq(duplicateTerminal, finished, 'resume.terminalVerdictCannotReverse');
+  console.log('engine save/resume simulation: passed');
+}
