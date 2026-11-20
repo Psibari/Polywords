@@ -226,3 +226,20 @@ console.log('hunt rotation regression tests passed');
   }
   console.log('returning Haunt placement simulation:', JSON.stringify({ checks, ghost, pinnedBoss: boss }));
 }
+
+
+// Product lock (2026-11-19): every production/default Hunt is eight rounds.
+// A ten-round override remains only for historical controlled comparisons.
+{
+  for (let seed = 1; seed <= 250; seed++) {
+    const standard = generateHunt({ seed: seed * 733 });
+    const fledgling = generateHunt({ seed: seed * 733, gentle: true, firstRunOnboarding: seed === 1 });
+    for (const [name, steps] of [['standard', standard], ['fledgling', fledgling]] as const) {
+      assert.equal(steps.length, 8, name + ' must contain exactly eight rounds');
+      assert.equal(steps[7].kind, 'word');
+      assert.equal(steps[7].eventType, 'bossWord', name + ' Boss must be round eight');
+      assert.ok(steps.slice(0, 7).every(step => step.eventType !== 'bossWord'));
+    }
+  }
+  console.log('eight-round production Hunt lock: passed');
+}
