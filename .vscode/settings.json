@@ -22,5 +22,36 @@
     "*.tsx": "typescriptreact"
   },
   "workbench.activityBar.autoHide": true,
-  "workbench.colorCustomizations": {}
+  "workbench.colorCustomizations": {},
+  "cSpell.words": [
+    "AGRABAH",
+    "CARB",
+    "CLIFFSNOTES",
+    "CURVEBALL",
+    "EARTHERS",
+    "EVEL",
+    "EWWWWWWW",
+    "FUNHOUSE",
+    "HAHA",
+    "HANDPRINTS",
+    "HONEYMAKER",
+    "HOUSEGUESTS",
+    "INFLUENCERS",
+    "JACKALOPES",
+    "LAWYERED",
+    "MERCH",
+    "MIXTAPE",
+    "MOJITO",
+    "NEMO",
+    "NESSIE",
+    "NOOGIE",
+    "ONESIE",
+    "PICKLEBALL",
+    "REPOED",
+    "RIBEYE",
+    "ROCKETTES",
+    "SCISSORHANDS",
+    "STEPH",
+    "WALKIE"
+  ]
 }
