@@ -1,5 +1,15 @@
 # POLYWORDS Architecture
 
+## Current approved development baseline (2026-11-20)
+
+**Branch:** `play-screen-overhaul`. Eight-round Hunt migration merged via PR #20 and locked by Pete after iPhone smoke testing. Original ten-round branch snapshot: `backup-play-screen-overhaul-10-round-pre-merge-2026-11-20` (`189f923`). Latest verified pre-documentation-change CI: `34eccd0`, Quality Checks `44808877477`, all three gates green. Eight rounds across tiers; six starting regular feathers; eligible Returning Haunt between rounds 4 and 5; Boss in round 8. Gold Feather remains separate. First-run FINE and mercy preserved. Explicit ten-round generator override remains historical/test-only.
+
+**Next:** audit first-time player experience against actual current code and device, then prioritize any demonstrated confusion. Word rotation issue #17 is substantially addressed by regression coverage and native observation, but early-loss/restart remains an unverified edge case. Do not reopen approved gameplay or Home design without evidence.
+
+**Historical note:** the pre-merge feature-branch checkpoint below is superseded.
+
+---
+
 ## Current feature-branch checkpoint (2026-11-20)
 
 **Branch:** `hunt-eight-round-migration`. Read `CONTEXT.md` for the latest verification and open pre-merge checks. **Do not merge without Pete's approval.** Yesterday's local 103 MB web ZIP commit was safely removed from the active branch, with a backup branch retained; the local and origin heads matched at `be34f76` before this documentation update. Do not restore or merge the ZIP.
