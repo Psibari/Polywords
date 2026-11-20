@@ -60,8 +60,7 @@ import {
   type DailyBreachTier,
 } from '../ui/dailyBreach';
 import { canOpenDailyPause } from '../game/dailyPause';
-import { DAILY_INTRO_SEEN_KEY, DAILY_PRACTICE_SEEN_KEY } from '../constants/storageKeys';
-import DailyPracticeIntro from '../components/DailyPracticeIntro';
+import { DAILY_INTRO_SEEN_KEY } from '../constants/storageKeys';
 import { recordPlaytestEvent } from '../game/playtestTelemetry';
 import { resolveRivalryState } from '../game/pollyMood';
 import { useGameStore } from '../store/useGameStore';
@@ -92,7 +91,6 @@ import {
   DAILY_ENTRY_INTRO,
   DAILY_ENTRY_RULES,
   DAILY_ENTRY_REWARD,
-  DAILY_ENTRY_REWARD_SUB,
   dailyEntryTaunt,
   DAILY_ENTRY_TAUNT_FIRST,
   DAILY_ENTRY_ATTEMPT,
@@ -335,6 +333,11 @@ function ResultsOverlay({
                 : DAILY_WIN_REWARD}
             </Text>
           </View>
+          {isWin && (
+            <Text allowFontScaling={false} style={[res.stat, { textAlign: 'center', marginTop: 8 }]}>
+              {'One extra Hunt life, good until midnight.\nUSE IT WISELY!'}
+            </Text>
+          )}
         )}
 
         {(() => {
@@ -526,8 +529,6 @@ export default function DailyChallengeScreen({ navigation }: Props) {
   // A returning player can reopen the rules on the short card. Reset every
   // time the screen mounts: the short card is what they asked to see.
   const [rulesOpen, setRulesOpen] = useState(false);
-  const [practiceSeen, setPracticeSeen] = useState(true);
-  const [practiceReplay, setPracticeReplay] = useState(false);
   const [dailyStarting, setDailyStarting] = useState(false);
   const inputLockedRef = useRef(true);
   // True while a new round's blocks are punching out of the wall
@@ -869,12 +870,8 @@ export default function DailyChallengeScreen({ navigation }: Props) {
       try {
         const seen = await AsyncStorage.getItem(DAILY_INTRO_SEEN_KEY);
         setDailyIntroSeen(seen === 'true');
-        const practice = await AsyncStorage.getItem(DAILY_PRACTICE_SEEN_KEY);
-        // Existing Daily players must not be forced through a new tutorial.
-        setPracticeSeen(practice === 'true' || seen === 'true');
       } catch {
         setDailyIntroSeen(true);
-        setPracticeSeen(true);
       }
       try {
         await loadDailyResult();
@@ -1679,17 +1676,7 @@ export default function DailyChallengeScreen({ navigation }: Props) {
   const isReadyToStart = dailyInitialized && !dailyResult && !dailySession;
   // The explanation is open by default the very first time, and thereafter
   // only when the player asks for it with HOW TO PLAY.
-  const showEntryRules = rulesOpen;
-  const showPractice = isReadyToStart && (!practiceSeen || practiceReplay);
-  async function finishPractice() {
-    setPracticeSeen(true);
-    setPracticeReplay(false);
-    setDailyIntroSeen(true);
-    await Promise.all([
-      AsyncStorage.setItem(DAILY_PRACTICE_SEEN_KEY, 'true'),
-      AsyncStorage.setItem(DAILY_INTRO_SEEN_KEY, 'true'),
-    ]).catch(() => {});
-  }
+  const showEntryRules = !dailyIntroSeen || rulesOpen;
   const committedComplete =
     dailyInitialized &&
     (!!dailyResult || (dailySession !== null && dailySession.status !== 'active'));
@@ -1816,10 +1803,7 @@ export default function DailyChallengeScreen({ navigation }: Props) {
       )}
 
       <SafeAreaView style={styles.content} pointerEvents="box-none">
-      {showPractice && (
-        <DailyPracticeIntro onComplete={() => void finishPractice()} onExit={handleHome} />
-      )}
-      {isReadyToStart && !showPractice && (
+      {isReadyToStart && (
         <ScrollView
           style={styles.startScroll}
           contentContainerStyle={styles.startGate}
@@ -1838,7 +1822,6 @@ export default function DailyChallengeScreen({ navigation }: Props) {
                   ))}
                 </View>
                 <Text allowFontScaling={false} style={styles.startReward}>{DAILY_ENTRY_REWARD}</Text>
-                <Text allowFontScaling={false} style={styles.startBody}>{DAILY_ENTRY_REWARD_SUB}</Text>
               </>
             )}
             <Text allowFontScaling={false} style={styles.startAttempt}>{DAILY_ENTRY_ATTEMPT}</Text>
@@ -1877,11 +1860,6 @@ export default function DailyChallengeScreen({ navigation }: Props) {
                 <Text allowFontScaling={false} style={styles.startRulesText}>
                   {rulesOpen ? DAILY_ENTRY_RULES_HIDE : DAILY_ENTRY_RULES_SHOW}
                 </Text>
-              </Pressable>
-            )}
-            {practiceSeen && (
-              <Pressable accessibilityRole="button" onPress={() => { setRulesOpen(false); setPracticeReplay(true); }} style={styles.startRulesButton}>
-                <Text allowFontScaling={false} style={styles.startRulesText}>REPLAY PRACTICE</Text>
               </Pressable>
             )}
             <Text allowFontScaling={false} style={styles.startTaunt}>
