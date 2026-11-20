@@ -138,7 +138,7 @@ assert.deepEqual(
   {
     CAPITAL: 'Quintuple',
     LIGHT: 'Septuple',
-    PALM: 'Sextuple',
+    PALM: 'Quintuple',
     FAST: '8-MEANING',
     FOOT: '10-MEANING',
   },
