@@ -8068,27 +8068,27 @@
     "masks": [
       {
         "id": "fly_r0",
-        "phrase": "SPLATTERED ACROSS YOUR WINDSHIELD",
+        "phrase": "WHAT A SWATTER DOES A PRETTY GOOD JOB OF KILLING",
         "isReal": true
       },
       {
         "id": "fly_r1",
-        "phrase": "TOP THREE ON THE SUPERPOWER WISHLIST",
+        "phrase": "WHAT'S IN MOST PEOPLE'S TOP THREE IF THEY HAD A SUPERPOWER WISH LIST",
         "isReal": true
       },
       {
         "id": "fly_r2",
-        "phrase": "MILLIONS HAVE THIS PHOBIA",
+        "phrase": "WHAT YOU'RE AFRAID OF IF YOU'D RATHER DRIVE 20-PLUS HOURS TO GET THERE",
         "isReal": true
       },
       {
         "id": "fly_r3",
-        "phrase": "TOP GUN'S BASIC JOB REQUIREMENT",
+        "phrase": "WHAT THE PILOTS IN TOP GUN ARE AMONG THE BEST IN THE WORLD AT DOING",
         "isReal": true
       },
       {
         "id": "fly_r4",
-        "phrase": "WHAT KIDS DO WITH A KITE",
+        "phrase": "WHAT YOU DO WITH A KITE, AND WHAT IT DOES WHEN IT GETS AWAY FROM YOU",
         "isReal": true
       },
       {
@@ -8098,92 +8098,42 @@
       },
       {
         "id": "fly_r6",
-        "phrase": "AN UNACCEPTABLE EXCUSE WON'T DO HERE",
-        "isReal": true
-      },
-      {
-        "id": "fly_r7",
-        "phrase": "IT'S OPEN—MADE YOU LOOK",
+        "phrase": "IF I POINT TO IT AND TELL YOU IT'S OPEN... HAHA, MADE YOU LOOK!",
         "isReal": true
       },
       {
         "id": "fly_t0",
-        "phrase": "MAKES HONEY INSIDE A WAX COMB",
+        "phrase": "THE BUZZING HONEYMAKER THAT OBEYS ITS QUEEN",
         "isReal": false
       },
       {
         "id": "fly_t1",
-        "phrase": "BUILDS A NEST UNDER THE EAVES",
+        "phrase": "WHAT YOU ZIP UP WHEN IT'S COLD OUT",
         "isReal": false
       },
       {
         "id": "fly_t2",
-        "phrase": "SCATTERS WHEN THE KITCHEN LIGHT CLICKS",
+        "phrase": "YOU'RE USUALLY SCREWED IF YOU DISTURB A NEST OF THEM",
         "isReal": false
       },
       {
         "id": "fly_t3",
-        "phrase": "MARCHES TOWARD THE SUGAR BOWL",
+        "phrase": "THE LITTLE CLOSET PEST THAT EATS HOLES IN YOUR FAVORITE SWEATER",
         "isReal": false
       },
       {
         "id": "fly_t4",
-        "phrase": "SILK WEB STRETCHED IN THE CORNER",
+        "phrase": "WHAT A PILOT HAS TO DO WITH A PLANE IN AN EMERGENCY",
         "isReal": false
       },
       {
         "id": "fly_t5",
-        "phrase": "HOVERS ABOVE TRAFFIC EVERY MORNING",
+        "phrase": "WHAT YOU'RE DOING AT EXTREME SPEED THROUGH THE AIR UNTIL YOUR PARACHUTE OPENS",
         "isReal": false
       },
       {
         "id": "fly_t6",
-        "phrase": "VOICE GUIDING PLANES FROM THE TOWER",
-        "isReal": false
-      },
-      {
-        "id": "fly_t7",
-        "phrase": "TWELVE HOURS BEHIND THE WHEEL",
-        "isReal": false
-      },
-      {
-        "id": "fly_t8",
-        "phrase": "PULLS THE RIPCORD BEFORE TOUCHING DOWN",
-        "isReal": false
-      },
-      {
-        "id": "fly_t9",
-        "phrase": "HELIUM BALLOON ESCAPES THE BIRTHDAY PARTY",
-        "isReal": false
-      },
-      {
-        "id": "fly_t10",
-        "phrase": "CLOCK HAND CRAWLS THROUGH DETENTION",
-        "isReal": false
-      },
-      {
-        "id": "fly_t11",
-        "phrase": "RUBBER STAMP SAYS APPROVED",
-        "isReal": false
-      },
-      {
-        "id": "fly_t12",
-        "phrase": "TEETH THAT CLOSE YOUR WINTER COAT",
-        "isReal": false
-      },
-      {
-        "id": "fly_t13",
-        "phrase": "BUTTON POPPED OFF AFTER THANKSGIVING DINNER",
-        "isReal": false
-      },
-      {
-        "id": "fly_t14",
-        "phrase": "ELEVATOR DOORS CLOSE, PANIC SETS IN",
-        "isReal": false
-      },
-      {
-        "id": "fly_t15",
-        "phrase": "SALUTES OLD GLORY AT SUNRISE",
+        "phrase": "WHAT MARTY McFLY'S SKATEBOARD COULD DO IN BACK TO THE FUTURE PART II",
         "isReal": false
       }
     ],
@@ -11739,37 +11689,47 @@
     "masks": [
       {
         "id": "trip_r0",
-        "phrase": "DRIVING COAST TO COAST",
+        "phrase": "WHAT YOU'RE GOING ON WHEN YOU'RE DRIVING ACROSS THE COUNTRY",
         "isReal": true
       },
       {
         "id": "trip_r1",
-        "phrase": "AN EMBARRASSING FALL",
+        "phrase": "THE MOST EMBARRASSING THING THAT CAN HAPPEN TO A MODEL ON THE CATWALK",
         "isReal": true
       },
       {
         "id": "trip_r2",
-        "phrase": "A MAGIC MUSHROOM EXPERIMENT",
+        "phrase": "THE MOST FANTASTICALLY COLORFUL, SUPER-DUPER, OUT-OF-THIS-WORLD EXPERIENCE MAGIC MUSHROOMS CAN GIVE YOU",
         "isReal": true
       },
       {
         "id": "trip_r3",
-        "phrase": "SETS OFF THE ALARM",
+        "phrase": "WHAT AN INTRUDER DOES TO THE ALARM WHEN THEY BREAK IN",
         "isReal": true
       },
       {
-        "id": "trip_t5",
+        "id": "trip_r4",
+        "phrase": "WHAT A QUICK-THINKING BYSTANDER DID TO STOP A THIEF WHO WAS GETTING AWAY",
+        "isReal": true
+      },
+      {
+        "id": "trip_t0",
         "phrase": "WHAT A BAND GOES ON TO PROMOTE A NEW ALBUM",
         "isReal": false
       },
       {
-        "id": "trip_t6",
-        "phrase": "WHAT YOU NEED TO DO WITH THE HURDLES TO WIN THE RACE",
+        "id": "trip_t1",
+        "phrase": "WHAT YOU DID WHEN YOU STEPPED ON AN ICY SIDEWALK AND FELL",
         "isReal": false
       },
       {
-        "id": "trip_t7",
-        "phrase": "WHAT YOU HAVE TO DO WHEN YOUR JOB RELOCATES YOU",
+        "id": "trip_t2",
+        "phrase": "WHAT YOU MAKE TO WORK AND BACK EVERY SINGLE DAY",
+        "isReal": false
+      },
+      {
+        "id": "trip_t3",
+        "phrase": "WHAT YOU HAVE TO TAKE WHEN THE ROAD AHEAD IS CLOSED",
         "isReal": false
       }
     ],
