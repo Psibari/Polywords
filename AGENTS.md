@@ -32,8 +32,8 @@ casually.
 - Hunt: UP claims a REAL; RIGHT rejects a trap. No left swipe or tap-submit.
 - Daily is UP-only. Never import Hunt's RIGHT gesture into Daily.
 - Ordinary choices stay neutral before commitment.
-- Standard Hunt = 8 rounds for every player tier; first three fledgling runs keep their
-  easy-biased draw and stronger mercy. Polly's Word is round 8. Returning Haunt = round 4.
+- Standard Hunt = 10 rounds; first three fledgling runs = 8. Polly's Word is final. Returning
+  Haunt = round 5 standard / round 4 fledgling.
 - Boss outcome comes from the hidden gauntlet, never score.
 - Do not change scoring, swipe grammar, Boss rules, persistence, `MaskBoard.tsx`, or
   `SwipeMask.tsx` without an explicit focused request.

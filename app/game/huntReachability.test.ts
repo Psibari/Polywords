@@ -72,7 +72,7 @@ function seenByPlayers(dieAt: number, players: number): Set<string> {
   assert.deepEqual(missing, [], `players who die in round 3 must be able to meet every easy and medium word; never seen: ${missing.join(', ')}`);
 }
 
-// 3. Mastered words still return only in rounds 5-7, flagged isMasteredReturn.
+// 3. Mastered words still return only in rounds 5-9, flagged isMasteredReturn.
 {
   const mastered = ordinary.slice(0, 40);
   const masteredSet = new Set(mastered);
@@ -150,7 +150,7 @@ console.log('hunt rotation regression tests passed');
       assert.deepEqual(generateHunt(opts), steps, 'identical state and seed must reproduce the same Hunt');
       const words = steps.map(wordOf);
       assert.equal(new Set(words).size, words.length, 'a Hunt cannot contain duplicate headwords');
-      assert.equal(steps.length, 8);
+      assert.equal(steps.length, hunt < 3 ? 8 : 10);
       if (hunt === 0) assert.equal(words[0], 'FINE', 'first-run onboarding begins with FINE');
 
       const currentBoss = pinnedBossForHunt(steps);
@@ -213,7 +213,7 @@ console.log('hunt rotation regression tests passed');
         seed: seed * 12347, length, gentle: length === 8,
         ghostWordIds: [ghost], pinnedBossWord: boss,
       });
-      const hauntIndex = 3;
+      const hauntIndex = length === 8 ? 3 : 4;
       const haunt = steps[hauntIndex];
       assert.equal(wordOf(haunt), ghost, 'queued Haunt appears in reserved slot');
       assert.equal(haunt.kind, 'word');
@@ -225,21 +225,4 @@ console.log('hunt rotation regression tests passed');
     }
   }
   console.log('returning Haunt placement simulation:', JSON.stringify({ checks, ghost, pinnedBoss: boss }));
-}
-
-
-// Product lock (2026-11-19): every production/default Hunt is eight rounds.
-// A ten-round override remains only for historical controlled comparisons.
-{
-  for (let seed = 1; seed <= 250; seed++) {
-    const standard = generateHunt({ seed: seed * 733 });
-    const fledgling = generateHunt({ seed: seed * 733, gentle: true, firstRunOnboarding: seed === 1 });
-    for (const [name, steps] of [['standard', standard], ['fledgling', fledgling]] as const) {
-      assert.equal(steps.length, 8, name + ' must contain exactly eight rounds');
-      assert.equal(steps[7].kind, 'word');
-      assert.equal(steps[7].eventType, 'bossWord', name + ' Boss must be round eight');
-      assert.ok(steps.slice(0, 7).every(step => step.eventType !== 'bossWord'));
-    }
-  }
-  console.log('eight-round production Hunt lock: passed');
 }

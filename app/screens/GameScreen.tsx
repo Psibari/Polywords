@@ -1246,7 +1246,7 @@ const tb = StyleSheet.create({
   featherShaftFilled: {
     backgroundColor: 'rgba(123,45,139,0.70)',
   },
-  // Round chips must fit INSIDE the bar's padding on both faces of the
+  // A ten-round row has to fit INSIDE the bar's padding on both faces of the
   // flip. At 375 pt the bar is 347 wide; less its 12 pt padding and 1 pt
   // border each side, 319 pt is usable. The old 28 pt chips with 7 pt gaps
   // measured 343 and overflowed by about 11 pt a side, clipped against the

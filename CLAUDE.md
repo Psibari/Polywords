@@ -34,7 +34,7 @@ The Hunt standard and Bible both contain binding editorial language; do not sile
 ## Hunt contracts
 
 - UP claims a REAL; RIGHT rejects a trap. No left swipe or tap-submit. Ordinary choices remain neutral before commitment.
-- Standard Hunt: eight rounds for all player tiers. First three fledgling runs retain gentle selection and stronger mercy, not a different length. Polly's Word is round eight. A Returning Haunt occupies round four and does not use Boss presentation.
+- Standard Hunt: ten rounds; first three fledgling runs: eight. Polly's Word is final. A Returning Haunt occupies round five (standard) or four (fledgling) and does not use Boss presentation.
 - A word encounter deals up to five visible cards from its larger approved pool. A card in live JSON is eligible to rotate, not guaranteed to appear in a particular Hunt.
 - Boss outcome is determined by the three hidden judgments, never the score: all correct means MASTERED; a hidden miss or Boss death means HAUNTED. Returning Haunts retry the saved exact hidden pair; success banishes the active Haunt.
 - The Boss is pinned across Hunts until the player reaches it, provided it remains eligible. Ordinary word rotation remains independent. `app/game/pinnedBoss.ts` and `app/game/pinnedBoss.test.ts` own the invariant.
