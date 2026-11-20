@@ -79,6 +79,14 @@ The Hunt standard and Bible both contain binding editorial language; do not sile
 - Native lessons: keep animated transform types stable; protect essential stacked views from flattening; give absolute image layers explicit dimensions on iOS; keep pose layers mounted and switch opacity rather than remounting; trigger arrival reactions from animation completion, not a timer started at screen mount. Use measured layout constants in code, not stale screenshot coordinates.
 - Gameplay text sizing is controlled to protect tile fitting; Settings and Polybook retain their own accessibility behavior. Verify native gesture, audio, animation, layout and Bold Text separately from TypeScript/CI.
 
+## Verified Hunt campaign stress test (2026-11-19 / CI 2026-11-20)
+
+- **Source:** `app/game/huntReachability.test.ts`, commit `6ac2b0fec1921f39d6b29bc1a01d16366789e48f`. GitHub Actions Quality Checks run `44649939114` completed **SUCCESS** on that commit. The job log confirms TypeScript, the full automated test command and the live Hunt content-quality gate all succeeded.
+- **Campaign coverage:** 200 simulated players × 40 Hunts = **8,000 generated Hunts**; **6,000 simulated early losses** and **2,000 simulated completed Hunts**. The simulation covered first-run FINE onboarding, eight-round introductory and ten-round standard Hunts, deterministic repeatability, within-Hunt word uniqueness, soft recency rotation, eligible pinned-Boss continuity, and visible-card composition.
+- **Observed counters from the CI log:** **253 distinct reached headwords**, **0 immediate ordinary-word repeats** (as measured between successive sets of reached ordinary words), **0 pinned-Boss failures**, and **0 visible-card REAL/trap mix or five-card-cap failures**. Assertions for seed reproducibility, Hunt length, onboarding and within-Hunt uniqueness also passed.
+- **Interpretation boundary:** These are generator-level synthetic campaigns with scripted early-loss/full-run outcomes, **not** 8,000 real player sessions. The test does not simulate per-card judgments, feather depletion, scoring, mastery/Haunt outcomes, retention, UI gestures, native presentation or emotional difficulty. The zero-repeat observation is specific to these simulated conditions; the generator's recency policy remains a **soft preference**, not an unconditional guarantee.
+- **Next highest-value test:** player-decision/balance simulation with explicit accuracy assumptions and real run-engine transitions, followed by physical-device and stranger-player testing. Keep the approved Group D audit re-edit closed unless a specific new issue warrants reopening.
+
 ## Shipping and verification
 
 - CI is `.github/workflows/typecheck.yml` (Quality Checks): Node 24, `npm run typecheck`, `npm test` and `npm run content:quality`. Recheck the **latest branch-head run** after any change; a historical green run does not certify a later commit.
