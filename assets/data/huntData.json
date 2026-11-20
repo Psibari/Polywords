@@ -8138,7 +8138,7 @@
       }
     ],
     "gpsTag": "panic",
-    "wordType": "8-MEANING"
+    "wordType": "Septuple"
   },
   "FOAM": {
     "difficulty": "medium",
@@ -9546,7 +9546,7 @@
       }
     ],
     "gpsTag": "tension",
-    "wordType": "Quadruple"
+    "wordType": "Quintuple"
   },
   "MOUSE": {
     "difficulty": "easy",
@@ -9585,7 +9585,7 @@
       }
     ],
     "gpsTag": "tension",
-    "wordType": "Double"
+    "wordType": "Triple"
   },
   "NAIL": {
     "difficulty": "easy",
@@ -9639,7 +9639,7 @@
       }
     ],
     "gpsTag": "flow",
-    "wordType": "Sextuple"
+    "wordType": "Quintuple"
   },
   "PALM": {
     "difficulty": "medium",
@@ -11088,7 +11088,7 @@
       }
     ],
     "gpsTag": "panic",
-    "wordType": "Septuple"
+    "wordType": "Quadruple"
   },
   "SOUND": {
     "difficulty": "medium",
@@ -11456,7 +11456,7 @@
       }
     ],
     "gpsTag": "tension",
-    "wordType": "Triple"
+    "wordType": "Quintuple"
   },
   "TANK": {
     "difficulty": "medium",
@@ -11680,7 +11680,7 @@
       }
     ],
     "gpsTag": "panic",
-    "wordType": "Quadruple"
+    "wordType": "Quintuple"
   },
   "TRIP": {
     "difficulty": "hard",
@@ -11734,7 +11734,7 @@
       }
     ],
     "gpsTag": "panic",
-    "wordType": "Quadruple"
+    "wordType": "Quintuple"
   },
   "WAKE": {
     "difficulty": "medium",
