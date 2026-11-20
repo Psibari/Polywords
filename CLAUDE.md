@@ -1,5 +1,18 @@
 # POLYWORDS Architecture
 
+## Current feature-branch checkpoint (2026-11-19 evening)
+
+Read `CONTEXT.md` first for the up-to-date pause/resume handoff. Pete is pausing work for the night on `hunt-eight-round-migration`; **do not merge without explicit approval**. Remote feature head: `c571cdba0658`. Local `19fc22f` adds only the 103 MB `POLYWORDS_8_ROUND_WEB_TEST.zip`; exclude this temporary artifact from integration. The older ten-round standard-Hunt campaign descriptions later in this file are **historical pre-migration test results**, not the present default.
+
+**Current Hunt contract:** eight standard rounds across player tiers, six starting feathers, eligible Returning Haunt at round 4, Boss at round 8; preserve first-run FINE and fledgling mercy/gentle selection. Explicit ten-round generation remains solely for legacy comparison tests. Starting feathers come from `app/game/polyRunEngine.ts`; display cap in `app/screens/GameScreen.tsx`; round count from `app/game/huntGenerator.ts`. Score milestones do not award lives. Balance is provisional pending player data.
+
+**Native evidence:** Pete played multiple Hunts on the iPhone development build and reports eight-round consistency, reaching and losing to Bosses, and working animations. Returning Haunt round 4 and Boss victory were not separately verified. The Chrome web export's nonrotating cover is tracked in GitHub issue #19 and intentionally deprioritized: no web-only animation work unless it reproduces on supported mobile. Working Git Bash launch: `APP_VARIANT=development npx expo start --dev-client -c`; tunnel launch failed, but LAN development worked.
+
+**Next:** inspect latest feature CI/diff, verify remaining Haunt/Boss/results cases, and prepare clean integration into `play-screen-overhaul` excluding the ZIP, subject to Pete's approval. No Home/art/content rework or feather rebalance in this task. Preserve all locked product decisions.
+
+---
+
+
 Durable implementation map, not a session diary. `AGENTS.md` owns repository authority and safeguards; `CONTEXT.md` owns the current state and next task. Focused specifications own product detail. Executable code and canonical data establish what actually ships. Prior decisions and discarded experiments remain recoverable in Git history.
 
 Do not hard-code live content counts here; run `npm run state`.
