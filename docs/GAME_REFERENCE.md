@@ -134,6 +134,6 @@ Implementation detail belongs in `CLAUDE.md` and the onboarding modules, not her
 ## Hunt Content CI Gate (verified 2026-11-19)
 
 - `assets/data/huntData.json` is the runtime content authority. `tools/content/runtimeHuntValidation.mjs` checks structural validity and reports editorial heuristics separately; `tools/content/validate-runtime-hunt.mjs` drives the preflight and reports known debt explicitly.
-- Approved capitalization exceptions are exact-ID, exact-phrase entries, not blanket suppression. `FLY/fly_t6` preserves `McFLY`'s actual mixed-case spelling as **McFLY** only in the sense of its source phrase `McFLY`? See the literal approved `McFly` text in the JSON and validator; do not normalize the card for lint.
+- Approved capitalization exceptions are exact-ID, exact-phrase entries, not blanket suppression. `FLY/fly_t6` preserves the approved proper-name spelling `McFly` in the live JSON; do not uppercase or rewrite the card merely to satisfy lint.
 - CI success for commit `67fb414f37c83cd153e8913df16d415b5f471172`: GitHub Actions run `44648860014`. This confirms automated checks, not human fairness review or a physical-phone test.
 - The 33 reported cSpell terms are workspace dictionary entries in `.vscode/settings.json`, not edits to approved cards.
