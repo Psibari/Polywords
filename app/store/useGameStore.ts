@@ -46,6 +46,7 @@ import {
 } from '../game/kingWins';
 import { pinnedBossForHunt, sanitizePinnedBossWord } from '../game/pinnedBoss';
 import { generateHunt } from '../game/huntGenerator';
+import { reachedWords, rememberReachedWords } from '../game/huntRecency';
 import {
   applyDevDailyFirstWord,
   buildDailySession,
@@ -647,6 +648,20 @@ export const useGameStore = create<GameStore>((set, get) => ({
   // quitting before starting a fresh run would resume the very run the
   // player just chose to forfeit, contradicting the whole point of asking.
   forfeitGame: async () => {
+    // A quit Hunt still counts toward word variety: the words the player met are remembered, so
+    // the next Hunt cannot deal them again (Pete, 2026-11-20). Only a live run; a finished run was
+    // already recorded by recordRunComplete.
+    const quitGame = get().game;
+    if (quitGame.status === 'playing' && quitGame.session.length > 0) {
+      const current = get().progress;
+      const recentWordIds = rememberReachedWords(
+        reachedWords(quitGame.session, quitGame.stepIndex),
+        current.recentWordIds ?? [],
+      );
+      const nextProgress: PlayerProgress = { ...current, recentWordIds };
+      set({ progress: nextProgress });
+      AsyncStorage.setItem(PROGRESS_KEY, JSON.stringify(nextProgress)).catch(() => {});
+    }
     const onboarding = get().onboarding;
     const nextOnboarding = onboarding.activeRun
       ? { ...onboarding, activeRun: null }
@@ -948,20 +963,11 @@ export const useGameStore = create<GameStore>((set, get) => ({
     // Rank is retired from the player-facing progression. Keep legacy
     // `personalBest`/`rankHistory` fields readable for old saves, but do not
     // write new rank history while the control migration is in progress.
-    const RECENT_WORDS_CAP = 30; // ~3 runs of history — tunable constant, not locked
-    const reachedWords = game.session
-      .slice(0, game.stepIndex + 1)
-      .filter((s): s is WordStep => s.kind === 'word')
-      .map(s => s.word)
-      .reverse(); // most-recent-first within this run
-    const recentSeen = new Set<string>();
-    const recentWordIds: string[] = [];
-    for (const w of [...reachedWords, ...(current.recentWordIds ?? [])]) {
-      if (recentSeen.has(w)) continue;
-      recentSeen.add(w);
-      recentWordIds.push(w);
-      if (recentWordIds.length >= RECENT_WORDS_CAP) break;
-    }
+    // Full variety (huntRecency.ts): remember every word played until the whole bank comes round.
+    const recentWordIds = rememberReachedWords(
+      reachedWords(game.session, game.stepIndex),
+      current.recentWordIds ?? [],
+    );
     const RECENT_PERFORMANCE_CAP = 5;
     const performance: HuntPerformance = resolveHuntPerformance({
       status: game.status,

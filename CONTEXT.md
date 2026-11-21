@@ -19,18 +19,15 @@ Short current handoff, not a work log. `CLAUDE.md` is the durable architecture m
   - The workbook's 18 extra Tiles rows are all marked RETIRED, CUT or REMOVED.
   - `wordType` is not in the Word Tracker, so it was not compared.
 
-## Open decision for Pete: Hunt word variety
+## Hunt word variety: full variety built (Pete's choice, 2026-11-20)
 
-Friend testers kept seeing the same words. Pete wants every word to get played and no repeats that don't need to happen (Haunts, mastered returns and the Boss excepted). Claude's findings (simulation on the real generator, 200 players x 40 Hunts, player dying in rounds 2-5):
+Friend testers kept seeing the same words. The causes were a 30-word memory, quit Hunts recording nothing, and rounds 1-2 limited to the 50 easy words. Pete chose full variety:
 
-- **Short memory.** The game only remembers the last 30 words played (`RECENT_WORDS_CAP`). Anything older counts as fresh again. Today that player sees about 61 different words in 40 Hunts, and 56% of the words they meet are repeats.
-- **Quitting doesn't count.** QUIT HUNT (`forfeitGame`) never records the words just seen, so the next Hunt can deal the same ones. With some quitting, the first repeat comes around Hunt 6.
-- **Difficulty fences.** Rounds 1-2 only take easy words, and there are only 50 easy ordinary words. A struggling player also gets easy words pushed first in every round, so early-dying players rarely see medium words and almost never see hard ones.
-- **Tested fix.** Remember every word until the whole bank has been played, count quits, prefer any unplayed word before a replay, and replay oldest-first. Result: 0 repeats in 40 Hunts, and every word seen once before any repeat.
-- **Cost of that fix.** For a player who keeps dying early, rounds 1-2 drift to medium words around Hunt 11-20 and some hard words after about Hunt 40, because the easy words run out.
-- **Middle option.** Keep the difficulty fences but use the long memory and record quits. Repeats drop to 35%, and the first repeat moves to about Hunt 17, but hard words still rarely reach early-dying players.
-
-Pete decides how loose the difficulty fences go. Nothing is built yet.
+- **What changed:** every word met is remembered (`app/game/huntRecency.ts`), quits included. Unplayed words are dealt before any replay, and replays come oldest first.
+- **Simulation result:** a player dying in rounds 2-5 over 40 Hunts went from 56% repeats to 0. Every ordinary word is met before any repeats.
+- **Accepted cost:** for that player, rounds 1-2 move to medium words around Hunts 11-20, and some hard words appear after about Hunt 40.
+- **Unchanged:** Haunts, pinned Boss, mastered-return timing (rounds 5-7) and the Boss rules.
+- **Still to do:** check it on the phone.
 
 ## Next task
 

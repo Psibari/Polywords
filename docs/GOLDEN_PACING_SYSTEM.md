@@ -39,6 +39,12 @@ not gpsTag, so a player who keeps dying early can still meet every easy and medi
 | Tension (5-6) | medium + hard, plus mastered returns |
 | Panic (7) | hard, plus mastered returns |
 
+**Full variety (Pete, 2026-11-20):** the table is a preference, not a fence. Every ordinary word is
+played once before any repeats: a round takes an unplayed word from its own band first, then an
+unplayed word from the next bands in order, and only then replays the longest-unseen word. So a
+player who keeps dying early moves on to medium, and eventually hard, words in rounds 1-2 instead
+of seeing the same easy words again. Memory lives in `app/game/huntRecency.ts`; quit Hunts count.
+
 Boss words (gpsTag `boss`) never fill ordinary rounds. Before this, gpsTag locked Tension and Panic
 words to late rounds even when easy, and a round-3 player saw 44 of the bank's words in 20 Hunts.
 `app/game/huntReachability.test.ts` fails if any ordinary word becomes unreachable.
@@ -49,7 +55,7 @@ words to late rounds even when easy, and a round-3 player saw 44 of the bank's w
 2. neutral pre-commitment treatment;
 3. valid phase eligibility;
 4. context and trap-family variety;
-5. unseen or least-recently-seen material.
+5. unseen material first, then least-recently-seen (full variety, above).
 
 The generator uses adjacent/cross-pool fallbacks when a preferred phase pool cannot fill a slot;
 this prevents uneven editorial pool sizes or heavy mastery from crashing a Hunt. Fallbacks may

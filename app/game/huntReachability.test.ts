@@ -2,6 +2,8 @@ import assert from 'node:assert/strict';
 
 import { generateHunt } from './huntGenerator';
 import { pinnedBossForHunt } from './pinnedBoss';
+import { RECENT_WORDS_CAP, reachedWords, rememberReachedWords } from './huntRecency';
+import { readFileSync } from 'node:fs';
 import db from '../../assets/data/huntData.json';
 
 // Ordinary rounds pick by DIFFICULTY, not gpsTag (Pete, 2026-11-13). gpsTag used to lock
@@ -23,7 +25,7 @@ for (const [word, entry] of Object.entries(db as Record<string, { masks: { id: s
 }
 type Step = ReturnType<typeof generateHunt>[number];
 const wordOf = (s: Step): string => (s as { word: string }).word;
-const RECENT_WORDS_CAP = 30; // mirrors useGameStore recordRunComplete
+// Same memory the store keeps (useGameStore.recordRunComplete / forfeitGame).
 
 // 1. Rounds 1-2 are always easy words; rounds 3-4 are never hard (no mastery, no first run).
 for (let seed = 1; seed <= 300; seed += 1) {
@@ -72,7 +74,7 @@ function seenByPlayers(dieAt: number, players: number): Set<string> {
   assert.deepEqual(missing, [], `players who die in round 3 must be able to meet every easy and medium word; never seen: ${missing.join(', ')}`);
 }
 
-// 3. Mastered words still return only in rounds 5-9, flagged isMasteredReturn.
+// 3. Mastered words still return only in rounds 5-7, flagged isMasteredReturn.
 {
   const mastered = ordinary.slice(0, 40);
   const masteredSet = new Set(mastered);
@@ -226,3 +228,69 @@ console.log('hunt rotation regression tests passed');
   }
   console.log('returning Haunt placement simulation:', JSON.stringify({ checks, ghost, pinnedBoss: boss }));
 }
+
+
+// 7. FULL VARIETY (Pete, 2026-11-20): a player who keeps dying early, quitting some Hunts, meets
+//    every ordinary word once before ANY ordinary word repeats. Haunts, mastered returns and the
+//    pinned Boss are outside this rule; the pinned Boss is excluded because it is never reached here.
+{
+  assert.equal(RECENT_WORDS_CAP, Object.keys(bank).length, 'memory must cover the whole bank');
+  const ordinarySet = new Set(ordinary);
+  for (let p = 0; p < 50; p += 1) {
+    let recent: string[] = [];
+    let pin: string | undefined;
+    const met = new Set<string>();
+    let cycleDone = false;
+    for (let h = 0; h < 120 && !cycleDone; h += 1) {
+      const steps = generateHunt({
+        seed: p * 7919 + h * 104729 + 3, recentWordIds: recent, pinnedBossWord: pin,
+        firstRunOnboarding: h === 0, ...(h < 3 ? { gentle: true } : {}),
+        recentHuntPerformance: ['struggle', 'struggle'],
+      });
+      pin = pinnedBossForHunt(steps) ?? undefined;
+      const dieAt = 2 + ((p * 13 + h * 7) % 4); // reaches rounds 2-5; quits count the same
+      const reached = reachedWords(steps, dieAt - 1).filter(w => ordinarySet.has(w));
+      for (const w of reached) {
+        if (met.size === ordinarySet.size) { cycleDone = true; break; }
+        assert.ok(!met.has(w), `player ${p} Hunt ${h + 1}: ${w} repeated before every word was played (${met.size}/${ordinarySet.size} met)`);
+        met.add(w);
+      }
+      recent = rememberReachedWords(reachedWords(steps, dieAt - 1), recent);
+    }
+  }
+}
+
+// 8. Rounds 1-2 still open on easy words while unplayed easy words remain, and mastered words
+//    never leak into rounds 1-4 however long the campaign runs.
+{
+  const mastered = ordinary.filter(w => bank[w].difficulty === 'medium').slice(0, 30);
+  const masteredSet = new Set(mastered);
+  let recent: string[] = [];
+  let easyLeft = ordinary.filter(w => bank[w].difficulty === 'easy' && !masteredSet.has(w)).length;
+  for (let h = 0; h < 80; h += 1) {
+    const steps = generateHunt({ seed: h * 6151 + 11, recentWordIds: recent, masteredWords: mastered });
+    steps.forEach((s, i) => {
+      if (masteredSet.has(wordOf(s))) assert.ok(i >= 4 && i <= steps.length - 2, `mastered ${wordOf(s)} in round ${i + 1}`);
+    });
+    if (easyLeft >= 2) steps.slice(0, 2).forEach((s, i) =>
+      assert.equal(bank[wordOf(s)].difficulty, 'easy', `Hunt ${h + 1} round ${i + 1} skipped an unplayed easy word`));
+    const reached = reachedWords(steps, 3);
+    easyLeft -= reached.filter(w => bank[w].difficulty === 'easy' && !recent.includes(w)).length;
+    recent = rememberReachedWords(reached, recent);
+  }
+}
+
+// 9. rememberReachedWords: latest round first, no duplicates, capped.
+assert.deepEqual(rememberReachedWords(['A', 'B', 'C'], ['C', 'D']), ['C', 'B', 'A', 'D']);
+assert.deepEqual(rememberReachedWords(['A', 'B'], ['C'], 2), ['B', 'A']);
+
+// 10. Quitting a Hunt records the words met (store wiring; the store needs native modules, so
+//     this is a source check like the other wiring tests).
+{
+  const store = readFileSync(new URL('../store/useGameStore.ts', import.meta.url), 'utf8');
+  const forfeit = store.slice(store.indexOf('forfeitGame: async'), store.indexOf('submitSwipeUp: (maskId)'));
+  assert.match(forfeit, /rememberReachedWords\(/, 'forfeitGame must remember the words met in a quit Hunt');
+  assert.match(store, /recordRunComplete[\s\S]*rememberReachedWords\(/, 'recordRunComplete must use the full-variety memory');
+}
+
+console.log('hunt full-variety tests passed');
