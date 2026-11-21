@@ -5,6 +5,14 @@ In-repo authority for the Hunt data boundary, workflow and approval gate.
 exceptions, Pete's binding trap rules); where the two disagree, the Bible wins (Pete, 2026-11-13).
 `docs/CONTENT_PHILOSOPHY.md` states the intended feeling.
 
+## Editorial Audit Interpretation (2026-11-20)
+
+The binding, detailed policy is in `docs/CONTENT_WRITING_BIBLE.md`, section **November 20, 2026: Human-Judgment Audit and Flag Triage**. Review each headword's complete current card, not a generic rule checklist. REALs must be genuinely true and recognition-rich; traps must tempt the headword yet have a different clear true owner and no defensible headword answer. A trap is not merely an inverted REAL. Multiple strong REAL angles for one meaning can coexist.
+
+Editorial overlap, repeated common vocabulary, cross-word scene similarity, clue-length imbalance and exceptional sound play are **review signals**, not automatic rewrite mandates. Previously approved KEEP/exception decisions remain binding until a concrete new defect is demonstrated. Do not automatically clear advisory warnings by rewriting approved tiles. Preserve the headword prohibition, player fairness and structural validation as hard gates.
+
+For the next word-by-word audit: inventory every ID and exact tile, classify each finding as KEEP / KEEP APPROVED EXCEPTION / REWRITE PROPOSAL / REMOVE PROPOSAL / NEEDS PETE'S RULING, and present a reason before any change. Pete approves editorial changes before runtime promotion. The live source is `assets/data/huntData.json`; the intended canonical editorial workbook path is `docs/content/POLYWORDS_CANONICAL_HUNT.xlsx` once the binary workbook is committed and verified. Never assume parity from a filename or a passing CI gate.
+
 ## Data Boundary
 
 - Base live Hunt bank: `assets/data/huntData.json`.
