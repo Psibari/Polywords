@@ -37,6 +37,16 @@ const EDITORIAL_STOPWORDS = new Set([
   'SHE', 'SO', 'SOME', 'THAN', 'THAT', 'THE', 'THEIR', 'THEM', 'THEN', 'THERE',
   'THESE', 'THEY', 'THIS', 'THOSE', 'THROUGH', 'TO', 'UP', 'WAS', 'WE', 'WERE',
   'WHAT', 'WHEN', 'WHERE', 'WHICH', 'WHO', 'WHY', 'WITH', 'WITHOUT', 'YOU', 'YOUR',
+
+  // Generic clue scaffolding is not a distinctive memory snap. Keep scene
+  // words (e.g. TEXT, READ, DEFENSE) available for actual editorial review.
+  'PERSON', 'PEOPLE', 'SOMEONE', 'SOMEBODY', 'ANYONE', 'EVERYONE', 'NOBODY',
+  'THING', 'THINGS', 'SOMETHING', 'ANYTHING', 'EVERYTHING',
+  'HAPPEN', 'HAPPENS', 'HAPPENED', 'OPPOSITE', 'BACK', 'AROUND', 'RIGHT', 'LEFT',
+  'MAKE', 'MAKES', 'MADE', 'NEED', 'NEEDS', 'WANT', 'WANTS',
+  'TAKE', 'TAKES', 'PUT', 'PUTS', 'KEEP', 'KEEPS', 'GO', 'GOES', 'GOING',
+  'GETTING', 'WAY', 'TIME', 'TIMES', 'FIRST', 'LAST', 'NEXT', 'ONLY',
+  'STILL', 'ALWAYS', 'NEVER', 'EVEN', 'MUCH', 'MANY',
 ]);
 
 export function normalizePhrase(value) {
@@ -168,8 +178,9 @@ function buildEditorialReview(records, editorialReview) {
     for (const real of group.reals) {
       for (const trap of group.traps) {
         const shared = sharedTokens(real.tokens, trap.tokens);
-        const suspicious = shared.length >= 2 ||
-          (shared.length === 1 && shared[0].length >= 6);
+        // One shared word is insufficient evidence of a recycled memory snap.
+        // These are review candidates, never automatic writing failures.
+        const suspicious = shared.length >= 2;
         if (!suspicious) continue;
         editorialReview.push(
           `same-headword REAL/trap overlap: ${word}/${real.id} ↔ ${word}/${trap.id}; shared=${shared.join(', ')}; REAL="${real.phrase}"; TRAP="${trap.phrase}"`,
@@ -360,9 +371,14 @@ export function validateRuntimeHuntData(data) {
         if (normalizePhrase(pair.real) && normalizePhrase(pair.real) === normalizePhrase(pair.trap)) {
           blockers.push(`${pairContext}: hidden REAL and trap cannot be identical`);
         }
-        const lengthDelta = Math.abs(countWords(pair.real) - countWords(pair.trap));
-        if (lengthDelta > 2) {
-          warnings.push(`${pairContext}: REAL/trap length differs by ${lengthDelta} words; review Hidden Truth parity`);
+        // Natural wording is not constrained to matching lengths. Flag only
+        // extreme asymmetry as a possible answer-position cue for human review.
+        const realLength = countWords(pair.real);
+        const trapLength = countWords(pair.trap);
+        const lengthDelta = Math.abs(realLength - trapLength);
+        const lengthRatio = Math.max(realLength, trapLength) / Math.max(1, Math.min(realLength, trapLength));
+        if (lengthDelta >= 8 && lengthRatio >= 2.5) {
+          warnings.push(`${pairContext}: extreme Hidden Truth length asymmetry (REAL ${realLength}, trap ${trapLength}); review possible length cue`);
         }
       }
     } else if (hiddenPairs.length > 0 || nonemptyLegacyHidden(entry)) {
