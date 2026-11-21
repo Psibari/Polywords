@@ -1,5 +1,12 @@
 # POLYWORDS Architecture
 
+## Current editorial workflow and canonical workbook destination (2026-11-20)
+
+Pete approved `docs/content/POLYWORDS_CANONICAL_HUNT.xlsx` as the stable version-controlled editorial master filename. **The workbook binary is not yet committed**: the reconciled source is `POLYWORDS_CANONICAL_LIVE_HUNT_RECONCILED_2026-11-20.xlsx` delivered separately. Do not treat the destination as an existing repository file until a Git commit and verification establish it.
+
+Audit rules were consolidated in `docs/CONTENT_WRITING_BIBLE.md` (commit `7a46d42`) and `docs/CONTENT_WRITING_STANDARD.md` (commit `0088321`). Per-word human judgment governs editorial review; REAL truth and trap falsehood/true-owner are distinct tests. Advisory overlaps and length differences do not authorize rewrites. Approved KEEP decisions remain; hard fairness, headword and runtime-integrity gates are unchanged. Word-by-word audit follows the workbook upload and verification, not before. See `CONTEXT.md` for current action.
+
+
 ## Current verified implementation and CI handoff (2026-11-20)
 
 **Active branch:** `play-screen-overhaul`; eight-round standard Hunt approved and merged. Six regular starting feathers; eligible Returning Haunt between rounds 4 and 5; round-eight Boss; Gold Feather separate; first-run FINE and mercy retained. Explicit ten-round override is historical/test-only. The older ten-round contract and pre-merge feature-branch checkpoint below are **archived history**, not instructions for current gameplay. Runtime code outranks any stale documentation.
