@@ -1,6 +1,24 @@
 # POLYWORDS Current Context
 
-## CURRENT VERIFIED BASELINE — 2026-11-20
+## CURRENT VERIFIED HANDOFF — 2026-11-20 (supersedes earlier checkpoints)
+
+**Working branch:** `play-screen-overhaul`. The eight-round Hunt is Pete-approved and merged; do not reopen gameplay or the approved Home. The ten-round snapshot is preserved at `backup-play-screen-overhaul-10-round-pre-merge-2026-11-20` (`189f923`). All pre-merge instructions below are **historical only**.
+
+**Latest verified quality baseline:** commit `b4c0c8e03572637d76565ba8ac2dca2e632ac6ec`, GitHub Actions **Typecheck / Quality Checks #1094**, **green SUCCESS**, as shown on Pete's GitHub Actions screen. Pete independently ran `npx.cmd tsc --noEmit` (passed with no errors), `npm test` (all tests passed, including `runtimeHuntValidation` and `contentEditorialReview`), and `npm run content:preflight -- --input assets/data/huntData.json` (PASSED). This is a verified CI and local automated baseline, **not** a device or workbook-parity certification. Any subsequent commit requires its own latest-head CI check.
+
+**Live Hunt content at the verified preflight:** SHA-256 `477cb5959d3480582f9e3fb6ad4ecb87901b2fcea8fb6af371a307b45df6b437`; **253 words, 2,583 masks, 72 hidden pairs**; confidence 24, flow 52, tension 83, panic 70, boss 24. **Zero new structural blockers, zero known live debt, zero launch blockers.** One advisory warning (EXTRACT hidden pair #3: 16-word REAL vs 6-word trap) and six advisory editorial overlaps (DOUBLE, MINE, PALM, HANDLE, INDEX, ROUND). These are **not failures** and their wording was reviewed/approved for KEEP; do not silently rewrite to clear heuristic warnings.
+
+**Approved editorial changes already in live `assets/data/huntData.json`:**
+- `row_t6` (TRAP): `WHAT ALL THE KIDS SIT IN WHEN THEY PLAY DUCK DUCK GOOSE`; true owner CIRCLE. Commit `5d70a687593e8f0ea0591ad1fcad8b4862eb0499`.
+- `handle_r4` (REAL): `WHAT THE CAR COULDN'T DO ON THE SHARP TURN AT THAT SPEED, SO IT CRASHED`. Commit `85301134bf5c5d40195b8716f1b68de2563b37b7`.
+- Editorial false-positive filtering was refined without weakening structural checks in `4f3d6a60360a6578698a63c740d347886f97f08d`. A stale Hidden Truth length **unit-test expectation** then caused red CI on earlier commits; the regression test was aligned with the approved extreme-asymmetry warning in `b4c0c8e03572637d76565ba8ac2dca2e632ac6ec`. Latest run #1094 is green. The old red runs remain historical, not current failures.
+- FORK's runtime `wordType` is Septuple (7 REALs), following the approved Boss REAL removal. The separate workbook tracker was also corrected to seven in a delivered local workbook.
+
+**Workbook boundary:** Live `assets/data/huntData.json` is the only runtime authority. The latest delivered working workbook is `POLYWORDS_CANONICAL_SYNC_VERIFIED_EDITS_2026-11-20.xlsx` (external to repo); it includes ROW/HANDLE edits and FORK tracker correction. **Full workbook-to-runtime reconciliation has NOT been completed or certified.** Never infer exact parity from the filename, previous matching state, or a passing quality gate. Reopen the actual workbook and live JSON, reconcile every ID, role, phrase, word classification and hidden pair, and preserve approved workbook-only material separately. No mass rewrites or silent ID changes.
+
+**Next single highest-value task:** full canonical workbook ↔ live Hunt JSON reconciliation, after this documentation handoff. Next three actions: (1) obtain and inspect the actual latest workbook and live branch-head JSON; (2) perform exhaustive ID/phrase/role/hidden-pair and tracker comparison, with discrepancy report and no unapproved edits; (3) resolve only source-backed mismatches, deliver verified workbook, rerun quality gates and verify CI if runtime code/data changes. **Acceptance:** zero unexplained mismatches, 253/2,583/72 runtime inventory accounted for, approved ROW/HANDLE/FORK changes preserved, and no altered locked copy. **Not yet:** Home redesign, new mechanics, Daily expansion, Polly rig overhaul, or unrelated refactors.
+
+## ARCHIVED BASELINE — 2026-11-20 (historical; superseded above)
 
 **Active development branch:** `play-screen-overhaul`, head `34eccd0` at lock-in. Eight-round Hunt migration approved and locked by Pete after iPhone playtesting. Original ten-round snapshot preserved at `backup-play-screen-overhaul-10-round-pre-merge-2026-11-20` (`189f923`). The feature branch `hunt-eight-round-migration` remains available. Do not reopen the eight-round decision without new evidence.
 
@@ -12,7 +30,7 @@
 
 ---
 
-## CURRENT HANDOFF — 2026-11-20 pre-merge verification
+## ARCHIVED HANDOFF — 2026-11-20 pre-merge verification (historical; superseded)
 
 **Active branch:** `hunt-eight-round-migration`. **Do not merge into `play-screen-overhaul` without Pete's explicit approval.** This supersedes the 2026-11-19 evening checkpoint below; retain older entries as history, not current instructions.
 
@@ -32,7 +50,7 @@ Verified against `Psibari/Polywords`, branch `play-screen-overhaul`, through 202
 ## Branch and verified baseline
 
 - **Working branch:** `play-screen-overhaul`. `main` is not the working source and must not be merged without Pete's approval. `gh-pages` is the separate public website; do not merge it into the app. Older feature branches are not the current build.
-- **Latest verified CI baseline:** commit `67fb414f37c83cd153e8913df16d415b5f471172`; GitHub Actions **Quality Checks** run `44648860014` completed **successfully**. Earlier quality-gate failures were fixed without rewriting approved tile text. This is CI evidence, not device playtesting or workbook parity. Recheck CI after documentation commits.
+- **Historical CI baseline (superseded by current handoff above):** commit `67fb414f37c83cd153e8913df16d415b5f471172`; GitHub Actions **Quality Checks** run `44648860014` completed **successfully**. Earlier quality-gate failures were fixed without rewriting approved tile text. This is CI evidence, not device playtesting or workbook parity. Recheck CI after documentation commits.
 - **Home:** outdoor night terrace is finished and Pete-approved. The old Home is DEV-only rollback. No redesign is pending.
 - **App icon and splash:** artwork approved; native presentation needs a fresh-build check if changed. Do not regenerate approved icon assets.
 - **Hunt:** UP/RIGHT swipe grammar, Boss/Haunt loop, pinned Boss, Master's Rematch, KING tally, first-run FINE onboarding and true pause/resume are implemented. Their protected behavior is in `AGENTS.md` and `CLAUDE.md`.
