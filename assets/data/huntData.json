@@ -805,7 +805,7 @@
     "hiddenTrap": null,
     "hiddenPairs": [
       {
-        "real": "THE BEAT THE BAND MARCHES TO",
+        "real": "THE FORT'S MAIN LINE OF DEFENSE",
         "trap": "THE DRUM MAJOR LEADING OUT FRONT",
         "id": "battery_h00"
       },
@@ -833,7 +833,7 @@
       },
       {
         "id": "battery_r2",
-        "phrase": "THE FORT'S MAIN LINE OF DEFENSE",
+        "phrase": "WHEN BUYING ELECTRONICS, THESE ARE NEVER INCLUDED",
         "isReal": true
       },
       {
@@ -2118,7 +2118,7 @@
     "hiddenPairs": [
       {
         "id": "brief_h00",
-        "real": "ANCHOR TEASES TONIGHT'S TOP STORY AT TEN",
+        "real": "THE THIRTY-SECOND NEWS UPDATE BETWEEN COMMERCIALS",
         "trap": "NINETY-MINUTE SPECIAL AIRS ONCE A WEEK"
       },
       {
@@ -2755,7 +2755,7 @@
       },
       {
         "id": "cast_r4",
-        "phrase": "FRIENDS SIGN THE ARMOR",
+        "phrase": "WHAT THE X-RAY SENT YOU HOME WEARING THAT RUINED YOUR WHOLE SUMMER",
         "isReal": true
       },
       {
@@ -4947,7 +4947,7 @@
         "id": "court_h02"
       },
       {
-        "real": "WHERE STUDENTS SPRAWL ON THE GRASS BETWEEN CLASSES",
+        "real": "THE YARD SURROUNDED BY SCHOOL BUILDINGS WHERE STUDENTS HANG OUT BETWEEN CLASSES",
         "trap": "WHAT YOU SWEAR ON TO TELL THE TRUTH AND NOTHING BUT THE TRUTH",
         "id": "court_h03"
       }
@@ -5004,7 +5004,7 @@
     "hiddenPairs": [
       {
         "id": "craft_h00",
-        "real": "WHERE THE FOOD'S FREE ON A MOVIE SET",
+        "real": "THE SERVICES THAT PROVIDE ALL THE FREE FOOD ON A MOVIE SET",
         "trap": "A HOMEMADE CONTRAPTION RIGGED FROM SPARE PARTS"
       },
       {
@@ -7257,7 +7257,7 @@
     "hiddenTrap": null,
     "hiddenPairs": [
       {
-        "real": "ALGEBRA CLASS: ISOLATE X SQUARED, THEN SQUARE ROOT",
+        "real": "WHAT NEEDS TO BE DONE TO GET THE SQUARE ROOT OF A NUMBER",
         "trap": "USE A AND B TO FIND SIDE C",
         "id": "extract_h00"
       },
@@ -8157,7 +8157,7 @@
       },
       {
         "real": "WHAT ROUGH WAVES LEAVE BUBBLING ALONG THE SHORE",
-        "trap": "CLEANS YOUR HAIR IN THE SHOWER",
+        "trap": "THE KIND OF SOAP THEY TELL YOU NEVER TO DROP IN A PRISON SHOWER",
         "id": "foam_h02"
       }
     ],
@@ -8651,11 +8651,6 @@
         "isReal": true
       },
       {
-        "id": "fork_r2",
-        "phrase": "WHERE A SMALLER STREAM SPLITS OFF FROM A BIG RIVER",
-        "isReal": true
-      },
-      {
         "id": "fork_r3",
         "phrase": "THE PART OF THE BIKE THAT HOLDS THE FRONT WHEEL WHILE IT SPINS",
         "isReal": true
@@ -8864,7 +8859,7 @@
       {
         "id": "horn_h01",
         "real": "WHAT YOUR THANKSGIVING CORNUCOPIA IS ALSO CALLED",
-        "trap": "WHAT SOME NATIVE AMERICAN GROUPS USED TO SIGNAL EACH OTHER FROM LONG DISTANCES"
+        "trap": "WHAT SOME NATIVE AMERICAN GROUPS USED TO SIGNAL EACH OTHER FROM HIGH UP AND FAR AWAY"
       },
       {
         "id": "horn_h02",
@@ -11273,12 +11268,12 @@
     "hiddenTrap": null,
     "hiddenPairs": [
       {
-        "real": "A BILLBOARD DOING TWO HUNDRED, TURNING LEFT ALL AFTERNOON",
+        "real": "THE KIND OF CAR THAT GOES TWO HUNDRED MILES AN HOUR JUST TO KEEP TURNING LEFT",
         "trap": "WHERE GOLD, COFFEE, AND OIL GET THEIR PRICE",
         "id": "stock_h01"
       },
       {
-        "real": "WHAT NOBODY PUTS IN A PSYCHIC HOTLINE",
+        "real": "WHAT YOU STOP PUTTING IN SOMEONE AFTER THEY'VE LIED TO YOU THREE TIMES",
         "trap": "WHAT YOU BUY WHEN YOU LEND THE GOVERNMENT MONEY",
         "id": "stock_h02"
       },
@@ -11296,7 +11291,7 @@
       },
       {
         "id": "stock_r1",
-        "phrase": "SOLD OUT — HALF OFF THE FLOOR MODEL",
+        "phrase": "WHAT THEY WERE OUT OF, SO YOU GOT HALF OFF ON THE FLOOR MODEL",
         "isReal": true
       },
       {
@@ -12189,7 +12184,7 @@
       },
       {
         "id": "cut_t0",
-        "phrase": "WHAT’S ON A CD OR RECORD WHEN IT KEEPS SKIPPING",
+        "phrase": "WHAT MAKES THE NEEDLE KEEP JUMPING BACK TO THE SAME PART OF A RECORD",
         "isReal": false
       },
       {
@@ -12365,7 +12360,7 @@
       },
       {
         "id": "drive_t13",
-        "phrase": "THE LITTLE VOICE THAT SAYS DON’T DO IT",
+        "phrase": "WHAT YOUR CAR STARTS DOING WHEN YOU HIT BLACK ICE AND LOSE CONTROL",
         "isReal": false
       }
     ],
@@ -13405,7 +13400,7 @@
       {
         "id": "hold_h02",
         "real": "WHAT YOU REACH FOR NEXT WHEN YOU’RE HALFWAY UP A CLIMBING WALL",
-        "trap": "WHAT YOU DO WITH A GRUDGE BECAUSE LIFE’S TOO SHORT"
+        "trap": "WHAT YOU DO WITH THE BUTTON TO ANSWER SOMEONE BEEPING IN ON THE OTHER LINE"
       }
     ],
     "masks": [
@@ -14064,7 +14059,7 @@
       },
       {
         "id": "set_t6",
-        "phrase": "WHAT YOU DO BEFORE YOU AIM AND FIRE",
+        "phrase": "WHAT THEY TELL YOU TO DO WITH YOUR GUN BETWEEN READY AND FIRE",
         "isReal": false
       },
       {
@@ -14083,7 +14078,7 @@
     "hiddenPairs": [
       {
         "id": "floor_h00",
-        "real": "WHO ALL HEARD YOUR HOTEL ROOM PARTY AT TWO IN THE MORNING",
+        "real": "WHAT THE ROCK STAR RENTED ALL OF AT THE HOTEL SO NOBODY ELSE COULD STAY THERE",
         "trap": "THE HIGHEST PART OF A BUILDING WHERE YOU CAN STILL THROW A PARTY"
       },
       {
