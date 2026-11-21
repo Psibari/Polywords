@@ -53,7 +53,7 @@ an arbitrary interpretation.
 
 **Current approved examples (November 20):** DOUBLE, MINE, PALM, HANDLE, INDEX and ROUND same-headword overlap flags were reviewed and kept; EXTRACT hidden length asymmetry (16 vs 6 words) was also kept. These flags may continue to be printed by the validator; that is acceptable. ROW `row_t6` and HANDLE `handle_r4` are the two explicitly approved rewritten tiles, already in live JSON. A new substantive fairness defect may justify reopening a tile, but the same heuristic alone does not.
 
-**Workbook/live-data discipline:** The workbook is the evolving editorial record; `assets/data/huntData.json` is the live runtime authority. Maintain a single canonical workbook at `docs/content/POLYWORDS_CANONICAL_HUNT.xlsx` **once the binary file is actually committed**. Do not claim the path exists until verified. Audit -> Pete approves -> update editorial record and runtime (if approved) -> exact ID/role/phrase/hidden-pair comparison -> preflight/tests -> commit. Preserve historical/retired entries without silently reactivating them.
+**Workbook/live-data discipline:** The workbook is the evolving editorial record; `assets/data/huntData.json` is the live runtime authority. The single canonical workbook is `docs/content/POLYWORDS_CANONICAL_HUNT.xlsx` (committed 2026-11-20, `e6ed6a7`). Re-check parity after every change; never assume it. Audit -> Pete approves -> update editorial record and runtime (if approved) -> exact ID/role/phrase/hidden-pair comparison -> preflight/tests -> commit. Preserve historical/retired entries without silently reactivating them.
 
 # PART I. THE CONTENT PHILOSOPHY
 

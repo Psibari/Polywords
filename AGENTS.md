@@ -32,8 +32,8 @@ casually.
 - Hunt: UP claims a REAL; RIGHT rejects a trap. No left swipe or tap-submit.
 - Daily is UP-only. Never import Hunt's RIGHT gesture into Daily.
 - Ordinary choices stay neutral before commitment.
-- Standard Hunt = 10 rounds; first three fledgling runs = 8. Polly's Word is final. Returning
-  Haunt = round 5 standard / round 4 fledgling.
+- Hunt = 8 rounds for every run, six starting feathers. Polly's Word is round 8. An eligible
+  Returning Haunt takes round 4. Ten-round generation survives only as a test override.
 - Boss outcome comes from the hidden gauntlet, never score.
 - Do not change scoring, swipe grammar, Boss rules, persistence, `MaskBoard.tsx`, or
   `SwipeMask.tsx` without an explicit focused request.
@@ -45,7 +45,7 @@ casually.
 - Polly is a smug opponent and trap-setter, not a friendly word owner.
 - Rig 2 face/crown animation is live on settled Home/Daily/Results Polly; most body art remains
   baked. The rejected ALIVE LOOP whole-image rocking experiment is not production direction.
-  Current articulation work lives in `CONTEXT.md`.
+  Full-body articulation is not approved work.
 - `BINGO BANGO ZZZZINGO!` is unassigned system text, never Polly dialogue.
 - Locked semantic palette: `#1A1830`, `#0F0D2A`, `#F5C842`, `#7B2D8B`, `#9B2D6B`, Polly
   green `#4CAF50`, wrong red `#CC2200`, and white. Gold remains scarce.
@@ -76,7 +76,9 @@ casually.
   runtime changes), `git diff --check`, and `git status --short`.
 - Docs-only changes: `git diff --check`, `git status --short`, and a reference/staleness scan.
 - Report device/native validation separately from static checks.
-- Commit, push, merge, or alter stashes only with explicit approval.
+- Commit and push to `play-screen-overhaul` when the work is done and checked (Pete, 2026-11-17);
+  say what is being pushed first. Merging into `main` or `gh-pages`, and altering stashes, need
+  Pete's explicit approval.
 - Verify every file written to Pete's disk by reading it back through the device SHELL, not the
   staging read. On 2026-11-04 `device_commit_files` returned success with no rejections and advanced
   the file's mtime while the OLD content stayed on disk, and the staging read then served a stale

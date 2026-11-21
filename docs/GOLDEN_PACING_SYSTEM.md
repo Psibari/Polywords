@@ -20,10 +20,10 @@ Governs Hunt placement and emotional rhythm. Tile writing belongs to
 
 | Arc | Confidence | Flow | Tension | Panic | Boss |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| Standard (10) | 2 | 2 | 3 | 2 | 1 |
-| Fledgling (8) | 2 | 2 | 2 | 1 | 1 |
+| Hunt (8, every run) | 2 | 2 | 2 | 1 | 1 |
+| Test-only override (10) | 2 | 2 | 3 | 2 | 1 |
 
-Polly's Word is always final. A Returning Haunt uses round 5 standard / round 4 fledgling, is
+Polly's Word is always final. An eligible Returning Haunt takes round 4, is
 forced to adrenaline/heavy feedback, and is followed by a Flow beat when possible so two peaks do
 not stack. It never receives Boss presentation.
 
@@ -32,12 +32,12 @@ not stack. It never receives Boss presentation.
 The round's phase still sets its role, haptics and Polly beats. The WORD comes from difficulty,
 not gpsTag, so a player who keeps dying early can still meet every easy and medium word:
 
-| Phase (rounds, standard) | Ordinary words drawn from |
+| Phase (rounds) | Ordinary words drawn from |
 | --- | --- |
 | Confidence (1-2) | easy |
 | Flow (3-4) | easy + medium |
-| Tension (5-7) | medium + hard, plus mastered returns |
-| Panic (8-9) | hard, plus mastered returns |
+| Tension (5-6) | medium + hard, plus mastered returns |
+| Panic (7) | hard, plus mastered returns |
 
 Boss words (gpsTag `boss`) never fill ordinary rounds. Before this, gpsTag locked Tension and Panic
 words to late rounds even when easy, and a round-3 player saw 44 of the bank's words in 20 Hunts.
@@ -56,7 +56,7 @@ this prevents uneven editorial pool sizes or heavy mastery from crashing a Hunt.
 soften phase purity but must not make properly tagged content unreachable.
 
 Boss-hidden content must be rare-but-fair and sourced. Returning Haunts take their reserved slot;
-mastered words remain eligible only for ordinary tension/panic revisits (rounds 5-9), never Boss or Returning
+mastered words remain eligible only for ordinary tension/panic revisits (rounds 5-7), never Boss or Returning
 Haunt placement. The generator marks those revisits so presentation can acknowledge them without
 leaking their status before commitment.
 

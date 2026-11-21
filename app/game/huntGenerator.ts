@@ -29,7 +29,7 @@ function selectVisibleMasks(masks:HuntWordData['masks'],rng:()=>number,requiredM
 function buildWordStep(word:string,emotionalRole:EmotionalRole,hapticTier:'light'|'medium'|'heavy',isHauntReturn:boolean,isBoss:boolean,isMasteryRematch:boolean,isMasteredReturn:boolean,rng:()=>number,requiredMaskIds:readonly string[]=[]):WordStep{const data=db[word],step:WordStep={kind:'word',word,emotionalRole,eventType:isBoss?'bossWord':'standard',difficulty:data.difficulty as WordStep['difficulty'],hapticTier,tileStagger:isBoss?120:80,meanings:[],masks:selectVisibleMasks(data.masks,rng,requiredMaskIds)};if(isBoss)step.bossModifier=true;if(isMasteryRematch)step.isMasteryRematch=true;if(isMasteredReturn)step.isMasteredReturn=true;if(isHauntReturn)step.isHauntReturn=true;if(data.hiddenMeaning!=null)step.hiddenMeaning=data.hiddenMeaning;if(data.hiddenTrap!=null)step.hiddenTrap=data.hiddenTrap;const pairs=hiddenPairsFor(word);if(pairs.length)step.hiddenPairs=pairs;return step;}
 // ORDINARY ROUNDS PICK BY DIFFICULTY, NOT gpsTag (Pete, 2026-11-13). The round's phase still sets its
 // role, haptics and Polly beats; the word comes from difficulty: rounds 1-2 easy, 3-4 easy+medium,
-// 5-7 medium+hard (+mastered returns), 8-9 hard (+mastered returns). Only the boss tag still decides
+// 5-6 medium+hard (+mastered returns), 7 hard (+mastered returns), 8 Boss. Only the boss tag decides
 // anything. Reason: gpsTag locked words to late rounds, so players who die early never saw them
 // (GOLDEN_PACING_SYSTEM: fallbacks must not make tagged content unreachable). huntReachability.test.ts.
 //
