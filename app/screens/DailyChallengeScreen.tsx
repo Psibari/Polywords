@@ -528,7 +528,8 @@ export default function DailyChallengeScreen({ navigation }: Props) {
   const [dailyIntroSeen, setDailyIntroSeen] = useState(true);
   // A returning player can reopen the rules on the short card. Reset every
   // time the screen mounts: the short card is what they asked to see.
-  const [rulesOpen, setRulesOpen] = useState(false);
+  // Separate invitation and rules cards; no Daily attempt is spent navigating between them.
+  const [entryStep, setEntryStep] = useState<'invitation' | 'rules'>('invitation');
   const [dailyStarting, setDailyStarting] = useState(false);
   const inputLockedRef = useRef(true);
   // True while a new round's blocks are punching out of the wall
@@ -1657,6 +1658,14 @@ export default function DailyChallengeScreen({ navigation }: Props) {
     clearDailyExpiredNotice();
   }, [dailyInitialized, dailyExpiredNotice, clearDailyExpiredNotice]);
 
+  function handleAcceptDaily() {
+    if (!dailyIntroSeen) {
+      setEntryStep('rules');
+      return;
+    }
+    void handleStartDaily();
+  }
+
   async function handleStartDaily() {
     if (dailyStarting) return;
     setDailyStarting(true);
@@ -1674,9 +1683,7 @@ export default function DailyChallengeScreen({ navigation }: Props) {
   }
 
   const isReadyToStart = dailyInitialized && !dailyResult && !dailySession;
-  // The explanation is open by default the very first time, and thereafter
-  // only when the player asks for it with HOW TO PLAY.
-  const showEntryRules = !dailyIntroSeen || rulesOpen;
+  const showEntryRules = entryStep === 'rules';
   const committedComplete =
     dailyInitialized &&
     (!!dailyResult || (dailySession !== null && dailySession.status !== 'active'));
@@ -1811,60 +1818,68 @@ export default function DailyChallengeScreen({ navigation }: Props) {
         >
           <View style={styles.startCard}>
             <Text allowFontScaling={false} style={styles.startKicker}>{dailyEntryKicker(challengeNumber)}</Text>
-            <Text allowFontScaling={false} style={styles.startTitle}>{DAILY_ENTRY_TITLE}</Text>
-            <Text allowFontScaling={false} style={styles.startRule}>{DAILY_ENTRY_RULE}</Text>
-            {showEntryRules && (
+            {showEntryRules ? (
               <>
+                <Text allowFontScaling={false} style={styles.startTitle}>HOW TO PLAY</Text>
                 <Text allowFontScaling={false} style={styles.startIntro}>{DAILY_ENTRY_INTRO}</Text>
                 <View style={styles.startRuleList}>
                   {DAILY_ENTRY_RULES.map((line) => (
                     <Text allowFontScaling={false} key={line} style={styles.startRuleLine}>{line}</Text>
                   ))}
                 </View>
-                <Text allowFontScaling={false} style={styles.startReward}>{DAILY_ENTRY_REWARD}</Text>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel="Start today's Daily Challenge"
+                  accessibilityState={{ disabled: dailyStarting }}
+                  disabled={dailyStarting}
+                  onPress={() => void handleStartDaily()}
+                  style={({ pressed }) => [
+                    styles.startButton,
+                    pressed && styles.startButtonPressed,
+                    dailyStarting && styles.startButtonDisabled,
+                  ]}
+                >
+                  <Text allowFontScaling={false} style={styles.startButtonText}>
+                    {dailyStarting ? DAILY_ENTRY_BEGIN_BUSY : "LET'S PLAY!"}
+                  </Text>
+                </Pressable>
+                <Pressable accessibilityRole="button" accessibilityLabel="Back to challenge invitation" onPress={() => setEntryStep('invitation')} style={styles.startHomeButton}>
+                  <Text allowFontScaling={false} style={styles.startHomeText}>GO BACK</Text>
+                </Pressable>
+              </>
+            ) : (
+              <>
+                <Text allowFontScaling={false} style={styles.startTitle}>{DAILY_ENTRY_TITLE}</Text>
+                <Text allowFontScaling={false} style={styles.startRule}>2 LIVES TO BEAT 5 ROUNDS.</Text>
+                <Text allowFontScaling={false} style={styles.startIntro}>WIN: Take home a Gold Feather.</Text>
+                <Text allowFontScaling={false} style={styles.startIntro}>LOSE: Congratulations. A cartoon bird beat you.</Text>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel="Accept Polly's Daily Challenge"
+                  accessibilityState={{ disabled: dailyStarting }}
+                  disabled={dailyStarting}
+                  onPress={handleAcceptDaily}
+                  style={({ pressed }) => [
+                    styles.startButton,
+                    pressed && styles.startButtonPressed,
+                    dailyStarting && styles.startButtonDisabled,
+                  ]}
+                >
+                  <Text allowFontScaling={false} style={styles.startButtonText}>
+                    {dailyStarting ? DAILY_ENTRY_BEGIN_BUSY : DAILY_ENTRY_BEGIN}
+                  </Text>
+                </Pressable>
+                <Pressable accessibilityRole="button" accessibilityLabel="Return Home" onPress={handleHome} style={styles.startHomeButton}>
+                  <Text allowFontScaling={false} style={styles.startHomeText}>{DAILY_ENTRY_LEAVE}</Text>
+                </Pressable>
+                {dailyIntroSeen && (
+                  <Pressable accessibilityRole="button" accessibilityLabel="How to play Daily Challenge" onPress={() => setEntryStep('rules')} style={styles.startRulesButton}>
+                    <Text allowFontScaling={false} style={styles.startRulesText}>HOW TO PLAY</Text>
+                  </Pressable>
+                )}
               </>
             )}
-            <Text allowFontScaling={false} style={styles.startAttempt}>{DAILY_ENTRY_ATTEMPT}</Text>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="Begin today's Daily Challenge"
-              accessibilityState={{ disabled: dailyStarting }}
-              disabled={dailyStarting}
-              onPress={() => void handleStartDaily()}
-              style={({ pressed }) => [
-                styles.startButton,
-                pressed && styles.startButtonPressed,
-                dailyStarting && styles.startButtonDisabled,
-              ]}
-            >
-              <Text allowFontScaling={false} style={styles.startButtonText}>
-                {dailyStarting ? DAILY_ENTRY_BEGIN_BUSY : DAILY_ENTRY_BEGIN}
-              </Text>
-            </Pressable>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="Return Home"
-              onPress={handleHome}
-              style={({ pressed }) => [styles.startHomeButton, pressed && styles.startButtonPressed]}
-            >
-              <Text allowFontScaling={false} style={styles.startHomeText}>{DAILY_ENTRY_LEAVE}</Text>
-            </Pressable>
-            {dailyIntroSeen && (
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel={rulesOpen ? DAILY_ENTRY_RULES_A11Y_HIDE : DAILY_ENTRY_RULES_A11Y_SHOW}
-                accessibilityState={{ expanded: rulesOpen }}
-                onPress={() => setRulesOpen(open => !open)}
-                style={({ pressed }) => [styles.startRulesButton, pressed && styles.startButtonPressed]}
-              >
-                <Text allowFontScaling={false} style={styles.startRulesText}>
-                  {rulesOpen ? DAILY_ENTRY_RULES_HIDE : DAILY_ENTRY_RULES_SHOW}
-                </Text>
-              </Pressable>
-            )}
-            <Text allowFontScaling={false} style={styles.startTaunt}>
-              {dailyIntroSeen ? dailyEntryTaunt(challengeNumber) : DAILY_ENTRY_TAUNT_FIRST}
-            </Text>
+
           </View>
         </ScrollView>
       )}
