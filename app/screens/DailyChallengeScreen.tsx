@@ -1807,19 +1807,19 @@ export default function DailyChallengeScreen({ navigation }: Props) {
           contentContainerStyle={styles.startGate}
           showsVerticalScrollIndicator={false}
         >
-          <View style={styles.startCard}>
+          <View style={[styles.startCard, showEntryRules && styles.startRulesCardCompact]}>
             <Text allowFontScaling={false} style={styles.startKicker}>{dailyEntryKicker(challengeNumber)}</Text>
             {showEntryRules ? (
               <>
                 <Text allowFontScaling={false} style={styles.startTitle}>HOW TO PLAY</Text>
-                <View style={styles.startRuleList}>
+                <View style={[styles.startRuleList, styles.startRuleListCompact]}>
                   {[
                     ['1. SIX WORDS.', 'One is the correct answer.'],
                     ['2. FOLLOW THE CLUES.', 'Three clues appear, one at a time.'],
                     ['3. WAIT OR ANSWER EARLY!', 'Answer early to knock Polly off her perch!'],
                     ['4. SWIPE UP', 'On the word you choose.'],
                   ].map(([heading, detail]) => (
-                    <View key={heading} style={styles.startInstruction}>
+                    <View key={heading} style={[styles.startInstruction, styles.startInstructionCompact]}>
                       <Text allowFontScaling={false} style={styles.startInstructionHeading}>{heading}</Text>
                       <Text allowFontScaling={false} style={styles.startInstructionDetail}>{detail}</Text>
                     </View>
@@ -2103,6 +2103,18 @@ const styles = StyleSheet.create({
     borderColor: PW.color.white,
     padding: 20,
     alignItems: 'center',
+  },
+  // Rules-only spacing: preserve font sizes and invitation layout. The outer
+  // ScrollView remains the fallback on short screens instead of clipping actions.
+  startRulesCardCompact: {
+    paddingVertical: 14,
+  },
+  startRuleListCompact: {
+    marginTop: 14,
+    gap: 13,
+  },
+  startInstructionCompact: {
+    gap: 3,
   },
   startKicker: {
     color: dailyResultsMaterial.challengeLabel,
