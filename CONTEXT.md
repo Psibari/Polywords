@@ -1,5 +1,12 @@
 # POLYWORDS Current Context
 
+## 2026-11-20 audit-rule consolidation and canonical workbook handoff
+
+The word-by-word Hunt audit is **not started**. Its rules are now consolidated in `docs/CONTENT_WRITING_BIBLE.md` (human-judgment/flag triage clarification, commit `7a46d42`) and `docs/CONTENT_WRITING_STANDARD.md` (commit `0088321`). Every word gets individual review; REAL and trap have different truth tests; heuristic overlap/length flags are advisory; approved KEEP decisions and exceptions stay locked; no automatic rewrites. Hard fairness and structural rules remain in force.
+
+**Canonical workbook destination approved by Pete:** `docs/content/POLYWORDS_CANONICAL_HUNT.xlsx`. The verified reconciled source file is `POLYWORDS_CANONICAL_LIVE_HUNT_RECONCILED_2026-11-20.xlsx` (provided to Pete for download, currently outside GitHub). **The binary has not yet been committed to this repo**; do not claim the canonical path exists until verified. The next operation is to copy this exact workbook into the approved path and commit it without altering contents. Once present, verify filename/path and record its hash, then proceed to the word-by-word Hunt audit. Preserve evolving workbook history and keep the live JSON separate.
+
+
 ## CURRENT VERIFIED HANDOFF — 2026-11-20 (supersedes earlier checkpoints)
 
 **Working branch:** `play-screen-overhaul`. The eight-round Hunt is Pete-approved and merged; do not reopen gameplay or the approved Home. The ten-round snapshot is preserved at `backup-play-screen-overhaul-10-round-pre-merge-2026-11-20` (`189f923`). All pre-merge instructions below are **historical only**.
