@@ -1,16 +1,33 @@
 # POLYWORDS Architecture
 
-## Current approved development baseline (2026-11-20)
+## Current verified implementation and CI handoff (2026-11-20)
+
+**Active branch:** `play-screen-overhaul`; eight-round standard Hunt approved and merged. Six regular starting feathers; eligible Returning Haunt between rounds 4 and 5; round-eight Boss; Gold Feather separate; first-run FINE and mercy retained. Explicit ten-round override is historical/test-only. The older ten-round contract and pre-merge feature-branch checkpoint below are **archived history**, not instructions for current gameplay. Runtime code outranks any stale documentation.
+
+**Current green CI:** commit `b4c0c8e03572637d76565ba8ac2dca2e632ac6ec`, Typecheck / Quality Checks #1094, green on GitHub. Pete separately verified local `npx.cmd tsc --noEmit`, `npm test`, and `npm run content:preflight -- --input assets/data/huntData.json` all pass. This verifies automation only, not native gameplay or workbook parity. Reverify CI after any later commit.
+
+**Hunt content gate:** live `assets/data/huntData.json` preflight SHA-256 `477cb5959d3480582f9e3fb6ad4ecb87901b2fcea8fb6af371a307b45df6b437`; 253 words, 2,583 visible masks, 72 hidden pairs, 0 structural/known-debt/launch blockers. One advisory EXTRACT Hidden Truth asymmetry and six advisory REAL/trap overlap flags (DOUBLE, MINE, PALM, HANDLE, INDEX, ROUND) are reviewed KEEP decisions, not gate failures. Structural checks remain strict.
+
+**Relevant recent commits and their intent:**
+- `5d70a687593e8f0ea0591ad1fcad8b4862eb0499`: approved ROW trap `row_t6` changed to `WHAT ALL THE KIDS SIT IN WHEN THEY PLAY DUCK DUCK GOOSE` (owner CIRCLE).
+- `85301134bf5c5d40195b8716f1b68de2563b37b7`: approved HANDLE REAL `handle_r4` changed to `WHAT THE CAR COULDN'T DO ON THE SHARP TURN AT THAT SPEED, SO IT CRASHED`.
+- `4f3d6a60360a6578698a63c740d347886f97f08d`: reduce false-positive editorial overlap and length warnings; do not weaken structural validation.
+- `b4c0c8e03572637d76565ba8ac2dca2e632ac6ec`: update outdated `tools/content/runtimeHuntValidation.test.mjs` Hidden Truth length assertion; fixes red CI from previous commits. Latest Quality Checks #1094 green.
+- FORK runtime `wordType` is Septuple (7 REALs); the separate workbook Word Tracker was corrected. Preserve approved Boss removals.
+
+**Editorial authority and next work:** `assets/data/huntData.json` is the only runtime Hunt bank. The delivered `POLYWORDS_CANONICAL_SYNC_VERIFIED_EDITS_2026-11-20.xlsx` is an **external working workbook**, not yet exhaustively reconciled with runtime. Do not claim parity or rewrite locked text without inspecting both current files. Next: compare all IDs, headwords, REAL/TRAP flags, exact phrases, hidden pairs, word types and tracker counts; preserve workbook-only history, resolve discrepancies with Pete where necessary, then validate again. See the current handoff at the top of `CONTEXT.md`.
+
+## Archived approved development baseline (2026-11-20; superseded above)
 
 **Branch:** `play-screen-overhaul`. Eight-round Hunt migration merged via PR #20 and locked by Pete after iPhone smoke testing. Original ten-round branch snapshot: `backup-play-screen-overhaul-10-round-pre-merge-2026-11-20` (`189f923`). Latest verified pre-documentation-change CI: `34eccd0`, Quality Checks `44808877477`, all three gates green. Eight rounds across tiers; six starting regular feathers; eligible Returning Haunt between rounds 4 and 5; Boss in round 8. Gold Feather remains separate. First-run FINE and mercy preserved. Explicit ten-round generator override remains historical/test-only.
 
-**Next:** audit first-time player experience against actual current code and device, then prioritize any demonstrated confusion. Word rotation issue #17 is substantially addressed by regression coverage and native observation, but early-loss/restart remains an unverified edge case. Do not reopen approved gameplay or Home design without evidence.
+**Historical next-task note (superseded):** audit first-time player experience against actual current code and device, then prioritize any demonstrated confusion. Word rotation issue #17 is substantially addressed by regression coverage and native observation, but early-loss/restart remains an unverified edge case. Do not reopen approved gameplay or Home design without evidence.
 
 **Historical note:** the pre-merge feature-branch checkpoint below is superseded.
 
 ---
 
-## Current feature-branch checkpoint (2026-11-20)
+## Archived feature-branch checkpoint (2026-11-20; historical only)
 
 **Branch:** `hunt-eight-round-migration`. Read `CONTEXT.md` for the latest verification and open pre-merge checks. **Do not merge without Pete's approval.** Yesterday's local 103 MB web ZIP commit was safely removed from the active branch, with a backup branch retained; the local and origin heads matched at `be34f76` before this documentation update. Do not restore or merge the ZIP.
 
@@ -58,7 +75,7 @@ The Hunt standard and Bible both contain binding editorial language; do not sile
 ## Hunt contracts
 
 - UP claims a REAL; RIGHT rejects a trap. No left swipe or tap-submit. Ordinary choices remain neutral before commitment.
-- Standard Hunt: ten rounds; first three fledgling runs: eight. Polly's Word is final. A Returning Haunt occupies round five (standard) or four (fledgling) and does not use Boss presentation.
+- **Current standard Hunt: eight rounds**; first-run FINE and fledgling mercy are preserved. Polly's Word is the round-eight Boss. An eligible Returning Haunt appears between rounds four and five and does not use Boss presentation. Explicit ten-round generation remains historical/test-only.
 - A word encounter deals up to five visible cards from its larger approved pool. A card in live JSON is eligible to rotate, not guaranteed to appear in a particular Hunt.
 - Boss outcome is determined by the three hidden judgments, never the score: all correct means MASTERED; a hidden miss or Boss death means HAUNTED. Returning Haunts retry the saved exact hidden pair; success banishes the active Haunt.
 - The Boss is pinned across Hunts until the player reaches it, provided it remains eligible. Ordinary word rotation remains independent. `app/game/pinnedBoss.ts` and `app/game/pinnedBoss.test.ts` own the invariant.
