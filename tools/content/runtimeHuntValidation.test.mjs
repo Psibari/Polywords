@@ -164,11 +164,12 @@ function hasMessage(messages, fragment) {
 
 {
   const bank = makeValidBank();
-  bank.WORD96.hiddenPairs[0] = {
-    real: 'A VERY LONG SECRET HUMAN MEMORY HANDLE',
-    trap: 'DECOY',
-  };
-  assert.ok(hasMessage(validateRuntimeHuntData(bank).warnings, 'Hidden Truth parity'));
+  bank.WORD96.hiddenPairs[0].real =
+    'A VERY LONG SECRET HUMAN MEMORY HANDLE FROM A DISTANT AND UNFORGETTABLE MOMENT';
+  bank.WORD96.hiddenPairs[0].trap = 'DECOY';
+  assert.ok(hasMessage(validateRuntimeHuntData(bank).warnings, 'extreme Hidden Truth length asymmetry'));
+  bank.WORD96.hiddenPairs[0].real = 'A FAMILIAR MEMORY FROM LONG AGO';
+  assert.equal(hasMessage(validateRuntimeHuntData(bank).warnings, 'extreme Hidden Truth length asymmetry'), false);
 }
 
 {
