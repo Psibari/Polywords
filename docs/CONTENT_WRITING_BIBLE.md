@@ -34,6 +34,27 @@ an arbitrary interpretation.
 
 ------------------------------------------------------------------------
 
+## November 20, 2026: Human-Judgment Audit and Flag Triage (binding clarification)
+
+**Audit one headword at a time, as its own recognition experience.** The rules are safeguards, not a universal clue template or automatic rewrite order. Read the full existing REAL, trap and (when applicable) hidden-pair pool with IDs before making a judgment. Preserve Pete-approved language and deliberate exceptions unless a specific, demonstrable fairness or validity defect is found. A heuristic warning is a request to inspect, **not** a finding of editorial failure and never permission to rewrite.
+
+**Different tests for different roles:**
+- **REAL:** Is the headword a genuinely defensible answer to the tile as an ordinary player would understand it? Does the wording awaken a familiar, distinct *recognition angle*, without flatly defining, misleading or requiring obscure knowledge? Multiple approved REALs may explore one dictionary sense when their memory snaps are meaningfully different. Do not force one REAL per sense or reject by length alone.
+- **TRAP:** Does the **headword itself** feel tempting at first, while the tile ultimately belongs to a clear different true owner? Test the plausible player protest: could an ordinary fair-minded player correctly defend the headword? If yes, the trap fails. Build a word-level independent pool, not one trap mechanically mirrored to each REAL. An indirect association is not automatically weak, but mere shared topic is insufficient.
+- **Hidden/Boss:** Apply the same truth, true-owner and recognition tests, plus distinct hidden discoveries and fair presentation. Unequal REAL/trap lengths alone do not invalidate a pair; examine whether a difference actually gives away the answer.
+
+**Triage of automated/editorial findings:**
+- Shared common words, overlapping topics, familiar cultural scenes, similar word lengths, cross-headword thematic overlap, and different tile lengths are **not automatic rejection grounds**.
+- Similar distinctive memory snaps or same-headword REAL/trap overlap merit **contextual human review**, not automatic rewrite. Deliberate reuse can be a Pete-approved exception when it genuinely improves recognition or misdirection without making the trap secretly true.
+- Sound-alike/rhyme associations are normally disfavored, **not absolutely banned**: retain only genuinely clever, natural, headword-specific cases. Section 16A rule 10 already states the exception.
+- Do not impose a numerical length ceiling, arbitrary quotas for styles, or a uniform opening formula. Judge the player experience and the specific headword.
+- **Hard failures remain hard:** headword leakage, invalid REAL meaning, secretly valid trap, no credible trap true owner, unfair/unnatural wording, malformed or reused persistence IDs, invalid runtime flags/classifications and missing required hidden content. A human exception does not waive structural integrity or fairness.
+- Distinguish **KEEP**, **KEEP AS APPROVED EXCEPTION**, **REWRITE PROPOSAL**, **REMOVE PROPOSAL**, and **NEEDS PETE'S RULING**. For every proposed change show exact current ID/text, reason, alternative, and what would be preserved. No silent changes to approved copy.
+
+**Current approved examples (November 20):** DOUBLE, MINE, PALM, HANDLE, INDEX and ROUND same-headword overlap flags were reviewed and kept; EXTRACT hidden length asymmetry (16 vs 6 words) was also kept. These flags may continue to be printed by the validator; that is acceptable. ROW `row_t6` and HANDLE `handle_r4` are the two explicitly approved rewritten tiles, already in live JSON. A new substantive fairness defect may justify reopening a tile, but the same heuristic alone does not.
+
+**Workbook/live-data discipline:** The workbook is the evolving editorial record; `assets/data/huntData.json` is the live runtime authority. Maintain a single canonical workbook at `docs/content/POLYWORDS_CANONICAL_HUNT.xlsx` **once the binary file is actually committed**. Do not claim the path exists until verified. Audit -> Pete approves -> update editorial record and runtime (if approved) -> exact ID/role/phrase/hidden-pair comparison -> preflight/tests -> commit. Preserve historical/retired entries without silently reactivating them.
+
 # PART I. THE CONTENT PHILOSOPHY
 
 ## 1. Recognition, Not Definition
