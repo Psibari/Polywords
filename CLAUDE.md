@@ -76,4 +76,4 @@ The Hunt standard and Bible both contain binding editorial language; do not sile
 - CI is `.github/workflows/typecheck.yml` (Quality Checks): Node 24, `npm run typecheck`, `npm test` and `npm run content:quality`. Recheck the **latest branch-head run** after any change; an older green run does not certify a later commit.
 - For docs-only changes, check whitespace and references. For code/content, run the relevant tests and the live-bank gate. Report device checks that were not done.
 - The public site and privacy/support pages are on the separate orphan `gh-pages` branch. Never merge it with the game branch. Adding network, analytics, crash reporting or ad SDKs requires matching updates to `PRIVACY_TEXT`, the published privacy page and App Store disclosures.
-- Licensing is a release gate: `assets/fonts/Buggie-LICENSE.txt` was empty in the last documented audit; verify the license before shipping.
+- Licensing is a release gate. Buggie is Public Domain (`assets/fonts/Buggie-LICENSE.txt`, FontSpace link); sound sources are in `assets/audio/LICENSES.md`.

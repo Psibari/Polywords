@@ -27,7 +27,7 @@ Friend testers kept seeing the same words. The causes were a 30-word memory, qui
 - **Simulation result:** a player dying in rounds 2-5 over 40 Hunts went from 56% repeats to 0. Every ordinary word is met before any repeats.
 - **Accepted cost:** for that player, rounds 1-2 move to medium words around Hunts 11-20, and some hard words appear after about Hunt 40.
 - **Unchanged:** Haunts, pinned Boss, mastered-return timing (rounds 5-7) and the Boss rules.
-- **Still to do:** check it on the phone.
+- **Phone-checked:** Pete tested it on POLYWORDS DEV on 2026-11-21. Words no longer come back, quits included.
 
 ## Next task
 
@@ -48,8 +48,8 @@ Word-by-word Hunt audit, one headword at a time. The rules are in `docs/CONTENT_
 - **All caps.** Should Hunt cards stay all caps? Mixed case would allow stressing a word. Look at it after the audit.
 - **Before release:**
   - Phone regression pass on the current build (restored-card rotation, pause/navigation, audio, splash).
-  - Buggie font licence and any open sound-source licence checks.
-  - Stranger testers after that.
+  - Any open sound-source licence checks. The Buggie font is cleared: `assets/fonts/Buggie-LICENSE.txt` says Public Domain and links its FontSpace source.
+  - Stranger playtest: kit and plan in `docs/STRANGER_PLAYTEST_PLAN.md`.
 
 ## Do not work on yet
 
