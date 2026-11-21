@@ -1812,10 +1812,17 @@ export default function DailyChallengeScreen({ navigation }: Props) {
             {showEntryRules ? (
               <>
                 <Text allowFontScaling={false} style={styles.startTitle}>HOW TO PLAY</Text>
-                <Text allowFontScaling={false} style={styles.startIntro}>{DAILY_ENTRY_INTRO}</Text>
                 <View style={styles.startRuleList}>
-                  {DAILY_ENTRY_RULES.map((line) => (
-                    <Text allowFontScaling={false} key={line} style={styles.startRuleLine}>{line}</Text>
+                  {[
+                    ['1. SIX WORDS.', 'One is the correct answer.'],
+                    ['2. FOLLOW THE CLUES.', 'Three clues appear, one at a time.'],
+                    ['3. WAIT OR ANSWER EARLY!', 'Answer early to knock Polly off her perch!'],
+                    ['4. SWIPE UP', 'On the word you choose.'],
+                  ].map(([heading, detail]) => (
+                    <View key={heading} style={styles.startInstruction}>
+                      <Text allowFontScaling={false} style={styles.startInstructionHeading}>{heading}</Text>
+                      <Text allowFontScaling={false} style={styles.startInstructionDetail}>{detail}</Text>
+                    </View>
                   ))}
                 </View>
                 <Pressable
@@ -1843,7 +1850,7 @@ export default function DailyChallengeScreen({ navigation }: Props) {
                 <Text allowFontScaling={false} style={styles.startTitle}>{DAILY_ENTRY_TITLE}</Text>
                 <Text allowFontScaling={false} style={styles.startRule}>2 LIVES TO BEAT 5 ROUNDS.</Text>
                 <Text allowFontScaling={false} style={styles.startIntro}>WIN: Take home a Gold Feather.</Text>
-                <Text allowFontScaling={false} style={styles.startIntro}>LOSE: Congratulations. A cartoon bird beat you.</Text>
+                <Text allowFontScaling={false} style={styles.startIntro}>LOSE: A cartoon bird beats you. Congratulations.</Text>
                 <Pressable
                   accessibilityRole="button"
                   accessibilityLabel="Accept Polly's Daily Challenge"
@@ -2117,8 +2124,8 @@ const styles = StyleSheet.create({
     color: dailyResultsMaterial.speedTitle,
     fontFamily: FONTS.hud,
     includeFontPadding: false,
-    fontSize: 18,
-    letterSpacing: 2,
+    fontSize: 21,
+    letterSpacing: 1.3,
     marginTop: 12,
     textAlign: 'center',
   },
@@ -2127,17 +2134,38 @@ const styles = StyleSheet.create({
     color: dailyResultsMaterial.statText,
     fontFamily: FONTS.tileCopy,
     includeFontPadding: false,
-    fontSize: 20,
-    lineHeight: 24,
-    marginTop: 16,
+    fontSize: 23,
+    lineHeight: 29,
+    marginTop: 18,
     textAlign: 'center',
   },
   // How it works: one idea per line, in the HUD voice, so the three clues read
   // as three things and not as a paragraph.
   startRuleList: {
     marginTop: 18,
-    gap: 7,
+    gap: 19,
     alignSelf: 'stretch',
+  },
+  startInstruction: {
+    alignItems: 'center',
+    gap: 5,
+  },
+  startInstructionHeading: {
+    color: dailyResultsMaterial.titleWin,
+    fontFamily: FONTS.hud,
+    includeFontPadding: false,
+    fontSize: 23,
+    lineHeight: 29,
+    letterSpacing: 1,
+    textAlign: 'center',
+  },
+  startInstructionDetail: {
+    color: dailyResultsMaterial.statText,
+    fontFamily: FONTS.tileCopy,
+    includeFontPadding: false,
+    fontSize: 22,
+    lineHeight: 27,
+    textAlign: 'center',
   },
   startRuleLine: {
     color: dailyResultsMaterial.speedTitle,
